@@ -1,0 +1,67 @@
+/*
+* Copyright 2024 - 2024 the original author or authors.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* https://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package spring.ai.mcp;
+
+import java.time.Duration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import spring.ai.mcp.client.McpClient;
+import spring.ai.mcp.client.stdio.StdioServerParameters;
+import spring.ai.mcp.client.stdio.StdioServerTransport;
+import spring.ai.mcp.spec.McpSchema.ListResourcesResult;
+
+/**
+ * @author Christian Tzolov
+ * @since 1.0.0
+ */
+public class ClientSessionTests {
+
+	public static void main(String[] args) {
+
+		var stdioParams = StdioServerParameters.builder("npx")
+			.args("-y", "@modelcontextprotocol/server-everything",
+					"/Users/christiantzolov/Dev/projects/demo/mcp-server/dir")
+			.build();
+
+		try (McpClient clientSession = new McpClient(new StdioServerTransport(stdioParams), Duration.ofSeconds(10),
+				new ObjectMapper())) {
+			// clientSession.handleIncomingMessages();
+			clientSession.initialize();
+
+			// ListToolsResult tools = clientSession.listTools(null);
+
+			// System.out.println("Tools: " + tools);
+
+			// clientSession.ping();
+
+			// CallToolRequest callToolRequest = new CallToolRequest("echo",
+			// Map.of("message", "Hello MCP Spring AI!"));
+			// CallToolResult callToolResult = clientSession.callTool(callToolRequest);
+			// System.out.println("Call Tool Result: " + callToolResult);
+
+			// //
+			// clientSession.sendRootsListChanged();
+
+			// Resources
+			ListResourcesResult resources = clientSession.listResources(null);
+			System.out.println("Resources: " + resources);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+}

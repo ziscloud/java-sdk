@@ -20,6 +20,8 @@ import java.util.concurrent.CompletableFuture;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import spring.ai.mcp.spec.McpAsyncTransport;
+import spring.ai.mcp.spec.McpTransport;
 import spring.ai.mcp.spec.McpSchema;
 import spring.ai.mcp.spec.McpSession;
 import spring.ai.mcp.spec.McpTransport;
@@ -59,20 +61,20 @@ public class McpClient {
 	//                                               JSONtoPOJOCodec type
 	//           .sync();
 
-	public static McpAsyncClient async(McpTransport transport) {
+	public static McpAsyncClient async(McpAsyncTransport transport) {
 		return new McpAsyncClient(transport);
 	}
 
-	public static McpAsyncClient async(McpTransport transport, Duration requestTimeout,
+	public static McpAsyncClient async(McpAsyncTransport transport, Duration requestTimeout,
 			ObjectMapper objectMapper) {
 		return new McpAsyncClient(transport, requestTimeout, objectMapper);
 	}
 
-	public static McpSyncClient sync(McpTransport transport) {
+	public static McpSyncClient sync(McpAsyncTransport transport) {
 		return new McpSyncClient(async(transport));
 	}
 
-	public static McpSyncClient sync(McpTransport transport, Duration requestTimeout,
+	public static McpSyncClient sync(McpAsyncTransport transport, Duration requestTimeout,
 			ObjectMapper objectMapper) {
 		return new McpSyncClient(async(transport, requestTimeout, objectMapper));
 	}

@@ -3,18 +3,15 @@ package spring.ai.mcp.client;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
-import reactor.core.publisher.Sinks;
-import spring.ai.mcp.spec.McpSchema;
-import spring.ai.mcp.spec.McpSession;
+import spring.ai.mcp.spec.McpAsyncTransport;
 import spring.ai.mcp.spec.McpTransport;
+import spring.ai.mcp.spec.McpSchema;
 
 public class McpAsyncSession {
 
@@ -25,11 +22,11 @@ public class McpAsyncSession {
 
 	private final ObjectMapper objectMapper;
 
-	private final McpTransport transport;
+	private final McpAsyncTransport transport;
 
 	public McpAsyncSession(Duration requestTimeout,
 			ObjectMapper objectMapper,
-			McpTransport transport) {
+			McpAsyncTransport transport) {
 		this.requestTimeout = requestTimeout;
 		this.objectMapper = objectMapper;
 		this.transport = transport;
@@ -65,8 +62,15 @@ public class McpAsyncSession {
 			this.pendingResponses.put(requestId, sink);
 			McpSchema.JSONRPCRequest jsonrpcRequest = new McpSchema.JSONRPCRequest(McpSchema.JSONRPC_VERSION, method, requestId, requestParams);
 			try {
-				// TODO convert the transport to non-blocking as well
-				this.transport.sendMessage(jsonrpcRequest);
+				// TODO: This is non-blocking, but it's actually a synchronous call,
+				// perhaps there's no need to make it return Mono?
+				this.transport.sendMessage(jsonrpcRequest)
+				              // TODO: It's most efficient to create a dedicated
+				              //  Subscriber here
+				              .subscribe(v -> {}, e -> {
+								  this.pendingResponses.remove(requestId);
+								  sink.error(e);
+				              });
 			} catch (Exception e) {
 				sink.error(e);
 			}

@@ -1,22 +1,20 @@
 package spring.ai.mcp.client;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
+import spring.ai.mcp.spec.McpAsyncTransport;
 import spring.ai.mcp.spec.McpSchema;
-import spring.ai.mcp.spec.McpSession;
-import spring.ai.mcp.spec.McpTransport;
 
 public class McpAsyncClient extends McpAsyncSession {
 
-	public McpAsyncClient(McpTransport transport) {
+	public McpAsyncClient(McpAsyncTransport transport) {
 		this(transport, Duration.ofSeconds(10), new ObjectMapper());
 	}
 
-	public McpAsyncClient(McpTransport transport, Duration requestTimeout, ObjectMapper objectMapper) {
+	public McpAsyncClient(McpAsyncTransport transport, Duration requestTimeout, ObjectMapper objectMapper) {
 		super(requestTimeout, objectMapper, transport);
 	}
 

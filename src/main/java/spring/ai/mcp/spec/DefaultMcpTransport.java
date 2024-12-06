@@ -16,10 +16,9 @@
 package spring.ai.mcp.spec;
 
 import java.time.Duration;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
 
@@ -27,15 +26,13 @@ import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
  * @author Christian Tzolov
  * @since 1.0.0
  */
-public class DefaultMcpTransport implements McpTransport {
+public class DefaultMcpTransport implements McpAsyncTransport {
 
 	private final Sinks.Many<String> errorSink;
 
 	private final Sinks.Many<JSONRPCMessage> inboundSink;
 
 	private final Sinks.Many<JSONRPCMessage> outboundSink;
-
-	private final ExecutorService executorService;
 
 	private final Duration writeTimeout;
 
@@ -56,23 +53,18 @@ public class DefaultMcpTransport implements McpTransport {
 		this.outboundSink = Sinks.many().unicast().onBackpressureBuffer();
         this.writeTimeout = readTimeout;
 
-		this.executorService = Executors.newFixedThreadPool(2);
 		this.handleIncomingMessages();
 	}
 
 	private void handleIncomingMessages() {
-		this.executorService.execute(() -> {
-			this.inboundSink.asFlux()
-			                .subscribe(message -> this.messageReader.accept(message));
-		});
+		this.inboundSink.asFlux()
+		                .subscribe(message -> this.messageReader.accept(message));
 	}
 
 	private void handleIncomingErrors() {
-		this.executorService.execute(() -> {
-			this.errorSink.asFlux().subscribe(e -> {
-				this.errorReader.accept(e);
-				System.err.println(e);
-			});
+		this.errorSink.asFlux().subscribe(e -> {
+			this.errorReader.accept(e);
+			System.err.println(e);
 		});
 	}
 
@@ -106,15 +98,19 @@ public class DefaultMcpTransport implements McpTransport {
 	@Override
 	public void close() {
 		// this.onClose();
-		this.executorService.shutdownNow();
 	}
 
-	public void sendMessage(JSONRPCMessage message) {
-		if (!this.outboundSink.tryEmitNext(message).isSuccess()) {
+	@Override
+	public Mono<Void> sendMessage(JSONRPCMessage message) {
+		if (this.outboundSink.tryEmitNext(message).isSuccess()) {
 			// TODO: essentially we could reschedule ourselves in some time and make
 			//  another attempt with the already read data but pause reading until
 			//  success
-			throw new RuntimeException("Failed to enqueue message");
+			//  In this approach we delegate the retry and the backpressure onto the 
+			//  caller. This might be enough for most cases.
+			return Mono.empty();
+		} else {
+			return Mono.error(new RuntimeException("Failed to enqueue message"));
 		}
 	}
 }

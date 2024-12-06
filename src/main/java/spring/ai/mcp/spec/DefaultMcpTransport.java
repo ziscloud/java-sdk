@@ -16,13 +16,11 @@
 package spring.ai.mcp.spec;
 
 import java.time.Duration;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import reactor.core.publisher.Sinks;
 import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
 
 /**
@@ -31,11 +29,11 @@ import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
  */
 public class DefaultMcpTransport implements McpTransport {
 
-	private final BlockingQueue<String> errorReadQueue;
+	private final Sinks.Many<String> errorSink;
 
-	private final BlockingQueue<JSONRPCMessage> dataReadQueue;
+	private final Sinks.Many<JSONRPCMessage> inboundSink;
 
-	private final BlockingQueue<JSONRPCMessage> dataWriteQueue;
+	private final Sinks.Many<JSONRPCMessage> outboundSink;
 
 	private final ExecutorService executorService;
 
@@ -47,9 +45,15 @@ public class DefaultMcpTransport implements McpTransport {
 
 	public DefaultMcpTransport(Duration readTimeout) {
 
-		this.errorReadQueue = new LinkedBlockingQueue<>();
-		this.dataReadQueue = new LinkedBlockingQueue<>();
-		this.dataWriteQueue = new LinkedBlockingQueue<>();
+		// TODO: consider the effects of buffering here -> the inter-process pipes are
+		//  independent and the notifications can flood the client/server.
+		//  Potentially, the interest in reading could be communicated from one party
+		//  to the other so the Blocking IO Threads can pause consuming the stream
+		//  buffers when there is no expectation for reading.
+
+		this.errorSink = Sinks.many().unicast().onBackpressureBuffer();
+		this.inboundSink = Sinks.many().unicast().onBackpressureBuffer();
+		this.outboundSink = Sinks.many().unicast().onBackpressureBuffer();
         this.writeTimeout = readTimeout;
 
 		this.executorService = Executors.newFixedThreadPool(2);
@@ -58,43 +62,30 @@ public class DefaultMcpTransport implements McpTransport {
 
 	private void handleIncomingMessages() {
 		this.executorService.execute(() -> {
-			while (!Thread.currentThread().isInterrupted()) {
-				try {
-					JSONRPCMessage message = this.dataReadQueue.take();
-					this.messageReader.accept(message);
-				}
-				catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
-			}
+			this.inboundSink.asFlux()
+			                .subscribe(message -> this.messageReader.accept(message));
 		});
 	}
 
 	private void handleIncomingErrors() {
 		this.executorService.execute(() -> {
-			while (!Thread.currentThread().isInterrupted()) {
-				try {
-					String error = this.errorReadQueue.take();
-					this.errorReader.accept(error);
-					System.err.println(error);
-				}
-				catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
-			}
+			this.errorSink.asFlux().subscribe(e -> {
+				this.errorReader.accept(e);
+				System.err.println(e);
+			});
 		});
 	}
 
-	protected BlockingQueue<JSONRPCMessage> getDataReadQueue() {
-		return dataReadQueue;
+	protected Sinks.Many<JSONRPCMessage> getInboundSink() {
+		return inboundSink;
 	}
 
-	protected BlockingQueue<JSONRPCMessage> getDataWriteQueue() {
-		return dataWriteQueue;
+	protected Sinks.Many<JSONRPCMessage> getOutboundSink() {
+		return outboundSink;
 	}
 
-	protected BlockingQueue<String> getErrorReadQueue() {
-		return errorReadQueue;
+	protected Sinks.Many<String> getErrorSink() {
+		return errorSink;
 	}
 
 	public void setMessageHandler(Consumer<JSONRPCMessage> messageReader) {
@@ -119,13 +110,11 @@ public class DefaultMcpTransport implements McpTransport {
 	}
 
 	public void sendMessage(JSONRPCMessage message) {
-		// Use offer with timeout to prevent blocking indefinitely
-		try {			
-			if (!this.dataWriteQueue.offer(message, writeTimeout.toMillis(), TimeUnit.MILLISECONDS)) {
-				throw new RuntimeException("Failed to enqueue message");
-			}
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
+		if (!this.outboundSink.tryEmitNext(message).isSuccess()) {
+			// TODO: essentially we could reschedule ourselves in some time and make
+			//  another attempt with the already read data but pause reading until
+			//  success
+			throw new RuntimeException("Failed to enqueue message");
 		}
 	}
 }

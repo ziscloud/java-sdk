@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import spring.ai.mcp.spec.DefaultMcpTransport;
 import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
@@ -107,7 +106,8 @@ public class StdioServerTransport extends DefaultMcpTransport {
 				while (isRunning && processErrorReader != null && (line = processErrorReader.readLine()) != null) {
 					try {
 						System.out.println("Received error line: " + line);
-						this.getErrorReadQueue().offer(line, 100, TimeUnit.MILLISECONDS);
+						// TODO: handle errors, etc.
+						this.getErrorSink().tryEmitNext(line);
 					}
 					catch (Exception e) {
 						throw new RuntimeException(e);
@@ -150,7 +150,10 @@ public class StdioServerTransport extends DefaultMcpTransport {
 				while (this.isRunning && this.processReader != null && (line = this.processReader.readLine()) != null) {
 					try {
 						JSONRPCMessage message = deserializeJsonRpcMessage(line);
-						this.getDataReadQueue().offer(message, 100, TimeUnit.MILLISECONDS);
+						if (!this.getInboundSink().tryEmitNext(message).isSuccess()) {
+							// TODO: Back off, reschedule -> same comment as for writing
+							throw new RuntimeException("Failed to enqueue message");
+						}
 					}
 					catch (Exception e) {
 						throw new RuntimeException(e);
@@ -170,28 +173,18 @@ public class StdioServerTransport extends DefaultMcpTransport {
 
 	private void startWriterThread() {
 		this.executorService.execute(() -> {
-			try {
-				while (this.isRunning && this.processWriter != null && !Thread.currentThread().isInterrupted()) {
+			this.getOutboundSink().asFlux().handle((message, s) -> {
+				if (message != null) {
 					try {
-						JSONRPCMessage message = this.getDataWriteQueue().poll(100, TimeUnit.MILLISECONDS);
-						if (message != null) {
-							this.processWriter.write(ModelOptionsUtils.toJsonString(message));
-							this.processWriter.newLine();
-							this.processWriter.flush();
-						}
-					}
-					catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						break;
+						this.processWriter.write(ModelOptionsUtils.toJsonString(message));
+						this.processWriter.newLine();
+						this.processWriter.flush();
+						s.next(message);
+					} catch (IOException e) {
+						s.error(new RuntimeException(e));
 					}
 				}
-			}
-			catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-			finally {
-				this.isRunning = false;
-			}
+			}).subscribe();
 		});
 	}
 

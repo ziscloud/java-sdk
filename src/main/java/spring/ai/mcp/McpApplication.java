@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.ai.mcp.client.McpClient;
+import spring.ai.mcp.client.McpSyncClient;
 import spring.ai.mcp.client.stdio.StdioServerParameters;
 import spring.ai.mcp.client.stdio.StdioServerTransport;
 
@@ -41,7 +42,7 @@ public class McpApplication {
 	}
 
 	@Bean
-	public List<McpFunctionCallback> functionCallbacks(McpClient mcpClient) {
+	public List<McpFunctionCallback> functionCallbacks(McpSyncClient mcpClient) {
 
 		return mcpClient.listTools(null)
 			.tools()
@@ -51,16 +52,17 @@ public class McpApplication {
 	}
 
 	@Bean(destroyMethod = "close")
-	public McpClient clientSession() {
+	public McpSyncClient clientSession() {
 
 		var stdioParams = StdioServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-filesystem",
-					"/Users/christiantzolov/Dev/projects/demo/mcp-server/dir")
+					"dir")
 			.build();
 
-		McpClient mcpClient = null;
+		McpSyncClient mcpClient = null;
 		try {			
-			mcpClient = new McpClient(new StdioServerTransport(stdioParams, Duration.ofMillis(100)),
+			mcpClient = McpClient.sync(new StdioServerTransport(stdioParams,
+				Duration.ofMillis(100)),
 					Duration.ofSeconds(10), new ObjectMapper());
 
 			var init = mcpClient.initialize();

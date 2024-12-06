@@ -19,6 +19,7 @@ import java.time.Duration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.ai.mcp.client.McpClient;
+import spring.ai.mcp.client.McpSyncClient;
 import spring.ai.mcp.client.stdio.StdioServerParameters;
 import spring.ai.mcp.client.stdio.StdioServerTransport;
 import spring.ai.mcp.spec.McpSchema.ListResourcesResult;
@@ -34,15 +35,16 @@ public class ClientSessionTests3 {
 	public static void main(String[] args) {
 
 		var stdioParams = StdioServerParameters.builder("uv")
-			.args("--directory", "/Users/christiantzolov/Dev/projects/demo/mcp-server/dir", "run", "mcp-server-sqlite",
+			.args("--directory", "dir", "run", "mcp-server-sqlite",
 					"--db-path", "~/test.db")
 			.build();
 
-	
-		McpClient clientSession = null;
+
+		McpSyncClient clientSession = null;
 		try {
 
-			clientSession = new McpClient(new StdioServerTransport(stdioParams), Duration.ofSeconds(10), new ObjectMapper());
+			clientSession = McpClient.sync(new StdioServerTransport(stdioParams),
+				Duration.ofSeconds(10), new ObjectMapper());
 
 			clientSession.initialize();
 

@@ -19,6 +19,7 @@ import java.time.Duration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.ai.mcp.client.McpClient;
+import spring.ai.mcp.client.McpSyncClient;
 import spring.ai.mcp.client.stdio.StdioServerParameters;
 import spring.ai.mcp.client.stdio.StdioServerTransport;
 import spring.ai.mcp.spec.McpSchema.ListResourcesResult;
@@ -33,10 +34,12 @@ public class ClientSessionTests {
 
 		var stdioParams = StdioServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-everything",
-					"/Users/christiantzolov/Dev/projects/demo/mcp-server/dir")
+					"dir")
 			.build();
 
-		try (McpClient clientSession = new McpClient(new StdioServerTransport(stdioParams), Duration.ofSeconds(10),
+		try (McpSyncClient clientSession =
+				     McpClient.sync(new StdioServerTransport(stdioParams),
+				Duration.ofSeconds(10),
 				new ObjectMapper())) {
 			// clientSession.handleIncomingMessages();
 			clientSession.initialize();

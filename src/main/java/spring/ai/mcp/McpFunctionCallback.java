@@ -18,6 +18,7 @@ package spring.ai.mcp;
 import java.util.Map;
 
 import spring.ai.mcp.client.McpClient;
+import spring.ai.mcp.client.McpSyncClient;
 import spring.ai.mcp.spec.McpSchema.CallToolRequest;
 import spring.ai.mcp.spec.McpSchema.CallToolResult;
 import spring.ai.mcp.spec.McpSchema.Tool;
@@ -32,11 +33,12 @@ import org.springframework.ai.model.function.FunctionCallback;
 
 public class McpFunctionCallback implements FunctionCallback {
 
-	private final McpClient mcpClient;
+	// TODO: revisit function calling as well to handle the async case
+	private final McpSyncClient mcpClient;
 
 	private final Tool tool;
 
-	public McpFunctionCallback(McpClient clientSession, Tool tool) {
+	public McpFunctionCallback(McpSyncClient clientSession, Tool tool) {
 		this.mcpClient = clientSession;
 		this.tool = tool;
 	}

@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package spring.ai.mcp;
+package spring.ai.mcp.attic;
 
 import java.time.Duration;
 
@@ -30,7 +30,7 @@ import spring.ai.mcp.spec.McpSchema.Resource;
  * @author Christian Tzolov
  * @since 1.0.0
  */
-public class ClientSessionTests3 {
+public class ClientSessionTests2 {
 
 	public static void main(String[] args) {
 
@@ -39,12 +39,9 @@ public class ClientSessionTests3 {
 					"--db-path", "~/test.db")
 			.build();
 
-
-		McpSyncClient clientSession = null;
-		try {
-
-			clientSession = McpClient.sync(new StdioServerTransport(stdioParams),
-				Duration.ofSeconds(10), new ObjectMapper());
+		try (McpSyncClient clientSession =
+				     McpClient.sync(new StdioServerTransport(stdioParams),
+						     Duration.ofSeconds(10), new ObjectMapper())) {
 
 			clientSession.initialize();
 
@@ -52,6 +49,14 @@ public class ClientSessionTests3 {
 			System.out.println("Tools: " + tools);
 
 			clientSession.ping();
+
+			// CallToolRequest callToolRequest = new CallToolRequest("echo",
+			// Map.of("message", "Hello MCP Spring AI!"));
+			// CallToolResult callToolResult =
+			// clientSession.callTool(callToolRequest);
+			// System.out.println("Call Tool Result: " + callToolResult);
+			// //
+			// clientSession.sendRootsListChanged();
 
 			// Resources
 			ListResourcesResult resources = clientSession.listResources(null);
@@ -61,14 +66,14 @@ public class ClientSessionTests3 {
 				System.out.println(clientSession.readResource(resource));
 
 			}
+
+			// var resourceTemplate = clientSession.listResourceTemplates(null);
+			// System.out.println("Resource Templates: " + resourceTemplate);
+
+			// stdioClient.awaitForExit();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-		}
-		finally {
-			if (clientSession != null) {
-				clientSession.close();
-			}
 		}
 	}
 

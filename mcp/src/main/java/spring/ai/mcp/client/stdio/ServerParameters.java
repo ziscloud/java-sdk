@@ -7,13 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import spring.ai.mcp.client.util.Assert;
 
 /**
  * Server parameters for stdio client.
  */
-public class StdioServerParameters {
+@JsonInclude(JsonInclude.Include.NON_ABSENT)
+public class ServerParameters {
 
 	// Environment variables to inherit by default
 	private static final List<String> DEFAULT_INHERITED_ENV_VARS = System.getProperty("os.name")
@@ -32,7 +34,7 @@ public class StdioServerParameters {
 	@JsonProperty("env")
 	private Map<String, String> env;
 
-	private StdioServerParameters(String command, List<String> args, Map<String, String> env) {
+	private ServerParameters(String command, List<String> args, Map<String, String> env) {
 		Assert.notNull(command, "The command can not be null");
 		Assert.notNull(args, "The args can not be null");
 
@@ -105,8 +107,8 @@ public class StdioServerParameters {
 			return this;
 		}
 
-		public StdioServerParameters build() {
-			return new StdioServerParameters(command, args, env);
+		public ServerParameters build() {
+			return new ServerParameters(command, args, env);
 		}
 
 	}

@@ -13,30 +13,31 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package spring.ai.mcp.client.util;
+package spring.ai.mcp.client.stdio;
 
 import java.util.Map;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import spring.ai.mcp.client.util.McpServerParameterParser.McpServers.McpServer;
+import spring.ai.mcp.client.stdio.ServerParametersParser.McpServerConfigurations.McpServerConfiguration;
 
 /**
  * @author Christian Tzolov
  * @since 1.0.0
  */
 
-public class McpServerParameterParser {
+public class ServerParametersParser {
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
-	public record McpServers(// @formatter:off
-		@JsonProperty("mcpServers") Map<String, McpServer> mcpServers) {
+	public record McpServerConfigurations(// @formatter:off
+		@JsonProperty("mcpServers") Map<String, McpServerConfiguration> mcpServers) {
 
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
-		public record McpServer(
+		public record McpServerConfiguration(
 			@JsonProperty("command") String command,
-			@JsonProperty("args") String[] args,
+			@JsonProperty("args") List<String> args,
 			@JsonProperty("env") Map<String, String> env) {
 		}
 	} // @formatter:on
@@ -72,10 +73,10 @@ public class McpServerParameterParser {
 								""";
 
 		// Deserialize JSON into McpServers
-		McpServers servers = objectMapper.readValue(jsonInput, McpServers.class);
+		McpServerConfigurations servers = objectMapper.readValue(jsonInput, McpServerConfigurations.class);
 
 		// Access individual servers
-		for (Map.Entry<String, McpServer> entry : servers.mcpServers().entrySet()) {
+		for (Map.Entry<String, McpServerConfiguration> entry : servers.mcpServers().entrySet()) {
 			System.out.println("Key: " + entry.getKey());
 			System.out.println("Command: " + entry.getValue().command());
 			System.out.println("Arguments: " + String.join(", ", entry.getValue().args()));

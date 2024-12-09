@@ -1,4 +1,4 @@
-package spring.ai.mcp.client;
+package spring.ai.mcp.spec;
 
 import java.time.Duration;
 import java.util.Map;
@@ -10,8 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import spring.ai.mcp.client.util.Assert;
-import spring.ai.mcp.spec.McpAsyncTransport;
-import spring.ai.mcp.spec.McpSchema;
 
 public class McpAsyncSession {
 
@@ -33,7 +31,7 @@ public class McpAsyncSession {
 		this.objectMapper = objectMapper;
 		this.transport = transport;
 
-		this.transport.setMessageHandler(message -> {
+		this.transport.setInboudMessageHandler(message -> {
 			switch (message) {
 				case McpSchema.JSONRPCResponse response -> {
 					var sink = pendingResponses.remove(response.id());

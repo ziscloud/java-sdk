@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import spring.ai.mcp.client.McpAsyncClient;
 import spring.ai.mcp.client.McpClient;
-import spring.ai.mcp.client.stdio.StdioServerParameters;
+import spring.ai.mcp.client.stdio.ServerParameters;
 import spring.ai.mcp.client.stdio.StdioServerTransport;
 import spring.ai.mcp.spec.McpSchema.CallToolRequest;
 import spring.ai.mcp.spec.McpSchema.Resource;
@@ -45,7 +45,7 @@ class McpAsyncClientTests {
 
 	private McpAsyncClient mcpAsyncClient;
 
-	private StdioServerParameters stdioParams;
+	private ServerParameters stdioParams;
 
 	private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
@@ -53,7 +53,7 @@ class McpAsyncClientTests {
 
 	@BeforeEach
 	void setUp() {
-		stdioParams = StdioServerParameters.builder("npx")
+		stdioParams = ServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-everything", "dir")
 			.build();
 

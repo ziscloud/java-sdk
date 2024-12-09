@@ -16,30 +16,9 @@
 package spring.ai.mcp.client;
 
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.ai.mcp.spec.McpAsyncTransport;
-import spring.ai.mcp.spec.McpTransport;
-import spring.ai.mcp.spec.McpSchema;
-import spring.ai.mcp.spec.McpSession;
-import spring.ai.mcp.spec.McpTransport;
-import spring.ai.mcp.spec.McpSchema.CallToolRequest;
-import spring.ai.mcp.spec.McpSchema.CallToolResult;
-import spring.ai.mcp.spec.McpSchema.ClientCapabilities;
-import spring.ai.mcp.spec.McpSchema.Implementation;
-import spring.ai.mcp.spec.McpSchema.InitializeRequest;
-import spring.ai.mcp.spec.McpSchema.InitializeResult;
-import spring.ai.mcp.spec.McpSchema.ListResourceTemplatesResult;
-import spring.ai.mcp.spec.McpSchema.ListResourcesResult;
-import spring.ai.mcp.spec.McpSchema.ListToolsResult;
-import spring.ai.mcp.spec.McpSchema.PaginatedRequest;
-import spring.ai.mcp.spec.McpSchema.ReadResourceRequest;
-import spring.ai.mcp.spec.McpSchema.Resource;
-import spring.ai.mcp.spec.McpSchema.SubscribeRequest;
-import spring.ai.mcp.spec.McpSchema.UnsubscribeRequest;
-import spring.ai.mcp.spec.McpSchema.ClientCapabilities.RootCapabilities;
 
 /**
  * The MCP client is the main entry point for interacting with the Model Context Protocol

@@ -3,12 +3,9 @@ package spring.ai.mcp.client.stdio;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.Executors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,12 +24,13 @@ import spring.ai.mcp.spec.McpSchema.JSONRPCResponse;
  */
 public class StdioServerTransport extends DefaultMcpTransport {
 
+	private final static TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<HashMap<String, Object>>() {
+	};
+
 	private Process process;
 
 	private BufferedReader processErrorReader;
-
 	private BufferedReader processReader;
-
 	private BufferedWriter processWriter;
 
 	private Scheduler inboundScheduler;
@@ -41,29 +39,28 @@ public class StdioServerTransport extends DefaultMcpTransport {
 
 	private volatile boolean isRunning;
 
-	private final StdioServerParameters params;
+	private final ServerParameters params;
 
-	public StdioServerTransport(StdioServerParameters params) {
-		this(params, Duration.ofMillis(100));
+	public StdioServerTransport(ServerParameters params) {
+		this(params, new ObjectMapper());
 	}
 
-	public StdioServerTransport(StdioServerParameters params, Duration writeTimeout) {
-		super(writeTimeout);
+	public StdioServerTransport(ServerParameters params, ObjectMapper objectMapper) {
+
+		super(objectMapper);
 
 		Assert.notNull(params, "The params can not be null");
+		Assert.notNull(objectMapper, "The ObjectMapper can not be null");
 
 		this.params = params;
 
 		// Start threads
-		this.inboundScheduler =
-				Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
-						"inbound");
-		this.outboundScheduler =
-				Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
-						"outbound");
-		this.errorScheduler =
-				Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
-						"error");
+		this.inboundScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
+				"inbound");
+		this.outboundScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
+				"outbound");
+		this.errorScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
+				"error");
 	}
 
 	@Override
@@ -79,8 +76,7 @@ public class StdioServerTransport extends DefaultMcpTransport {
 		// Start the process
 		try {
 			this.process = processBuilder.start();
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new RuntimeException("Failed to start process with command: " + fullCommand, e);
 		}
 
@@ -100,14 +96,12 @@ public class StdioServerTransport extends DefaultMcpTransport {
 		startInboundProcessing();
 		startOutboundProcessing();
 		startErrorProcessing();
-
 	}
 
 	public void awaitForExit() {
 		try {
 			this.process.waitFor();
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw new RuntimeException("Process interrupted", e);
 		}
 	}
@@ -121,54 +115,18 @@ public class StdioServerTransport extends DefaultMcpTransport {
 						System.out.println("Received error line: " + line);
 						// TODO: handle errors, etc.
 						this.getErrorSink().tryEmitNext(line);
-					}
-					catch (Exception e) {
+					} catch (Exception e) {
 						throw new RuntimeException(e);
 					}
 				}
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				if (this.isRunning) {
 					throw new RuntimeException(e);
 				}
-			}
-			finally {
+			} finally {
 				this.isRunning = false;
 			}
 		});
-	}
-
-	private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-	private static TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<HashMap<String, Object>>() {
-
-	};
-
-	public static Map<String, Object> jsonToMap(String json) {
-		try {
-			return OBJECT_MAPPER.readValue(json, MAP_TYPE_REF);
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private JSONRPCMessage deserializeJsonRpcMessage(String jsonText) throws IOException {
-
-		var map = jsonToMap(jsonText);
-
-		// Determine message type based on specific JSON structure
-		if (map.containsKey("method") && map.containsKey("id")) {
-			return OBJECT_MAPPER.convertValue(map, JSONRPCRequest.class);
-		}
-		else if (map.containsKey("method") && !map.containsKey("id")) {
-			return OBJECT_MAPPER.convertValue(map, JSONRPCNotification.class);
-		}
-		else if (map.containsKey("result") || map.containsKey("error")) {
-			return OBJECT_MAPPER.convertValue(map, JSONRPCResponse.class);
-		}
-
-		throw new IllegalArgumentException("Cannot deserialize JSONRPCMessage: " + jsonText);
 	}
 
 	private void startInboundProcessing() {
@@ -182,43 +140,55 @@ public class StdioServerTransport extends DefaultMcpTransport {
 							// TODO: Back off, reschedule, give up?
 							throw new RuntimeException("Failed to enqueue message");
 						}
-					}
-					catch (Exception e) {
+					} catch (Exception e) {
 						throw new RuntimeException(e);
 					}
 				}
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				if (isRunning) {
 					throw new RuntimeException(e);
 				}
-			}
-			finally {
+			} finally {
 				isRunning = false;
 			}
 		});
 	}
 
+	private JSONRPCMessage deserializeJsonRpcMessage(String jsonText) throws IOException {
+
+		var map = this.objectMapper.readValue(jsonText, MAP_TYPE_REF);
+
+		// Determine message type based on specific JSON structure
+		if (map.containsKey("method") && map.containsKey("id")) {
+			return this.objectMapper.convertValue(map, JSONRPCRequest.class);
+		} else if (map.containsKey("method") && !map.containsKey("id")) {
+			return this.objectMapper.convertValue(map, JSONRPCNotification.class);
+		} else if (map.containsKey("result") || map.containsKey("error")) {
+			return this.objectMapper.convertValue(map, JSONRPCResponse.class);
+		}
+
+		throw new IllegalArgumentException("Cannot deserialize JSONRPCMessage: " + jsonText);
+	}
+
 	private void startOutboundProcessing() {
 		this.getOutboundSink()
-		    .asFlux()
-		    // this bit is important since writes come from user threads and we
-		    // want to ensure that the actual writing happens on a dedicated thread
-		    .publishOn(outboundScheduler)
-		    .handle((message, s) -> {
-			    if (message != null) {
-				    try {
-					    this.processWriter.write(OBJECT_MAPPER.writeValueAsString(message));
-					    this.processWriter.newLine();
-					    this.processWriter.flush();
-					    s.next(message);
-				    }
-				    catch (IOException e) {
-					    s.error(new RuntimeException(e));
-				    }
-			    }
-		    })
-		    .subscribe();
+				.asFlux()
+				// this bit is important since writes come from user threads and we
+				// want to ensure that the actual writing happens on a dedicated thread
+				.publishOn(outboundScheduler)
+				.handle((message, s) -> {
+					if (message != null) {
+						try {
+							this.processWriter.write(objectMapper.writeValueAsString(message));
+							this.processWriter.newLine();
+							this.processWriter.flush();
+							s.next(message);
+						} catch (IOException e) {
+							s.error(new RuntimeException(e));
+						}
+					}
+				})
+				.subscribe();
 	}
 
 	// TODO: provide a non-blocking variant with graceful option
@@ -235,24 +205,30 @@ public class StdioServerTransport extends DefaultMcpTransport {
 
 	@Override
 	public void close() {
-		stop();
-		
+
+		this.stop();
+
 		super.close(); // Do we need this?
 
 		// Close resources
 		if (this.processReader != null) {
 			try {
 				this.processReader.close();
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
 		if (this.processWriter != null) {
 			try {
 				this.processWriter.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			catch (IOException e) {
+		}
+		if (this.processErrorReader != null) {
+			try {
+				this.processErrorReader.close();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}

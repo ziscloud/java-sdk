@@ -31,7 +31,7 @@ public interface McpAsyncTransport extends AutoCloseable{
 
 	void close();
 
-    void setMessageHandler(Consumer<JSONRPCMessage> messageReader);
+    void setInboudMessageHandler(Consumer<JSONRPCMessage> messageReader);
 
 	void setErrorHandler(Consumer<String> errorReader);
 

@@ -6,7 +6,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.ai.mcp.client.McpClient;
 import spring.ai.mcp.client.McpSyncClient;
-import spring.ai.mcp.client.stdio.StdioServerParameters;
+import spring.ai.mcp.client.stdio.ServerParameters;
 import spring.ai.mcp.client.stdio.StdioServerTransport;
 
 import org.springframework.ai.chat.client.ChatClient;
@@ -55,15 +55,14 @@ public class McpApplication {
 	@Bean(destroyMethod = "close")
 	public McpSyncClient clientSession() {
 
-		var stdioParams = StdioServerParameters.builder("npx")
+		var stdioParams = ServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-filesystem",
 					"/Users/christiantzolov/Dev/projects/demo/mcp-server/dir")
 			.build();
 
 		McpSyncClient mcpClient = null;
 		try {			
-			mcpClient = McpClient.sync(new StdioServerTransport(stdioParams,
-				Duration.ofMillis(100)),
+			mcpClient = McpClient.sync(new StdioServerTransport(stdioParams),
 					Duration.ofSeconds(10), new ObjectMapper());
 
 			var init = mcpClient.initialize();

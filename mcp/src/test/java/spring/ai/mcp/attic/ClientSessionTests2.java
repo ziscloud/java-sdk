@@ -20,7 +20,7 @@ import java.time.Duration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.ai.mcp.client.McpClient;
 import spring.ai.mcp.client.McpSyncClient;
-import spring.ai.mcp.client.stdio.StdioServerParameters;
+import spring.ai.mcp.client.stdio.ServerParameters;
 import spring.ai.mcp.client.stdio.StdioServerTransport;
 import spring.ai.mcp.spec.McpSchema.ListResourcesResult;
 import spring.ai.mcp.spec.McpSchema.ListToolsResult;
@@ -34,7 +34,7 @@ public class ClientSessionTests2 {
 
 	public static void main(String[] args) {
 
-		var stdioParams = StdioServerParameters.builder("uv")
+		var stdioParams = ServerParameters.builder("uv")
 			.args("--directory", "dir", "run", "mcp-server-sqlite",
 					"--db-path", "~/test.db")
 			.build();

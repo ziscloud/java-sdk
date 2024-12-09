@@ -15,9 +15,9 @@
 */
 package spring.ai.mcp.spec;
 
-import java.time.Duration;
 import java.util.function.Consumer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import spring.ai.mcp.client.util.Assert;
@@ -29,19 +29,24 @@ import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
  */
 public class DefaultMcpTransport implements McpAsyncTransport {
 
+	protected final ObjectMapper objectMapper;
+
 	private final Sinks.Many<String> errorSink;
-
 	private final Sinks.Many<JSONRPCMessage> inboundSink;
-
 	private final Sinks.Many<JSONRPCMessage> outboundSink;
 
-	private final Duration writeTimeout;
+	private Consumer<JSONRPCMessage> inboundMessageHandler = message -> System.out
+			.println("Received message: " + message);
+	private Consumer<String> errorHandler = error -> System.err.println("Received error: " + error);
 
-	private Consumer<JSONRPCMessage> messageReader = message -> System.out.println("Received message: " + message);
+	public DefaultMcpTransport() {		
+		this(new ObjectMapper());
+	}
 
-	private Consumer<String> errorReader = error -> System.err.println("Received error: " + error);
+	public DefaultMcpTransport(ObjectMapper objectMapper) {
 
-	public DefaultMcpTransport(Duration readTimeout) {
+		Assert.notNull(objectMapper, "ObjectMapper must not be null");
+		this.objectMapper = objectMapper;
 
 		// TODO: consider the effects of buffering here -> the inter-process pipes are
 		// independent and the notifications can flood the client/server.
@@ -52,19 +57,22 @@ public class DefaultMcpTransport implements McpAsyncTransport {
 		this.errorSink = Sinks.many().unicast().onBackpressureBuffer();
 		this.inboundSink = Sinks.many().unicast().onBackpressureBuffer();
 		this.outboundSink = Sinks.many().unicast().onBackpressureBuffer();
-		this.writeTimeout = readTimeout;
 
 		this.handleIncomingMessages();
 	}
 
+	public ObjectMapper getObjectMapper() {
+		return this.objectMapper;
+	}
+
 	private void handleIncomingMessages() {
 		this.inboundSink.asFlux()
-				.subscribe(message -> this.messageReader.accept(message));
+				.subscribe(message -> this.inboundMessageHandler.accept(message));
 	}
 
 	private void handleIncomingErrors() {
 		this.errorSink.asFlux().subscribe(e -> {
-			this.errorReader.accept(e);
+			this.errorHandler.accept(e);
 			System.err.println(e);
 		});
 	}
@@ -81,12 +89,12 @@ public class DefaultMcpTransport implements McpAsyncTransport {
 		return errorSink;
 	}
 
-	public void setMessageHandler(Consumer<JSONRPCMessage> messageReader) {
-		this.messageReader = messageReader;
+	public void setInboudMessageHandler(Consumer<JSONRPCMessage> inboundMessageHandler) {
+		this.inboundMessageHandler = inboundMessageHandler;
 	}
 
-	public void setErrorHandler(Consumer<String> errorReader) {
-		this.errorReader = errorReader;
+	public void setErrorHandler(Consumer<String> errorHandler) {
+		this.errorHandler = errorHandler;
 	}
 
 	// Start processing incoming messages

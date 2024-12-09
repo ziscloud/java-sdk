@@ -16,6 +16,7 @@
 package spring.ai.mcp;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
@@ -28,14 +29,16 @@ import static org.assertj.core.api.Assertions.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import spring.ai.mcp.client.McpClient;
 import spring.ai.mcp.client.McpSyncClient;
-import spring.ai.mcp.client.stdio.StdioServerParameters;
+import spring.ai.mcp.client.stdio.ServerParameters;
 import spring.ai.mcp.client.stdio.StdioServerTransport;
 import spring.ai.mcp.spec.McpSchema.CallToolRequest;
 import spring.ai.mcp.spec.McpSchema.CallToolResult;
+import spring.ai.mcp.spec.McpSchema.Content;
 import spring.ai.mcp.spec.McpSchema.ListResourcesResult;
 import spring.ai.mcp.spec.McpSchema.ListToolsResult;
 import spring.ai.mcp.spec.McpSchema.Tool;
 import spring.ai.mcp.spec.McpSchema.Resource;
+import spring.ai.mcp.spec.McpSchema.TextContent;
 
 /**
  * Unit tests for MCP Client Session functionality.
@@ -47,7 +50,7 @@ class McpSyncClientTests {
 
 	private McpSyncClient mcpSyncClient;
 
-	private StdioServerParameters stdioParams;
+	private ServerParameters stdioParams;
 
 	private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
@@ -55,7 +58,7 @@ class McpSyncClientTests {
 
 	@BeforeEach
 	void setUp() {
-		stdioParams = StdioServerParameters.builder("npx")
+		stdioParams = ServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-everything", "dir")
 			.build();
 
@@ -95,6 +98,25 @@ class McpSyncClientTests {
 			Tool firstTool = result.tools().get(0);
 			assertThat(firstTool.name()).isNotNull();
 			assertThat(firstTool.description()).isNotNull();
+		});
+	}
+
+	@Test
+	@Timeout(15) // Giving extra time beyond the client timeout
+	void testCallTools() {
+		CallToolResult toolResult = mcpSyncClient.callTool(new CallToolRequest("add", Map.of("a", 3, "b", 4)));
+
+		assertThat(toolResult).isNotNull().satisfies(result -> {
+			
+			assertThat(result.content()).hasSize(1);
+
+			TextContent content = (TextContent) result.content().get(0);
+
+			assertThat(content).isNotNull();
+			assertThat(content.text()).isNotNull();
+			assertThat(content.text()).contains("7");
+
+			System.out.println(content);
 		});
 	}
 

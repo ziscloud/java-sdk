@@ -17,7 +17,6 @@ package spring.ai.mcp.spec;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import spring.ai.mcp.client.util.Assert;
 import spring.ai.mcp.spec.McpSchema.JSONRPCNotification;
 import spring.ai.mcp.spec.McpSchema.JSONRPCRequest;
 import spring.ai.mcp.spec.McpSchema.JSONRPCResponse;
@@ -41,9 +41,9 @@ public class McpSession implements AutoCloseable {
 
 	public McpSession(McpTransport transport, Duration readTimeout, ObjectMapper objectMapper) {
 
-		Objects.nonNull(transport);
-		Objects.nonNull(readTimeout);
-		Objects.nonNull(objectMapper);
+		Assert.notNull(transport, "The transport can not be null");
+		Assert.notNull(readTimeout, "The readTimeout can not be null");
+		Assert.notNull(objectMapper, "The objectMapper can not be null");
 
 		this.waitingForResponseStreams = new ConcurrentHashMap<>();
 
@@ -55,15 +55,13 @@ public class McpSession implements AutoCloseable {
 		this.transport.setMessageHandler(message -> {
 			if (message instanceof JSONRPCResponse jsonRpcResponse) {
 				CompletableFuture<JSONRPCResponse> responseFuture = this.waitingForResponseStreams
-					.remove(jsonRpcResponse.id());
+						.remove(jsonRpcResponse.id());
 				if (responseFuture != null) {
 					responseFuture.complete(jsonRpcResponse);
 				}
-			}
-			else if (message instanceof JSONRPCRequest jsonRpcRequest) {
+			} else if (message instanceof JSONRPCRequest jsonRpcRequest) {
 				handleRequest(new RequestResponder<>(jsonRpcRequest.id(), jsonRpcRequest));
-			}
-			else if (message instanceof JSONRPCNotification jsonRpcNotification) {
+			} else if (message instanceof JSONRPCNotification jsonRpcNotification) {
 				handleNotification(jsonRpcNotification);
 			}
 		});
@@ -85,19 +83,18 @@ public class McpSession implements AutoCloseable {
 
 		try {
 			this.transport.sendMessage(jsonrpcRequest);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			return CompletableFuture.failedFuture(new McpError(e));
 		}
 
 		return responseFuture.orTimeout(this.readTimeout.toMillis(), TimeUnit.MILLISECONDS)
-			.thenApply(jsonRpcResponse -> {
-				if (jsonRpcResponse.error() != null) {
-					throw new McpError(jsonRpcResponse.error());
-				}
+				.thenApply(jsonRpcResponse -> {
+					if (jsonRpcResponse.error() != null) {
+						throw new McpError(jsonRpcResponse.error());
+					}
 
-				return this.objectMapper.convertValue(jsonRpcResponse.result(), typeRef);
-			});
+					return this.objectMapper.convertValue(jsonRpcResponse.result(), typeRef);
+				});
 	}
 
 	public CompletableFuture<Void> sendNotification(String method) {
@@ -108,8 +105,7 @@ public class McpSession implements AutoCloseable {
 		JSONRPCNotification jsonrpcNotification = new JSONRPCNotification(McpSchema.JSONRPC_VERSION, method, params);
 		try {
 			this.transport.sendMessage(jsonrpcNotification);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			return CompletableFuture.failedFuture(new McpError(e));
 		}
 		return CompletableFuture.completedFuture(null);

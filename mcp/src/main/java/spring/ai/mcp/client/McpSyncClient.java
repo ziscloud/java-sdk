@@ -1,8 +1,8 @@
 package spring.ai.mcp.client;
 
 import java.time.Duration;
-import java.util.Objects;
 
+import spring.ai.mcp.client.util.Assert;
 import spring.ai.mcp.spec.McpSchema;
 
 public class McpSyncClient implements AutoCloseable {
@@ -15,7 +15,7 @@ public class McpSyncClient implements AutoCloseable {
 	McpAsyncClient delegate;
 
 	public McpSyncClient(McpAsyncClient delegate) {
-		Objects.nonNull(delegate);
+		Assert.notNull(delegate, "The delegate can not be null");
 		this.delegate = delegate;
 	}
 

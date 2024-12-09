@@ -29,6 +29,7 @@
 	</properties>
 	<modules>
 		<module>mcp</module>
+		<module>spring</module>
 	</modules>
 
 	<repositories>

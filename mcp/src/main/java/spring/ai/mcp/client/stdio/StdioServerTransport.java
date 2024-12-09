@@ -5,19 +5,22 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.Executors;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import spring.ai.mcp.client.util.Assert;
 import spring.ai.mcp.spec.DefaultMcpTransport;
 import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
 import spring.ai.mcp.spec.McpSchema.JSONRPCNotification;
 import spring.ai.mcp.spec.McpSchema.JSONRPCRequest;
 import spring.ai.mcp.spec.McpSchema.JSONRPCResponse;
-
-import org.springframework.ai.model.ModelOptionsUtils;
-import org.springframework.util.Assert;
 
 /**
  * Stdio client for communicating with a server process.
@@ -47,7 +50,7 @@ public class StdioServerTransport extends DefaultMcpTransport {
 	public StdioServerTransport(StdioServerParameters params, Duration writeTimeout) {
 		super(writeTimeout);
 
-		Assert.notNull(params, "Server parameters must not be null");
+		Assert.notNull(params, "The params can not be null");
 
 		this.params = params;
 
@@ -135,19 +138,34 @@ public class StdioServerTransport extends DefaultMcpTransport {
 		});
 	}
 
+	private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+	private static TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<HashMap<String, Object>>() {
+
+	};
+
+	public static Map<String, Object> jsonToMap(String json) {
+		try {
+			return OBJECT_MAPPER.readValue(json, MAP_TYPE_REF);
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private JSONRPCMessage deserializeJsonRpcMessage(String jsonText) throws IOException {
 
-		var map = ModelOptionsUtils.jsonToMap(jsonText);
+		var map = jsonToMap(jsonText);
 
 		// Determine message type based on specific JSON structure
 		if (map.containsKey("method") && map.containsKey("id")) {
-			return ModelOptionsUtils.OBJECT_MAPPER.convertValue(map, JSONRPCRequest.class);
+			return OBJECT_MAPPER.convertValue(map, JSONRPCRequest.class);
 		}
 		else if (map.containsKey("method") && !map.containsKey("id")) {
-			return ModelOptionsUtils.OBJECT_MAPPER.convertValue(map, JSONRPCNotification.class);
+			return OBJECT_MAPPER.convertValue(map, JSONRPCNotification.class);
 		}
 		else if (map.containsKey("result") || map.containsKey("error")) {
-			return ModelOptionsUtils.OBJECT_MAPPER.convertValue(map, JSONRPCResponse.class);
+			return OBJECT_MAPPER.convertValue(map, JSONRPCResponse.class);
 		}
 
 		throw new IllegalArgumentException("Cannot deserialize JSONRPCMessage: " + jsonText);
@@ -190,7 +208,7 @@ public class StdioServerTransport extends DefaultMcpTransport {
 		    .handle((message, s) -> {
 			    if (message != null) {
 				    try {
-					    this.processWriter.write(ModelOptionsUtils.toJsonString(message));
+					    this.processWriter.write(OBJECT_MAPPER.writeValueAsString(message));
 					    this.processWriter.newLine();
 					    this.processWriter.flush();
 					    s.next(message);

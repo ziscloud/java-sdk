@@ -5,12 +5,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import org.springframework.util.CollectionUtils;
+import spring.ai.mcp.client.util.Assert;
 
 /**
  * Server parameters for stdio client.
@@ -19,11 +17,11 @@ public class StdioServerParameters {
 
 	// Environment variables to inherit by default
 	private static final List<String> DEFAULT_INHERITED_ENV_VARS = System.getProperty("os.name")
-		.toLowerCase()
-		.contains("win")
-				? Arrays.asList("APPDATA", "HOMEDRIVE", "HOMEPATH", "LOCALAPPDATA", "PATH",
-						"PROCESSOR_ARCHITECTURE", "SYSTEMDRIVE", "SYSTEMROOT", "TEMP", "USERNAME", "USERPROFILE")
-				: Arrays.asList("HOME", "LOGNAME", "PATH", "SHELL", "TERM", "USER");
+			.toLowerCase()
+			.contains("win")
+					? Arrays.asList("APPDATA", "HOMEDRIVE", "HOMEPATH", "LOCALAPPDATA", "PATH",
+							"PROCESSOR_ARCHITECTURE", "SYSTEMDRIVE", "SYSTEMROOT", "TEMP", "USERNAME", "USERPROFILE")
+					: Arrays.asList("HOME", "LOGNAME", "PATH", "SHELL", "TERM", "USER");
 
 	@JsonProperty("command")
 	private String command;
@@ -35,13 +33,13 @@ public class StdioServerParameters {
 	private Map<String, String> env;
 
 	private StdioServerParameters(String command, List<String> args, Map<String, String> env) {
-		Objects.nonNull(command);
-		Objects.nonNull(args);
+		Assert.notNull(command, "The command can not be null");
+		Assert.notNull(args, "The args can not be null");
 
 		this.command = command;
 		this.args = args;
 		this.env = new HashMap<>(getDefaultEnvironment());
-		if (!CollectionUtils.isEmpty(env)) {
+		if (env != null && !env.isEmpty()) {
 			this.env.putAll(env);
 		}
 	}
@@ -71,38 +69,38 @@ public class StdioServerParameters {
 		private Map<String, String> env = new HashMap<>();
 
 		public Builder(String command) {
-			Objects.no.hasText(command, "Command must not be empty");
+			Assert.notNull(command, "The command can not be null");
 			this.command = command;
 		}
 
 		public Builder args(String... args) {
-			Assert.notNull(args, "Arguments must not be null");
+			Assert.notNull(args, "The args can not be null");
 			this.args = Arrays.asList(args);
 			return this;
 		}
 
 		public Builder args(List<String> args) {
-			Assert.notNull(args, "Arguments must not be null");
+			Assert.notNull(args, "The args can not be null");
 			this.args = new ArrayList<>(args);
 			return this;
 		}
 
 		public Builder arg(String arg) {
-			Assert.hasText(arg, "Argument must not be empty");
+			Assert.notNull(arg, "The arg can not be null");
 			this.args.add(arg);
 			return this;
 		}
 
 		public Builder env(Map<String, String> env) {
-			if (!CollectionUtils.isEmpty(env)) {
+			if (env != null && !env.isEmpty()) {
 				this.env.putAll(env);
 			}
 			return this;
 		}
 
 		public Builder addEnvVar(String key, String value) {
-			Assert.hasText(key, "Environment variable key must not be empty");
-			Assert.notNull(value, "Environment variable value must not be null");
+			Assert.notNull(key, "The key can not be null");
+			Assert.notNull(value, "The value can not be null");
 			this.env.put(key, value);
 			return this;
 		}
@@ -119,12 +117,12 @@ public class StdioServerParameters {
 	 */
 	private static Map<String, String> getDefaultEnvironment() {
 		return System.getenv()
-			.entrySet()
-			.stream()
-			.filter(entry -> DEFAULT_INHERITED_ENV_VARS.contains(entry.getKey()))
-			.filter(entry -> entry.getValue() != null)
-			.filter(entry -> !entry.getValue().startsWith("()"))
-			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+				.entrySet()
+				.stream()
+				.filter(entry -> DEFAULT_INHERITED_ENV_VARS.contains(entry.getKey()))
+				.filter(entry -> entry.getValue() != null)
+				.filter(entry -> !entry.getValue().startsWith("()"))
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 }

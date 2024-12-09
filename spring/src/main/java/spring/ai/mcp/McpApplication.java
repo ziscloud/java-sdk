@@ -31,6 +31,7 @@ public class McpApplication {
 				.build();
 
 			var response = chatClient.prompt("What is the content of the test.txt file?").call().content();
+
 			System.out.println(response);
 
 			response = chatClient.prompt(
@@ -56,7 +57,7 @@ public class McpApplication {
 
 		var stdioParams = StdioServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-filesystem",
-					"dir")
+					"/Users/christiantzolov/Dev/projects/demo/mcp-server/dir")
 			.build();
 
 		McpSyncClient mcpClient = null;

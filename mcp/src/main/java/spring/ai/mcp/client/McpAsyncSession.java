@@ -2,7 +2,6 @@ package spring.ai.mcp.client;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,6 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
+import spring.ai.mcp.client.util.Assert;
 import spring.ai.mcp.spec.McpAsyncTransport;
 import spring.ai.mcp.spec.McpSchema;
 
@@ -25,9 +25,9 @@ public class McpAsyncSession {
 
 	public McpAsyncSession(Duration requestTimeout, ObjectMapper objectMapper, McpAsyncTransport transport) {
 
-		Objects.nonNull(requestTimeout);
-		Objects.nonNull(objectMapper);
-		Objects.nonNull(transport);
+		Assert.notNull(objectMapper, "The ObjectMapper can not be null");
+		Assert.notNull(requestTimeout, "The requstTimeout can not be null");
+		Assert.notNull(transport, "The transport can not be null");
 
 		this.requestTimeout = requestTimeout;
 		this.objectMapper = objectMapper;
@@ -39,8 +39,7 @@ public class McpAsyncSession {
 					var sink = pendingResponses.remove(response.id());
 					if (sink == null) {
 						System.out.println("Unexpected response for unkown id " + response.id());
-					}
-					else {
+					} else {
 						sink.success(response);
 					}
 				}
@@ -69,26 +68,23 @@ public class McpAsyncSession {
 				// TODO: This is non-blocking, but it's actually a synchronous call,
 				// perhaps there's no need to make it return Mono?
 				this.transport.sendMessage(jsonrpcRequest)
-					// TODO: It's most efficient to create a dedicated
-					// Subscriber here
-					.subscribe(v -> {
-					}, e -> {
-						this.pendingResponses.remove(requestId);
-						sink.error(e);
-					});
-			}
-			catch (Exception e) {
+						// TODO: It's most efficient to create a dedicated
+						// Subscriber here
+						.subscribe(v -> {
+						}, e -> {
+							this.pendingResponses.remove(requestId);
+							sink.error(e);
+						});
+			} catch (Exception e) {
 				sink.error(e);
 			}
 		}).timeout(this.requestTimeout).handle((jsonRpcResponse, s) -> {
 			if (jsonRpcResponse.error() != null) {
 				s.error(new McpError(jsonRpcResponse.error()));
-			}
-			else {
+			} else {
 				if (typeRef.getType().getTypeName().equals("java.lang.Void")) {
 					s.complete();
-				}
-				else {
+				} else {
 					s.next(this.objectMapper.convertValue(jsonRpcResponse.result(), typeRef));
 				}
 			}
@@ -113,8 +109,7 @@ public class McpAsyncSession {
 		try {
 			// TODO: make it non-blocking
 			this.transport.sendMessage(jsonrpcNotification);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			return Mono.error(new McpError(e));
 		}
 		return Mono.empty();

@@ -14,7 +14,7 @@ public class McpAsyncClient extends McpAsyncSession {
 		this(transport, Duration.ofSeconds(10), new ObjectMapper());
 	}
 
-	public McpAsyncClient(McpAsyncTransport transport, Duration requestTimeout, ObjectMapper objectMapper) {
+	public McpAsyncClient(McpAsyncTransport transport, Duration requestTimeout, ObjectMapper objectMapper) {		
 		super(requestTimeout, objectMapper, transport);
 	}
 

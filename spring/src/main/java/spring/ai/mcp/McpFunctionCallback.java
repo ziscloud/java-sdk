@@ -17,7 +17,6 @@ package spring.ai.mcp;
 
 import java.util.Map;
 
-import spring.ai.mcp.client.McpClient;
 import spring.ai.mcp.client.McpSyncClient;
 import spring.ai.mcp.spec.McpSchema.CallToolRequest;
 import spring.ai.mcp.spec.McpSchema.CallToolResult;

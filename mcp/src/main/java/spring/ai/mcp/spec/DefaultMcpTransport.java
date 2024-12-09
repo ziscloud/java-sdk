@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+import spring.ai.mcp.client.util.Assert;
 import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
 
 /**
@@ -43,22 +44,22 @@ public class DefaultMcpTransport implements McpAsyncTransport {
 	public DefaultMcpTransport(Duration readTimeout) {
 
 		// TODO: consider the effects of buffering here -> the inter-process pipes are
-		//  independent and the notifications can flood the client/server.
-		//  Potentially, the interest in reading could be communicated from one party
-		//  to the other so the Blocking IO Threads can pause consuming the stream
-		//  buffers when there is no expectation for reading.
+		// independent and the notifications can flood the client/server.
+		// Potentially, the interest in reading could be communicated from one party
+		// to the other so the Blocking IO Threads can pause consuming the stream
+		// buffers when there is no expectation for reading.
 
 		this.errorSink = Sinks.many().unicast().onBackpressureBuffer();
 		this.inboundSink = Sinks.many().unicast().onBackpressureBuffer();
 		this.outboundSink = Sinks.many().unicast().onBackpressureBuffer();
-        this.writeTimeout = readTimeout;
+		this.writeTimeout = readTimeout;
 
 		this.handleIncomingMessages();
 	}
 
 	private void handleIncomingMessages() {
 		this.inboundSink.asFlux()
-		                .subscribe(message -> this.messageReader.accept(message));
+				.subscribe(message -> this.messageReader.accept(message));
 	}
 
 	private void handleIncomingErrors() {
@@ -104,10 +105,10 @@ public class DefaultMcpTransport implements McpAsyncTransport {
 	public Mono<Void> sendMessage(JSONRPCMessage message) {
 		if (this.outboundSink.tryEmitNext(message).isSuccess()) {
 			// TODO: essentially we could reschedule ourselves in some time and make
-			//  another attempt with the already read data but pause reading until
-			//  success
-			//  In this approach we delegate the retry and the backpressure onto the 
-			//  caller. This might be enough for most cases.
+			// another attempt with the already read data but pause reading until
+			// success
+			// In this approach we delegate the retry and the backpressure onto the
+			// caller. This might be enough for most cases.
 			return Mono.empty();
 		} else {
 			return Mono.error(new RuntimeException("Failed to enqueue message"));

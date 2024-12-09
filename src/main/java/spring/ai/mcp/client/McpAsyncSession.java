@@ -80,7 +80,12 @@ public class McpAsyncSession {
 					   if (jsonRpcResponse.error() != null) {
 						   s.error(new McpError(jsonRpcResponse.error()));
 					   } else {
-						   s.next(this.objectMapper.convertValue(jsonRpcResponse.result(), typeRef));
+						   if (typeRef.getType().getTypeName().equals("java.lang.Void")) {
+							   s.complete();
+						   } else {
+							   s.next(this.objectMapper.convertValue(jsonRpcResponse.result(),
+									   typeRef));
+						   }
 					   }
 		           });
 	}

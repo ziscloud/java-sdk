@@ -127,7 +127,7 @@ class McpSyncClientTests {
             .isNotNull()
             .satisfies(result -> {
                 assertThat(result.content()).isNotNull();
-                assertThat(result.isError()).isFalse();
+                assertThat(result.isError()).isNull();
             });
     }
 

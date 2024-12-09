@@ -4,6 +4,8 @@ import java.time.Duration;
 
 import spring.ai.mcp.spec.McpSchema;
 
+import org.springframework.util.Assert;
+
 public class McpSyncClient implements AutoCloseable {
 
 	// TODO: Consider providing a client config to set this properly
@@ -14,6 +16,7 @@ public class McpSyncClient implements AutoCloseable {
 	McpAsyncClient delegate;
 
 	public McpSyncClient(McpAsyncClient delegate) {
+		Assert.notNull(delegate, "McpAsyncClient must not be null");
 		this.delegate = delegate;
 	}
 

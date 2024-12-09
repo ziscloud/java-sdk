@@ -11,12 +11,14 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import spring.ai.mcp.spec.McpAsyncTransport;
 import spring.ai.mcp.spec.McpTransport;
+
+import org.springframework.util.Assert;
+
 import spring.ai.mcp.spec.McpSchema;
 
 public class McpAsyncSession {
 
-	private final ConcurrentHashMap<Object, MonoSink<McpSchema.JSONRPCResponse>> pendingResponses
-			= new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Object, MonoSink<McpSchema.JSONRPCResponse>> pendingResponses = new ConcurrentHashMap<>();
 
 	private final Duration requestTimeout;
 
@@ -24,9 +26,12 @@ public class McpAsyncSession {
 
 	private final McpAsyncTransport transport;
 
-	public McpAsyncSession(Duration requestTimeout,
-			ObjectMapper objectMapper,
-			McpAsyncTransport transport) {
+	public McpAsyncSession(Duration requestTimeout, ObjectMapper objectMapper, McpAsyncTransport transport) {
+
+		Assert.notNull(requestTimeout, "Request timeout must not be null");
+		Assert.notNull(objectMapper, "ObjectMapper must not be null");
+		Assert.notNull(transport, "Transport must not be null");
+
 		this.requestTimeout = requestTimeout;
 		this.objectMapper = objectMapper;
 		this.transport = transport;
@@ -37,7 +42,8 @@ public class McpAsyncSession {
 					var sink = pendingResponses.remove(response.id());
 					if (sink == null) {
 						System.out.println("Unexpected response for unkown id " + response.id());
-					} else {
+					}
+					else {
 						sink.success(response);
 					}
 				}
@@ -60,34 +66,36 @@ public class McpAsyncSession {
 
 		return Mono.<McpSchema.JSONRPCResponse>create(sink -> {
 			this.pendingResponses.put(requestId, sink);
-			McpSchema.JSONRPCRequest jsonrpcRequest = new McpSchema.JSONRPCRequest(McpSchema.JSONRPC_VERSION, method, requestId, requestParams);
+			McpSchema.JSONRPCRequest jsonrpcRequest = new McpSchema.JSONRPCRequest(McpSchema.JSONRPC_VERSION, method,
+					requestId, requestParams);
 			try {
 				// TODO: This is non-blocking, but it's actually a synchronous call,
 				// perhaps there's no need to make it return Mono?
 				this.transport.sendMessage(jsonrpcRequest)
-				              // TODO: It's most efficient to create a dedicated
-				              //  Subscriber here
-				              .subscribe(v -> {}, e -> {
-								  this.pendingResponses.remove(requestId);
-								  sink.error(e);
-				              });
-			} catch (Exception e) {
+					// TODO: It's most efficient to create a dedicated
+					// Subscriber here
+					.subscribe(v -> {
+					}, e -> {
+						this.pendingResponses.remove(requestId);
+						sink.error(e);
+					});
+			}
+			catch (Exception e) {
 				sink.error(e);
 			}
-		})
-		           .timeout(this.requestTimeout)
-		           .handle((jsonRpcResponse, s) -> {
-					   if (jsonRpcResponse.error() != null) {
-						   s.error(new McpError(jsonRpcResponse.error()));
-					   } else {
-						   if (typeRef.getType().getTypeName().equals("java.lang.Void")) {
-							   s.complete();
-						   } else {
-							   s.next(this.objectMapper.convertValue(jsonRpcResponse.result(),
-									   typeRef));
-						   }
-					   }
-		           });
+		}).timeout(this.requestTimeout).handle((jsonRpcResponse, s) -> {
+			if (jsonRpcResponse.error() != null) {
+				s.error(new McpError(jsonRpcResponse.error()));
+			}
+			else {
+				if (typeRef.getType().getTypeName().equals("java.lang.Void")) {
+					s.complete();
+				}
+				else {
+					s.next(this.objectMapper.convertValue(jsonRpcResponse.result(), typeRef));
+				}
+			}
+		});
 	}
 
 	public static class McpError extends RuntimeException {
@@ -95,6 +103,7 @@ public class McpAsyncSession {
 		public McpError(Object error) {
 			super(error.toString());
 		}
+
 	}
 
 	public Mono<Void> sendNotification(String method) {
@@ -102,8 +111,8 @@ public class McpAsyncSession {
 	}
 
 	public Mono<Void> sendNotification(String method, Map<String, Object> params) {
-		McpSchema.JSONRPCNotification
-				jsonrpcNotification = new McpSchema.JSONRPCNotification(McpSchema.JSONRPC_VERSION, method, params);
+		McpSchema.JSONRPCNotification jsonrpcNotification = new McpSchema.JSONRPCNotification(McpSchema.JSONRPC_VERSION,
+				method, params);
 		try {
 			// TODO: make it non-blocking
 			this.transport.sendMessage(jsonrpcNotification);
@@ -118,4 +127,5 @@ public class McpAsyncSession {
 		// TODO handle the timeout in transport
 		return Mono.fromRunnable(this.transport::close);
 	}
+
 }

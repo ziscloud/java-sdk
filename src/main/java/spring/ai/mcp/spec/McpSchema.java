@@ -18,6 +18,7 @@ package spring.ai.mcp.spec;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -213,6 +214,7 @@ public class McpSchema {
 	 * @param mimeType The MIME type of this resource, if known.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record Resource( // @formatter:off
 		@JsonProperty("uri") String uri,
 		@JsonProperty("name") String name,

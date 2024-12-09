@@ -57,7 +57,7 @@ public class McpAsyncClient extends McpAsyncSession {
 				this.sendRequest("initialize", initializeRequest, new TypeReference<McpSchema.InitializeResult>() {});
 
 		return result.flatMap(initializeResult -> {
-			if (initializeResult.protocolVersion() != McpSchema.LATEST_PROTOCOL_VERSION) {
+			if (!McpSchema.LATEST_PROTOCOL_VERSION.equals(initializeResult.protocolVersion())) {
 				return Mono.error(
 						new McpError("Unsupported protocol version from the server: "
 								+ initializeResult.protocolVersion()));

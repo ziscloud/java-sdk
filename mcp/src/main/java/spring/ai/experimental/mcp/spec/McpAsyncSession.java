@@ -1,4 +1,4 @@
-package spring.ai.mcp.spec;
+package spring.ai.experimental.mcp.spec;
 
 import java.time.Duration;
 import java.util.Map;
@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
-import spring.ai.mcp.client.util.Assert;
+import spring.ai.experimental.mcp.client.util.Assert;
 
 public class McpAsyncSession {
 

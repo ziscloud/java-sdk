@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package spring.ai.mcp.spec;
+package spring.ai.experimental.mcp.spec;
 
 import java.util.List;
 import java.util.Map;

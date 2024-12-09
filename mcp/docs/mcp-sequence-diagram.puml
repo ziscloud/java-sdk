@@ -1,0 +1,105 @@
+@startuml MCP Sequence Diagram
+
+participant McpClient
+participant McpSyncClient
+participant McpAsyncClient
+participant DefaultMcpTransport
+participant StdioServerTransport
+
+== Initialization ==
+
+McpClient -> McpSyncClient: new McpSyncClient(transport)
+activate McpSyncClient
+
+McpSyncClient -> McpAsyncClient: new McpAsyncClient(transport)
+activate McpAsyncClient
+
+McpAsyncClient -> DefaultMcpTransport: start()
+activate DefaultMcpTransport
+DefaultMcpTransport --> McpAsyncClient: started
+deactivate DefaultMcpTransport
+
+McpAsyncClient --> McpSyncClient: created
+deactivate McpAsyncClient
+
+McpSyncClient --> McpClient: created
+deactivate McpSyncClient
+
+== Message Flow ==
+
+McpClient -> McpSyncClient: initialize()
+activate McpSyncClient
+
+McpSyncClient -> McpAsyncClient: initialize()
+activate McpAsyncClient
+
+McpAsyncClient -> DefaultMcpTransport: sendMessage(initRequest)
+activate DefaultMcpTransport
+
+DefaultMcpTransport -> StdioServerTransport: sendMessage(initRequest)
+activate StdioServerTransport
+
+StdioServerTransport --> DefaultMcpTransport: response
+deactivate StdioServerTransport
+
+DefaultMcpTransport --> McpAsyncClient: InitializeResult
+deactivate DefaultMcpTransport
+
+McpAsyncClient --> McpSyncClient: InitializeResult
+deactivate McpAsyncClient
+
+McpSyncClient --> McpClient: InitializeResult
+deactivate McpSyncClient
+
+== Tool Execution ==
+
+McpClient -> McpSyncClient: callTool(name, args)
+activate McpSyncClient
+
+McpSyncClient -> McpAsyncClient: callTool(name, args)
+activate McpAsyncClient
+
+McpAsyncClient -> DefaultMcpTransport: sendMessage(toolRequest)
+activate DefaultMcpTransport
+
+DefaultMcpTransport -> StdioServerTransport: sendMessage(toolRequest)
+activate StdioServerTransport
+
+StdioServerTransport --> DefaultMcpTransport: response
+deactivate StdioServerTransport
+
+DefaultMcpTransport --> McpAsyncClient: CallToolResult
+deactivate DefaultMcpTransport
+
+McpAsyncClient --> McpSyncClient: CallToolResult
+deactivate McpAsyncClient
+
+McpSyncClient --> McpClient: CallToolResult
+deactivate McpSyncClient
+
+== Cleanup ==
+
+McpClient -> McpSyncClient: close()
+activate McpSyncClient
+
+McpSyncClient -> McpAsyncClient: close()
+activate McpAsyncClient
+
+McpAsyncClient -> DefaultMcpTransport: close()
+activate DefaultMcpTransport
+
+DefaultMcpTransport -> StdioServerTransport: close()
+activate StdioServerTransport
+StdioServerTransport --> DefaultMcpTransport: closed
+deactivate StdioServerTransport
+
+DefaultMcpTransport --> McpAsyncClient: closed
+deactivate DefaultMcpTransport
+
+McpAsyncClient --> McpSyncClient: closed
+deactivate McpAsyncClient
+
+McpSyncClient --> McpClient: closed
+deactivate McpSyncClient
+
+@enduml

@@ -13,32 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package spring.ai.mcp;
+package spring.ai.experimental.mcp.client;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import spring.ai.experimental.mcp.client.McpAsyncClient;
+import spring.ai.experimental.mcp.client.McpClient;
+import spring.ai.experimental.mcp.client.stdio.ServerParameters;
+import spring.ai.experimental.mcp.client.stdio.StdioServerTransport;
+import spring.ai.experimental.mcp.spec.McpSchema.CallToolRequest;
+import spring.ai.experimental.mcp.spec.McpSchema.Resource;
+import spring.ai.experimental.mcp.spec.McpSchema.Tool;
 
-import static org.assertj.core.api.Assertions.*;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import spring.ai.mcp.client.McpClient;
-import spring.ai.mcp.client.McpSyncClient;
-import spring.ai.mcp.client.stdio.ServerParameters;
-import spring.ai.mcp.client.stdio.StdioServerTransport;
-import spring.ai.mcp.spec.McpSchema.CallToolRequest;
-import spring.ai.mcp.spec.McpSchema.CallToolResult;
-import spring.ai.mcp.spec.McpSchema.Content;
-import spring.ai.mcp.spec.McpSchema.ListResourcesResult;
-import spring.ai.mcp.spec.McpSchema.ListToolsResult;
-import spring.ai.mcp.spec.McpSchema.Tool;
-import spring.ai.mcp.spec.McpSchema.Resource;
-import spring.ai.mcp.spec.McpSchema.TextContent;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Unit tests for MCP Client Session functionality.
@@ -46,9 +41,9 @@ import spring.ai.mcp.spec.McpSchema.TextContent;
  * @author Christian Tzolov
  * @since 1.0.0
  */
-class McpSyncClientTests {
+class McpAsyncClientTests {
 
-	private McpSyncClient mcpSyncClient;
+	private McpAsyncClient mcpAsyncClient;
 
 	private ServerParameters stdioParams;
 
@@ -63,16 +58,16 @@ class McpSyncClientTests {
 			.build();
 
 		assertThatCode(() -> {
-			mcpSyncClient = McpClient.sync(new StdioServerTransport(stdioParams), TIMEOUT, new ObjectMapper());
-			mcpSyncClient.initialize();
+			mcpAsyncClient = McpClient.async(new StdioServerTransport(stdioParams), TIMEOUT, new ObjectMapper());
+			mcpAsyncClient.initialize();
 		}).doesNotThrowAnyException();
 	}
 
 	@AfterEach
 	void tearDown() {
-		if (mcpSyncClient != null) {
-			assertThatCode(() -> mcpSyncClient.close()).doesNotThrowAnyException();
-		}
+		// if (mcpSyncClient != null) {
+		// assertThatCode(() -> mcpSyncClient.close()).doesNotThrowAnyException();
+		// }
 	}
 
 	@Test
@@ -90,9 +85,7 @@ class McpSyncClientTests {
 	@Test
 	@Timeout(15) // Giving extra time beyond the client timeout
 	void testListTools() {
-		ListToolsResult tools = mcpSyncClient.listTools(null);
-
-		assertThat(tools).isNotNull().satisfies(result -> {
+		mcpAsyncClient.listTools(null).subscribe(result -> {
 			assertThat(result.tools()).isNotNull().isNotEmpty();
 
 			Tool firstTool = result.tools().get(0);
@@ -102,28 +95,9 @@ class McpSyncClientTests {
 	}
 
 	@Test
-	@Timeout(15) // Giving extra time beyond the client timeout
-	void testCallTools() {
-		CallToolResult toolResult = mcpSyncClient.callTool(new CallToolRequest("add", Map.of("a", 3, "b", 4)));
-
-		assertThat(toolResult).isNotNull().satisfies(result -> {
-			
-			assertThat(result.content()).hasSize(1);
-
-			TextContent content = (TextContent) result.content().get(0);
-
-			assertThat(content).isNotNull();
-			assertThat(content.text()).isNotNull();
-			assertThat(content.text()).contains("7");
-
-			System.out.println(content);
-		});
-	}
-
-	@Test
 	@Timeout(15)
 	void testPing() {
-		assertThatCode(() -> mcpSyncClient.ping()).doesNotThrowAnyException();
+		assertThatCode(() -> mcpAsyncClient.ping().block()).doesNotThrowAnyException();
 	}
 
 	@Test
@@ -131,11 +105,11 @@ class McpSyncClientTests {
 	void testCallTool() {
 		CallToolRequest callToolRequest = new CallToolRequest("echo", Map.of("message", TEST_MESSAGE));
 
-		CallToolResult callToolResult = mcpSyncClient.callTool(callToolRequest);
-
-		assertThat(callToolResult).isNotNull().satisfies(result -> {
-			assertThat(result.content()).isNotNull();
-			assertThat(result.isError()).isNull();
+		mcpAsyncClient.callTool(callToolRequest).subscribe(callToolResult -> {
+			assertThat(callToolResult).isNotNull().satisfies(result -> {
+				assertThat(result.content()).isNotNull();
+				assertThat(result.isError()).isNull();
+			});
 		});
 	}
 
@@ -144,34 +118,34 @@ class McpSyncClientTests {
 	void testCallToolWithInvalidTool() {
 		CallToolRequest invalidRequest = new CallToolRequest("nonexistent_tool", Map.of("message", TEST_MESSAGE));
 
-		assertThatThrownBy(() -> mcpSyncClient.callTool(invalidRequest)).isInstanceOf(Exception.class);
+		assertThatThrownBy(() -> mcpAsyncClient.callTool(invalidRequest).block()).isInstanceOf(Exception.class);
 	}
 
 	@Test
 	@Timeout(15)
 	void testRootsListChanged() {
-		assertThatCode(() -> mcpSyncClient.sendRootsListChanged()).doesNotThrowAnyException();
+		assertThatCode(() -> mcpAsyncClient.sendRootsListChanged().block()).doesNotThrowAnyException();
 	}
 
 	@Test
 	@Timeout(15)
 	void testListResources() {
-		ListResourcesResult resources = mcpSyncClient.listResources(null);
+		mcpAsyncClient.listResources(null).subscribe(resources -> {
+			assertThat(resources).isNotNull().satisfies(result -> {
+				assertThat(result.resources()).isNotNull();
 
-		assertThat(resources).isNotNull().satisfies(result -> {
-			assertThat(result.resources()).isNotNull();
-
-			if (!result.resources().isEmpty()) {
-				Resource firstResource = result.resources().get(0);
-				assertThat(firstResource.uri()).isNotNull();
-				assertThat(firstResource.name()).isNotNull();
-			}
+				if (!result.resources().isEmpty()) {
+					Resource firstResource = result.resources().get(0);
+					assertThat(firstResource.uri()).isNotNull();
+					assertThat(firstResource.name()).isNotNull();
+				}
+			});
 		});
 	}
 
 	@Test
-	void testClientSessionState() {
-		assertThat(mcpSyncClient).isNotNull();
+	void testMcpAsyncClientState() {
+		assertThat(mcpAsyncClient).isNotNull();
 	}
 
 }

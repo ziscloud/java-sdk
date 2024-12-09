@@ -1,4 +1,4 @@
-package spring.ai.mcp.client.stdio;
+package spring.ai.experimental.mcp.client.stdio;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -12,12 +12,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
-import spring.ai.mcp.client.util.Assert;
-import spring.ai.mcp.spec.DefaultMcpTransport;
-import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
-import spring.ai.mcp.spec.McpSchema.JSONRPCNotification;
-import spring.ai.mcp.spec.McpSchema.JSONRPCRequest;
-import spring.ai.mcp.spec.McpSchema.JSONRPCResponse;
+import spring.ai.experimental.mcp.client.util.Assert;
+import spring.ai.experimental.mcp.spec.DefaultMcpTransport;
+import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCMessage;
+import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCNotification;
+import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCRequest;
+import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCResponse;
 
 /**
  * Stdio client for communicating with a server process.

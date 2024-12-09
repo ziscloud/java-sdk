@@ -13,12 +13,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */ 
-package spring.ai.mcp.spec;
+package spring.ai.experimental.mcp.spec;
 
 import java.util.function.Consumer;
 
 import reactor.core.publisher.Mono;
-import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
+import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCMessage;
 
 /**
  * @author Christian Tzolov

@@ -1,4 +1,4 @@
-package spring.ai.mcp.client.stdio;
+package spring.ai.experimental.mcp.client.stdio;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import spring.ai.mcp.client.util.Assert;
+import spring.ai.experimental.mcp.client.util.Assert;
 
 /**
  * Server parameters for stdio client.

@@ -13,12 +13,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package spring.ai.mcp.client;
+package spring.ai.experimental.mcp.client;
 
 import java.time.Duration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import spring.ai.mcp.spec.McpAsyncTransport;
+import spring.ai.experimental.mcp.spec.McpAsyncTransport;
 
 /**
  * The MCP client is the main entry point for interacting with the Model Context Protocol

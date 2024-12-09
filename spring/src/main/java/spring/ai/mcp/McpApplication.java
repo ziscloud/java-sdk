@@ -4,10 +4,10 @@ import java.time.Duration;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import spring.ai.mcp.client.McpClient;
-import spring.ai.mcp.client.McpSyncClient;
-import spring.ai.mcp.client.stdio.ServerParameters;
-import spring.ai.mcp.client.stdio.StdioServerTransport;
+import spring.ai.experimental.mcp.client.McpClient;
+import spring.ai.experimental.mcp.client.McpSyncClient;
+import spring.ai.experimental.mcp.client.stdio.ServerParameters;
+import spring.ai.experimental.mcp.client.stdio.StdioServerTransport;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.boot.CommandLineRunner;

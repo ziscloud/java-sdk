@@ -1,9 +1,9 @@
-package spring.ai.mcp.client;
+package spring.ai.experimental.mcp.client;
 
 import java.time.Duration;
 
-import spring.ai.mcp.client.util.Assert;
-import spring.ai.mcp.spec.McpSchema;
+import spring.ai.experimental.mcp.client.util.Assert;
+import spring.ai.experimental.mcp.spec.McpSchema;
 
 public class McpSyncClient implements AutoCloseable {
 

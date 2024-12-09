@@ -1,13 +1,13 @@
-package spring.ai.mcp.client;
+package spring.ai.experimental.mcp.client;
 
 import java.time.Duration;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
-import spring.ai.mcp.spec.McpAsyncSession;
-import spring.ai.mcp.spec.McpAsyncTransport;
-import spring.ai.mcp.spec.McpSchema;
+import spring.ai.experimental.mcp.spec.McpAsyncSession;
+import spring.ai.experimental.mcp.spec.McpAsyncTransport;
+import spring.ai.experimental.mcp.spec.McpSchema;
 
 public class McpAsyncClient extends McpAsyncSession {
 

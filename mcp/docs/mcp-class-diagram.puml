@@ -1,0 +1,118 @@
+@startuml MCP Class Diagram
+
+' Style configurations
+skinparam class {
+    BackgroundColor White
+    ArrowColor Black
+    BorderColor Black
+}
+
+' Interfaces
+interface McpAsyncTransport {
+    +start(): void
+    +close(): void
+    +setInboudMessageHandler(Consumer<JSONRPCMessage>): void
+    +setErrorHandler(Consumer<String>): void
+    +sendMessage(JSONRPCMessage): Mono<Void>
+}
+
+interface McpAsyncSession {
+    +initialize(): Mono<InitializeResult>
+    +close(): void
+    +listTools(): Mono<ListToolsResult>
+    +callTool(String, Map<String, Object>): Mono<CallToolResult>
+    +createMessage(List<SamplingMessage>, ModelPreferences): Mono<CreateMessageResult>
+}
+
+interface McpClient {
+    +initialize(): InitializeResult
+    +listTools(): ListToolsResult
+    +callTool(String, Map<String, Object>): CallToolResult
+    +createMessage(List<SamplingMessage>, ModelPreferences): CreateMessageResult
+}
+
+' Classes
+class DefaultMcpTransport {
+    -objectMapper: ObjectMapper
+    -errorSink: Sinks.Many<String>
+    -inboundSink: Sinks.Many<JSONRPCMessage>
+    -outboundSink: Sinks.Many<JSONRPCMessage>
+    +DefaultMcpTransport()
+    +DefaultMcpTransport(ObjectMapper)
+}
+
+class McpAsyncClient {
+    -transport: McpAsyncTransport
+    -session: McpAsyncSession
+    +McpAsyncClient(McpAsyncTransport)
+    +initialize(): Mono<InitializeResult>
+    +close(): void
+}
+
+class McpSyncClient {
+    -asyncClient: McpAsyncClient
+    +McpSyncClient(McpAsyncTransport)
+    +initialize(): InitializeResult
+    +close(): void
+}
+
+class StdioServerTransport {
+    -process: Process
+    -writer: BufferedWriter
+    -reader: BufferedReader
+    +StdioServerTransport(ServerParameters)
+}
+
+class ServerParameters {
+    -command: String[]
+    -workingDirectory: File
+    -environment: Map<String, String>
+}
+
+class ServerParametersParser {
+    +{static} parse(String): ServerParameters
+}
+
+class Assert {
+    +{static} notNull(Object, String): void
+    +{static} hasText(String, String): void
+}
+
+' Relationships
+McpAsyncTransport <|.. DefaultMcpTransport
+DefaultMcpTransport <|-- StdioServerTransport
+
+McpClient <|.. McpSyncClient
+McpAsyncSession <|.. McpAsyncClient
+
+McpSyncClient o-- McpAsyncClient
+McpAsyncClient o-- McpAsyncTransport
+McpAsyncClient o-- McpAsyncSession
+
+StdioServerTransport o-- ServerParameters
+ServerParameters <.. ServerParametersParser : creates
+
+' Package organization
+package "spring.ai.mcp.spec" {
+    ' McpAsyncTransport
+    ' McpAsyncSession
+    ' DefaultMcpTransport
+}
+
+package "spring.ai.mcp.client" {
+    ' McpClient
+    ' McpAsyncClient
+    ' McpSyncClient
+    
+    package "stdio" {
+        ' StdioServerTransport
+        ' ServerParameters
+        ' ServerParametersParser
+    }
+    
+    package "util" {
+        ' Assert
+    }
+}
+
+@enduml

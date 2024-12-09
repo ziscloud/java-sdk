@@ -13,15 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package spring.ai.mcp.spec;
+package spring.ai.experimental.mcp.spec;
 
 import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
-import spring.ai.mcp.client.util.Assert;
-import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
+import spring.ai.experimental.mcp.client.util.Assert;
+import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCMessage;
 
 /**
  * @author Christian Tzolov

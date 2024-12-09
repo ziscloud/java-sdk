@@ -17,10 +17,10 @@ package spring.ai.mcp;
 
 import java.util.Map;
 
-import spring.ai.mcp.client.McpSyncClient;
-import spring.ai.mcp.spec.McpSchema.CallToolRequest;
-import spring.ai.mcp.spec.McpSchema.CallToolResult;
-import spring.ai.mcp.spec.McpSchema.Tool;
+import spring.ai.experimental.mcp.client.McpSyncClient;
+import spring.ai.experimental.mcp.spec.McpSchema.CallToolRequest;
+import spring.ai.experimental.mcp.spec.McpSchema.CallToolResult;
+import spring.ai.experimental.mcp.spec.McpSchema.Tool;
 
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.function.FunctionCallback;

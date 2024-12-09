@@ -13,18 +13,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package spring.ai.mcp.attic;
+package spring.ai.experimental.mcp.attic;
 
 import java.time.Duration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import spring.ai.mcp.client.McpClient;
-import spring.ai.mcp.client.McpSyncClient;
-import spring.ai.mcp.client.stdio.ServerParameters;
-import spring.ai.mcp.client.stdio.StdioServerTransport;
-import spring.ai.mcp.spec.McpSchema.ListResourcesResult;
-import spring.ai.mcp.spec.McpSchema.ListToolsResult;
-import spring.ai.mcp.spec.McpSchema.Resource;
+import spring.ai.experimental.mcp.client.McpClient;
+import spring.ai.experimental.mcp.client.McpSyncClient;
+import spring.ai.experimental.mcp.client.stdio.ServerParameters;
+import spring.ai.experimental.mcp.client.stdio.StdioServerTransport;
+import spring.ai.experimental.mcp.spec.McpSchema.ListResourcesResult;
+import spring.ai.experimental.mcp.spec.McpSchema.ListToolsResult;
+import spring.ai.experimental.mcp.spec.McpSchema.Resource;
 
 /**
  * @author Christian Tzolov

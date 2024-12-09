@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package spring.ai.mcp.client.stdio;
+package spring.ai.experimental.mcp.client.stdio;
 
 import java.util.Map;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import spring.ai.mcp.client.stdio.ServerParametersParser.McpServerConfigurations.McpServerConfiguration;
+import spring.ai.experimental.mcp.client.stdio.ServerParametersParser.McpServerConfigurations.McpServerConfiguration;
 
 /**
  * @author Christian Tzolov

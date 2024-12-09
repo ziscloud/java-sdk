@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package spring.ai.mcp.spec;
+package spring.ai.experimental.mcp.spec;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import spring.ai.mcp.spec.McpSchema.JSONRPCMessage;
-import spring.ai.mcp.spec.McpSchema.JSONRPCRequest;
+import spring.ai.experimental.mcp.spec.DefaultMcpTransport;
+import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCMessage;
+import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCRequest;
 
 import java.util.concurrent.atomic.AtomicReference;
 

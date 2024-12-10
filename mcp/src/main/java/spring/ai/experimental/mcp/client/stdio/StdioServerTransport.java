@@ -41,7 +41,7 @@ public class StdioServerTransport extends AbstractMcpTransport {
 	private Scheduler outboundScheduler;
 	private Scheduler errorScheduler;
 
-	private volatile boolean isRunning;
+	volatile boolean isRunning;
 
 	private final ServerParameters params;
 
@@ -74,7 +74,8 @@ public class StdioServerTransport extends AbstractMcpTransport {
 		fullCommand.add(params.getCommand());
 		fullCommand.addAll(params.getArgs());
 
-		ProcessBuilder processBuilder = new ProcessBuilder(fullCommand);
+		ProcessBuilder processBuilder = this.getProcessBuilder();
+		processBuilder.command(fullCommand);
 		processBuilder.environment().putAll(params.getEnv());
 
 		// Start the process
@@ -100,6 +101,10 @@ public class StdioServerTransport extends AbstractMcpTransport {
 		startInboundProcessing();
 		startOutboundProcessing();
 		startErrorProcessing();
+	}
+
+	protected ProcessBuilder getProcessBuilder() {
+		return new ProcessBuilder();
 	}
 
 	public void awaitForExit() {

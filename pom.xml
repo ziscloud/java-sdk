@@ -30,6 +30,7 @@
 	<modules>
 		<module>mcp-core</module>
 		<module>mcp-spring</module>
+		<module>mcp-spring-boot</module>
 	</modules>
 
 	<repositories>

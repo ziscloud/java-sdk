@@ -1,4 +1,4 @@
-package spring.ai.mcp;
+package spring.ai.experimental.mcp.spring.boot;
 
 import java.time.Duration;
 import java.util.List;
@@ -8,6 +8,7 @@ import spring.ai.experimental.mcp.client.McpClient;
 import spring.ai.experimental.mcp.client.McpSyncClient;
 import spring.ai.experimental.mcp.client.stdio.ServerParameters;
 import spring.ai.experimental.mcp.client.stdio.StdioServerTransport;
+import spring.ai.experimental.mcp.spring.McpFunctionCallback;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.boot.CommandLineRunner;

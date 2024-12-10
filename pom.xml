@@ -4,7 +4,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.springframework.experimental</groupId>
-	<artifactId>mcp-parent</artifactId>
+	
+	<artifactId>spring-ai-mcp</artifactId>
+	
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
@@ -59,8 +61,8 @@
 
 	<properties>
 		<java.version>17</java.version>
-		<spring-ai.version>1.0.0-M4</spring-ai.version>
 	</properties>
+
 	<modules>
 		<module>mcp-core</module>
 		<module>mcp-spring</module>

@@ -111,7 +111,6 @@ public class McpSession {
 		McpSchema.JSONRPCNotification jsonrpcNotification = new McpSchema.JSONRPCNotification(McpSchema.JSONRPC_VERSION,
 				method, params);
 		try {
-			// TODO: make it non-blocking
 			this.transport.sendMessage(jsonrpcNotification);
 		} catch (Exception e) {
 			return Mono.error(new McpError(e));

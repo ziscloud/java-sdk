@@ -27,7 +27,7 @@ import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCMessage;
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
-public class DefaultMcpTransport implements McpTransport {
+public abstract class AbstractMcpTransport implements McpTransport {
 
 	protected final ObjectMapper objectMapper;
 
@@ -39,11 +39,11 @@ public class DefaultMcpTransport implements McpTransport {
 			.println("Received message: " + message);
 	private Consumer<String> errorHandler = error -> System.err.println("Received error: " + error);
 
-	public DefaultMcpTransport() {		
+	public AbstractMcpTransport() {		
 		this(new ObjectMapper());
 	}
 
-	public DefaultMcpTransport(ObjectMapper objectMapper) {
+	public AbstractMcpTransport(ObjectMapper objectMapper) {
 
 		Assert.notNull(objectMapper, "ObjectMapper must not be null");
 		this.objectMapper = objectMapper;
@@ -73,7 +73,7 @@ public class DefaultMcpTransport implements McpTransport {
 	private void handleIncomingErrors() {
 		this.errorSink.asFlux().subscribe(e -> {
 			this.errorHandler.accept(e);
-			System.err.println(e);
+			// System.err.println(e); TODO: log the error
 		});
 	}
 
@@ -101,12 +101,6 @@ public class DefaultMcpTransport implements McpTransport {
 	public void start() {
 		this.handleIncomingErrors();
 		this.handleIncomingMessages();
-	}
-
-	// Close the transport
-	@Override
-	public void close() {
-		// this.onClose();
 	}
 
 	@Override

@@ -15,148 +15,162 @@
  */
 package spring.ai.experimental.mcp.spec;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import spring.ai.experimental.mcp.spec.DefaultMcpTransport;
 import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCMessage;
 import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCRequest;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class DefaultMcpTransportTests {
 
-    private DefaultMcpTransport transport;
-    private ObjectMapper objectMapper;
+	private AbstractMcpTransport transport;
+	private ObjectMapper objectMapper;
 
-    @BeforeEach
-    void setUp() {
-        objectMapper = new ObjectMapper();
-        transport = new DefaultMcpTransport(objectMapper);
-    }
+	@BeforeEach
+	void setUp() {
+		objectMapper = new ObjectMapper();
+		transport = new AbstractMcpTransport(objectMapper) {
+			@Override
+			public Mono<Void> closeGracefully() {
+				return null;
+			}
+		};
+	}
 
-    @Test
-    void constructorShouldValidateObjectMapper() {
-        assertThatThrownBy(() -> new DefaultMcpTransport(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("ObjectMapper must not be null");
-    }
+	@Test
+	void constructorShouldValidateObjectMapper() {
+		assertThatThrownBy(() -> new AbstractMcpTransport(null) {
+			@Override
+			public Mono<Void> closeGracefully() {
+				return null;
+			}
+		})
+				.isInstanceOf(IllegalArgumentException.class)
+				.hasMessage("ObjectMapper must not be null");
+	}
 
-    @Test
-    void defaultConstructorShouldCreateValidInstance() {
-        DefaultMcpTransport defaultTransport = new DefaultMcpTransport();
-        assertThat(defaultTransport.getObjectMapper()).isNotNull();
-    }
+	@Test
+	void defaultConstructorShouldCreateValidInstance() {
+		AbstractMcpTransport defaultTransport = new AbstractMcpTransport() {
+			@Override
+			public Mono<Void> closeGracefully() {
+				return null;
+			}
+		};
+		assertThat(defaultTransport.getObjectMapper()).isNotNull();
+	}
 
-    @Test
-    void customObjectMapperConstructorShouldCreateValidInstance() {
-        assertThat(transport.getObjectMapper()).isSameAs(objectMapper);
-    }
+	@Test
+	void customObjectMapperConstructorShouldCreateValidInstance() {
+		assertThat(transport.getObjectMapper()).isSameAs(objectMapper);
+	}
 
-    @Test
-    void sendMessageShouldEmitToOutboundSink() {
-        JSONRPCRequest message = new JSONRPCRequest(
-                "2.0",
-                "test",
-                1,
-                null);
+	@Test
+	void sendMessageShouldEmitToOutboundSink() {
+		JSONRPCRequest message = new JSONRPCRequest(
+				"2.0",
+				"test",
+				1,
+				null);
 
-        AtomicReference<JSONRPCMessage> receivedMessage = new AtomicReference<>();
-        transport.getOutboundSink().asFlux().subscribe(receivedMessage::set);
+		AtomicReference<JSONRPCMessage> receivedMessage = new AtomicReference<>();
+		transport.getOutboundSink().asFlux().subscribe(receivedMessage::set);
 
-        Mono<Void> result = transport.sendMessage(message);
+		Mono<Void> result = transport.sendMessage(message);
 
-        StepVerifier.create(result)
-                .verifyComplete();
+		StepVerifier.create(result)
+				.verifyComplete();
 
-        assertThat(receivedMessage.get())
-                .isNotNull()
-                .satisfies(msg -> {
-                    assertThat(((JSONRPCRequest) msg).jsonrpc()).isEqualTo("2.0");
-                    assertThat(((JSONRPCRequest) msg).method()).isEqualTo("test");
-                });
-    }
+		assertThat(receivedMessage.get())
+				.isNotNull()
+				.satisfies(msg -> {
+					assertThat(((JSONRPCRequest) msg).jsonrpc()).isEqualTo("2.0");
+					assertThat(((JSONRPCRequest) msg).method()).isEqualTo("test");
+				});
+	}
 
-    @Test
-    void customInboundMessageHandlerShouldReceiveMessages() {
-        AtomicReference<JSONRPCMessage> receivedMessage = new AtomicReference<>();
-        transport.setInboudMessageHandler(receivedMessage::set);
-        transport.start();
+	@Test
+	void customInboundMessageHandlerShouldReceiveMessages() {
+		AtomicReference<JSONRPCMessage> receivedMessage = new AtomicReference<>();
+		transport.setInboudMessageHandler(receivedMessage::set);
+		transport.start();
 
-        JSONRPCRequest message = new JSONRPCRequest(
-                "2.0",
-                "test",
-                1,
-                null);
+		JSONRPCRequest message = new JSONRPCRequest(
+				"2.0",
+				"test",
+				1,
+				null);
 
-        transport.getInboundSink().tryEmitNext(message);
+		transport.getInboundSink().tryEmitNext(message);
 
-        assertThat(receivedMessage.get())
-                .isNotNull()
-                .satisfies(msg -> {
-                    assertThat(((JSONRPCRequest) msg).jsonrpc()).isEqualTo("2.0");
-                    assertThat(((JSONRPCRequest) msg).method()).isEqualTo("test");
-                });
-    }
+		assertThat(receivedMessage.get())
+				.isNotNull()
+				.satisfies(msg -> {
+					assertThat(((JSONRPCRequest) msg).jsonrpc()).isEqualTo("2.0");
+					assertThat(((JSONRPCRequest) msg).method()).isEqualTo("test");
+				});
+	}
 
-    @Test
-    void customErrorHandlerShouldReceiveErrors() {
-        AtomicReference<String> receivedError = new AtomicReference<>();
-        transport.setInboundErrorHandler(receivedError::set);
-        transport.start();
+	@Test
+	void customErrorHandlerShouldReceiveErrors() {
+		AtomicReference<String> receivedError = new AtomicReference<>();
+		transport.setInboundErrorHandler(receivedError::set);
+		transport.start();
 
-        String errorMessage = "Test error";
-        transport.getErrorSink().tryEmitNext(errorMessage);
+		String errorMessage = "Test error";
+		transport.getErrorSink().tryEmitNext(errorMessage);
 
-        assertThat(receivedError.get())
-                .isNotNull()
-                .isEqualTo(errorMessage);
-    }
+		assertThat(receivedError.get())
+				.isNotNull()
+				.isEqualTo(errorMessage);
+	}
 
-    @Test
-    void startShouldInitializeMessageAndErrorHandling() {
-        AtomicReference<JSONRPCMessage> receivedMessage = new AtomicReference<>();
-        AtomicReference<String> receivedError = new AtomicReference<>();
+	@Test
+	void startShouldInitializeMessageAndErrorHandling() {
+		AtomicReference<JSONRPCMessage> receivedMessage = new AtomicReference<>();
+		AtomicReference<String> receivedError = new AtomicReference<>();
 
-        transport.setInboudMessageHandler(receivedMessage::set);
-        transport.setInboundErrorHandler(receivedError::set);
-        transport.start();
+		transport.setInboudMessageHandler(receivedMessage::set);
+		transport.setInboundErrorHandler(receivedError::set);
+		transport.start();
 
-        JSONRPCRequest message = new JSONRPCRequest(
-                "2.0",
-                "test",
-                1,
-                null);
+		JSONRPCRequest message = new JSONRPCRequest(
+				"2.0",
+				"test",
+				1,
+				null);
 
-        String errorMessage = "Test error";
+		String errorMessage = "Test error";
 
-        transport.getInboundSink().tryEmitNext(message);
-        transport.getErrorSink().tryEmitNext(errorMessage);
+		transport.getInboundSink().tryEmitNext(message);
+		transport.getErrorSink().tryEmitNext(errorMessage);
 
-        assertThat(receivedMessage.get()).isNotNull();
-        assertThat(receivedError.get()).isEqualTo(errorMessage);
-    }
+		assertThat(receivedMessage.get()).isNotNull();
+		assertThat(receivedError.get()).isEqualTo(errorMessage);
+	}
 
-    @Test
-    void sendMessageShouldReturnErrorWhenSinkFails() {
-        JSONRPCRequest message = new JSONRPCRequest(
-                "2.0",
-                "test",
-                1,
-                null);
-        // Close the sink to simulate failure
-        transport.getOutboundSink().tryEmitComplete();
+	@Test
+	void sendMessageShouldReturnErrorWhenSinkFails() {
+		JSONRPCRequest message = new JSONRPCRequest(
+				"2.0",
+				"test",
+				1,
+				null);
+		// Close the sink to simulate failure
+		transport.getOutboundSink().tryEmitComplete();
 
-        Mono<Void> result = transport.sendMessage(message);
+		Mono<Void> result = transport.sendMessage(message);
 
-        StepVerifier.create(result)
-                .verifyErrorSatisfies(error -> assertThat(error)
-                        .isInstanceOf(RuntimeException.class)
-                        .hasMessage("Failed to enqueue message"));
-    }
+		StepVerifier.create(result)
+				.verifyErrorSatisfies(error -> assertThat(error)
+						.isInstanceOf(RuntimeException.class)
+						.hasMessage("Failed to enqueue message"));
+	}
 }

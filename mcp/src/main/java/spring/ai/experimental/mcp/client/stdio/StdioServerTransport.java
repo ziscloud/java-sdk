@@ -10,10 +10,11 @@ import java.util.concurrent.Executors;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 import spring.ai.experimental.mcp.client.util.Assert;
-import spring.ai.experimental.mcp.spec.DefaultMcpTransport;
+import spring.ai.experimental.mcp.spec.AbstractMcpTransport;
 import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCMessage;
 import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCNotification;
 import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCRequest;
@@ -25,7 +26,7 @@ import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCResponse;
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
-public class StdioServerTransport extends DefaultMcpTransport {
+public class StdioServerTransport extends AbstractMcpTransport {
 
 	private final static TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<HashMap<String, Object>>() {
 	};
@@ -194,47 +195,46 @@ public class StdioServerTransport extends DefaultMcpTransport {
 				.subscribe();
 	}
 
-	// TODO: provide a non-blocking variant with graceful option
-	public void stop() {
-		this.outboundScheduler.dispose();
-		this.inboundScheduler.dispose();
-		this.errorScheduler.dispose();
-
-		// Destroy process
-		if (this.process != null) {
-			this.process.destroyForcibly();
-		}
-	}
-
 	@Override
-	public void close() {
+	public Mono<Void> closeGracefully() {
 
-		this.stop();
+		this.isRunning = false;
 
-		super.close(); // Do we need this?
-
-		// Close resources
-		if (this.processReader != null) {
-			try {
-				this.processReader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		if (this.processWriter != null) {
-			try {
-				this.processWriter.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		if (this.processErrorReader != null) {
-			try {
-				this.processErrorReader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		return Mono.whenDelayError(
+				Mono.fromRunnable(() -> {
+					try {
+						this.processErrorReader.close();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}).subscribeOn(errorScheduler),
+				Mono.fromRunnable(() -> {
+					try {
+						this.processReader.close();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}).subscribeOn(inboundScheduler),
+				Mono.fromRunnable(() -> {
+					try {
+						this.processWriter.close();
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				}).subscribeOn(outboundScheduler))
+				.then(Mono.whenDelayError(inboundScheduler.disposeGracefully(),
+						outboundScheduler.disposeGracefully(),
+						errorScheduler.disposeGracefully()))
+				.then(Mono.fromRunnable(() -> {
+					if (this.process != null) {
+						var process = this.process.destroyForcibly();
+						if (process.exitValue() != 0) {
+							throw new RuntimeException("Failed to destroy process");
+						}
+					}
+				}))
+				.then()
+				.subscribeOn(Schedulers.boundedElastic());
 	}
 
 }

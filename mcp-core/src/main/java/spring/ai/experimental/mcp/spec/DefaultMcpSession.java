@@ -38,21 +38,18 @@ public class DefaultMcpSession implements McpSession {
 		this.transport = transport;
 
 		this.transport.setInboudMessageHandler(message -> {
-			switch (message) {
-				case McpSchema.JSONRPCResponse response -> {
-					var sink = pendingResponses.remove(response.id());
-					if (sink == null) {
-						System.out.println("Unexpected response for unkown id " + response.id());
-					} else {
-						sink.success(response);
-					}
+
+			if ( message instanceof McpSchema.JSONRPCResponse response) {
+				var sink = pendingResponses.remove(response.id());
+				if (sink == null) {
+					System.out.println("Unexpected response for unkown id " + response.id());
+				} else {
+					sink.success(response);
 				}
-				case McpSchema.JSONRPCRequest request -> {
-					System.out.println("Client does not yet support server requests");
-				}
-				case McpSchema.JSONRPCNotification notification -> {
-					System.out.println("Notifications not yet supported");
-				}
+			} else if ( message instanceof McpSchema.JSONRPCRequest request) {
+				System.out.println("Client does not yet support server requests");
+			} else if ( message instanceof McpSchema.JSONRPCNotification notification) {
+				System.out.println("Notifications not yet supported");
 			}
 		});
 

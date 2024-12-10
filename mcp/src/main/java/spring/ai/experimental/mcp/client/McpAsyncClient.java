@@ -5,15 +5,16 @@ import java.time.Duration;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
-import spring.ai.experimental.mcp.spec.McpSession;
+import spring.ai.experimental.mcp.spec.DefaultMcpSession;
 import spring.ai.experimental.mcp.spec.McpTransport;
+import spring.ai.experimental.mcp.spec.McpError;
 import spring.ai.experimental.mcp.spec.McpSchema;
 
 /**
  * @author Dariusz Jędrzejczyk
  * @author Christian Tzolov
  */
-public class McpAsyncClient extends McpSession {
+public class McpAsyncClient extends DefaultMcpSession {
 
 	public McpAsyncClient(McpTransport transport) {
 		this(transport, Duration.ofSeconds(10), new ObjectMapper());

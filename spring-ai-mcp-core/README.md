@@ -30,6 +30,12 @@ Add the following dependency to your Maven project:
 </dependency>
 ```
 
+## Documentation
+
+Detailed UML class diagrams showing the relationships between components can be found in [docs/class-diagrams.puml](docs/class-diagrams.puml). The diagrams include:
+- Core Components: Shows the main interfaces, classes, and their relationships
+- Message Flow: Illustrates the message and resource type hierarchies
+
 ## Usage
 
 ### Async Client Example
@@ -134,6 +140,8 @@ The SDK follows a layered architecture:
 - **McpSchema**: Comprehensive protocol schema definitions
 - **AbstractMcpTransport**: Base transport implementation
 - **StdioServerTransport**: Stdio-based server communication
+
+<img src="docs/spring-ai-mcp-uml-classdiagram.svg" width="600"/>
 
 ### Key Interactions
 

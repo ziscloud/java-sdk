@@ -38,7 +38,7 @@
 		</dependency>
 		<dependency>
 			<groupId>spring.ai.experimental</groupId>
-			<artifactId>mcp</artifactId>
+			<artifactId>mcp-core</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>

@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>spring.ai.experimental</groupId>
-	<artifactId>mcp-spring-boot-demo</artifactId>
+	<artifactId>mcp-spring</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>mcp-spring-boot-demo</name>
+	<name>mcp-spring</name>
 	<description>Demo project for Spring Boot</description>
 	<url />
 	<licenses>

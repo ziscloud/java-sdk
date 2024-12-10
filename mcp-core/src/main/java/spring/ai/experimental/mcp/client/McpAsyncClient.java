@@ -9,12 +9,19 @@ import spring.ai.experimental.mcp.spec.DefaultMcpSession;
 import spring.ai.experimental.mcp.spec.McpTransport;
 import spring.ai.experimental.mcp.spec.McpError;
 import spring.ai.experimental.mcp.spec.McpSchema;
+import spring.ai.experimental.mcp.spec.McpSchema.GetPromptRequest;
+import spring.ai.experimental.mcp.spec.McpSchema.GetPromptResult;
+import spring.ai.experimental.mcp.spec.McpSchema.ListPromptsResult;
+import spring.ai.experimental.mcp.spec.McpSchema.PaginatedRequest;
 
 /**
  * @author Dariusz Jędrzejczyk
  * @author Christian Tzolov
  */
 public class McpAsyncClient extends DefaultMcpSession {
+
+	private static TypeReference<Void> VOID_TYPE_REFERENCE = new TypeReference<Void>() {
+	};
 
 	public McpAsyncClient(McpTransport transport) {
 		this(transport, Duration.ofSeconds(10), new ObjectMapper());
@@ -89,14 +96,17 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * Send a synchronous ping request.
 	 */
 	public Mono<Void> ping() {
-		return this.sendRequest("ping", null,
-				new TypeReference<Void>() {
-				});
+		return this.sendRequest("ping", null, VOID_TYPE_REFERENCE);
 	}
 
 	// --------------------------
 	// Tools
 	// --------------------------
+	private static TypeReference<McpSchema.CallToolResult> CALL_TOOL_RESULT_TYPE_REF = new TypeReference<McpSchema.CallToolResult>() {
+	};
+	private static TypeReference<McpSchema.ListToolsResult> LIST_TOOLS_RESULT_TYPE_REF = new TypeReference<McpSchema.ListToolsResult>() {
+	};
+
 	/**
 	 * Send a tools/call request.
 	 * 
@@ -104,9 +114,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the call tool result.
 	 */
 	public Mono<McpSchema.CallToolResult> callTool(McpSchema.CallToolRequest callToolRequest) {
-		return this.sendRequest("tools/call", callToolRequest,
-				new TypeReference<McpSchema.CallToolResult>() {
-				});
+		return this.sendRequest("tools/call", callToolRequest, CALL_TOOL_RESULT_TYPE_REF);
 	}
 
 	/**
@@ -115,14 +123,19 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the list of tools result.
 	 */
 	public Mono<McpSchema.ListToolsResult> listTools(String cursor) {
-		return this.sendRequest("tools/list", new McpSchema.PaginatedRequest(cursor),
-				new TypeReference<McpSchema.ListToolsResult>() {
-				});
+		return this.sendRequest("tools/list", new McpSchema.PaginatedRequest(cursor), LIST_TOOLS_RESULT_TYPE_REF);
 	}
 
 	// --------------------------
 	// Resources
 	// --------------------------
+
+	private static TypeReference<McpSchema.ListResourcesResult> LIST_RESOURCES_RESULT_TYPE_REF = new TypeReference<McpSchema.ListResourcesResult>() {
+	};
+	private static TypeReference<McpSchema.ReadResourceResult> READ_RESOURCE_RESULT_TYPE_REF = new TypeReference<McpSchema.ReadResourceResult>() {
+	};
+	private static TypeReference<McpSchema.ListResourceTemplatesResult> LIST_RESOURCE_TEMPLATES_RESULT_TYPE_REF = new TypeReference<McpSchema.ListResourceTemplatesResult>() {
+	};
 
 	/**
 	 * Send a resources/list request.
@@ -132,8 +145,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 */
 	public Mono<McpSchema.ListResourcesResult> listResources(String cursor) {
 		return this.sendRequest("resources/list", new McpSchema.PaginatedRequest(cursor),
-				new TypeReference<McpSchema.ListResourcesResult>() {
-				});
+				LIST_RESOURCES_RESULT_TYPE_REF);
 	}
 
 	/**
@@ -153,9 +165,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the resource content.
 	 */
 	public Mono<McpSchema.ReadResourceResult> readResource(McpSchema.ReadResourceRequest readResourceRequest) {
-		return this.sendRequest("resources/read", readResourceRequest,
-				new TypeReference<McpSchema.ReadResourceResult>() {
-				});
+		return this.sendRequest("resources/read", readResourceRequest, READ_RESOURCE_RESULT_TYPE_REF);
 	}
 
 	/**
@@ -169,14 +179,12 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 */
 	public Mono<McpSchema.ListResourceTemplatesResult> listResourceTemplates(String cursor) {
 		return this.sendRequest("resources/templates/list", new McpSchema.PaginatedRequest(cursor),
-				new TypeReference<McpSchema.ListResourceTemplatesResult>() {
-				});
+				LIST_RESOURCE_TEMPLATES_RESULT_TYPE_REF);
 	}
 
 	/**
 	 * List Changed Notification. When the list of available resources changes,
-	 * servers
-	 * that declared the listChanged capability SHOULD send a notification:
+	 * servers that declared the listChanged capability SHOULD send a notification:
 	 */
 	public Mono<Void> sendResourcesListChanged() {
 		return this.sendNotification("notifications/resources/list_changed");
@@ -186,31 +194,53 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * Subscriptions. The protocol supports optional subscriptions to resource
 	 * changes.
 	 * Clients can subscribe to specific resources and receive notifications when
-	 * they
-	 * change.
+	 * they change.
 	 *
 	 * Send a resources/subscribe request.
 	 * 
 	 * @param subscribeRequest the subscribe request contains the uri of the
-	 *                         resource to
-	 *                         subscribe to.
+	 *                         resource to subscribe to.
 	 */
 	public Mono<Void> subscribeResource(McpSchema.SubscribeRequest subscribeRequest) {
-		return this.sendRequest("resources/subscribe", subscribeRequest,
-				new TypeReference<Void>() {
-				});
+		return this.sendRequest("resources/subscribe", subscribeRequest, VOID_TYPE_REFERENCE);
 	}
 
 	/**
 	 * Send a resources/unsubscribe request.
 	 * 
 	 * @param unsubscribeRequest the unsubscribe request contains the uri of the
-	 *                           resource
-	 *                           to unsubscribe from.
+	 *                           resource to unsubscribe from.
 	 */
 	public Mono<Void> unsubscribeResource(McpSchema.UnsubscribeRequest unsubscribeRequest) {
-		return this.sendRequest("resources/unsubscribe", unsubscribeRequest,
-				new TypeReference<Void>() {
-				});
+		return this.sendRequest("resources/unsubscribe", unsubscribeRequest, VOID_TYPE_REFERENCE);
 	}
+
+	// --------------------------
+	// Prompts
+	// --------------------------
+	private static TypeReference<McpSchema.ListPromptsResult> LIST_PROMPTS_RESULT_TYPE_REF = new TypeReference<McpSchema.ListPromptsResult>() {
+	};
+	private static TypeReference<McpSchema.GetPromptResult> GET_PROMPT_RESULT_TYPE_REF = new TypeReference<McpSchema.GetPromptResult>() {
+	};
+
+	public Mono<ListPromptsResult> listPrompts(String cursor) {
+		return this
+				.sendRequest("prompts/list", new PaginatedRequest(cursor), LIST_PROMPTS_RESULT_TYPE_REF);
+	}
+
+	public Mono<GetPromptResult> getPrompt(GetPromptRequest getPromptRequest) {
+		return this.sendRequest("prompts/get", getPromptRequest, GET_PROMPT_RESULT_TYPE_REF);
+	}
+
+	/**
+	 * (Server) An optional notification from the server to the client, informing it
+	 * that
+	 * the list of prompts it offers has changed. This may be issued by servers
+	 * without
+	 * any previous subscription from the client.
+	 */
+	public Mono<Void> promptListChangedNotification() {
+		return this.sendNotification("notifications/prompts/list_changed");
+	}
+
 }

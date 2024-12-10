@@ -57,7 +57,7 @@ public class McpSchema {
 
 	}
 
-	public sealed interface Request permits InitializeRequest, CallToolRequest, CreateMessageRequest, CompleteRequest {
+	public sealed interface Request permits InitializeRequest, CallToolRequest, CreateMessageRequest, CompleteRequest, GetPromptRequest {
 
 	}
 
@@ -178,7 +178,8 @@ public class McpSchema {
 	// Resource Interfaces
 	// ---------------------------
 	/**
-	 * Base for objects that include optional annotations for the client. The client can
+	 * Base for objects that include optional annotations for the client. The client
+	 * can
 	 * use annotations to inform how objects are used or displayed
 	 */
 	public interface Annotated {
@@ -188,13 +189,18 @@ public class McpSchema {
 	}
 
 	/**
-	 * @param audience Describes who the intended customer of this object or data is. It
-	 * can include multiple entries to indicate content useful for multiple audiences
-	 * (e.g., `["user", "assistant"]`).
-	 * @param priority Describes how important this data is for operating the server. A
-	 * value of 1 means "most important," and indicates that the data is effectively
-	 * required, while 0 means "least important," and indicates that the data is entirely
-	 * optional. It is a number between 0 and 1.
+	 * @param audience Describes who the intended customer of this object or data
+	 *                 is. It
+	 *                 can include multiple entries to indicate content useful for
+	 *                 multiple audiences
+	 *                 (e.g., `["user", "assistant"]`).
+	 * @param priority Describes how important this data is for operating the
+	 *                 server. A
+	 *                 value of 1 means "most important," and indicates that the
+	 *                 data is effectively
+	 *                 required, while 0 means "least important," and indicates that
+	 *                 the data is entirely
+	 *                 optional. It is a number between 0 and 1.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record Annotations( // @formatter:off
@@ -205,13 +211,16 @@ public class McpSchema {
 	/**
 	 * A known resource that the server is capable of reading.
 	 *
-	 * @param uri the URI of the resource.
-	 * @param name A human-readable name for this resource. This can be used by clients to
-	 * populate UI elements.
-	 * @param description A description of what this resource represents. This can be used
-	 * by clients to improve the LLM's understanding of available resources. It can be
-	 * thought of like a "hint" to the model.
-	 * @param mimeType The MIME type of this resource, if known.
+	 * @param uri         the URI of the resource.
+	 * @param name        A human-readable name for this resource. This can be used
+	 *                    by clients to
+	 *                    populate UI elements.
+	 * @param description A description of what this resource represents. This can
+	 *                    be used
+	 *                    by clients to improve the LLM's understanding of available
+	 *                    resources. It can be
+	 *                    thought of like a "hint" to the model.
+	 * @param mimeType    The MIME type of this resource, if known.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -255,11 +264,13 @@ public class McpSchema {
 	} // @formatter:on
 
 	/**
-	 * Sent from the client to request resources/updated notifications from the server
+	 * Sent from the client to request resources/updated notifications from the
+	 * server
 	 * whenever a particular resource changes.
 	 *
-	 * @param uri the URI of the resource to subscribe to. The URI can use any protocol;
-	 * it is up to the server how to interpret it.
+	 * @param uri the URI of the resource to subscribe to. The URI can use any
+	 *            protocol;
+	 *            it is up to the server how to interpret it.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record SubscribeRequest( // @formatter:off
@@ -281,12 +292,14 @@ public class McpSchema {
 
 		/**
 		 * The URI of this resource.
+		 * 
 		 * @return the URI of this resource.
 		 */
 		String uri();
 
 		/**
 		 * The MIME type of this resource.
+		 * 
 		 * @return the MIME type of this resource.
 		 */
 		String mimeType();
@@ -296,10 +309,11 @@ public class McpSchema {
 	/**
 	 * Text contents of a resource.
 	 *
-	 * @param uri the URI of this resource.
+	 * @param uri      the URI of this resource.
 	 * @param mimeType the MIME type of this resource.
-	 * @param text the text of the resource. This must only be set if the resource can
-	 * actually be represented as text (not binary data).
+	 * @param text     the text of the resource. This must only be set if the
+	 *                 resource can
+	 *                 actually be represented as text (not binary data).
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record TextResourceContents( // @formatter:off
@@ -311,11 +325,13 @@ public class McpSchema {
 	/**
 	 * Binary contents of a resource.
 	 *
-	 * @param uri the URI of this resource.
+	 * @param uri      the URI of this resource.
 	 * @param mimeType the MIME type of this resource.
-	 * @param blob a base64-encoded string representing the binary data of the resource.
-	 * This must only be set if the resource can actually be represented as binary data
-	 * (not text).
+	 * @param blob     a base64-encoded string representing the binary data of the
+	 *                 resource.
+	 *                 This must only be set if the resource can actually be
+	 *                 represented as binary data
+	 *                 (not text).
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record BlobResourceContents( // @formatter:off
@@ -327,14 +343,83 @@ public class McpSchema {
 	// ---------------------------
 	// Prompt Interfaces
 	// ---------------------------
-	public record Prompt(String name, String description, List<PromptArgument> arguments) {
-	}
+	/**
+	 * A prompt or prompt template that the server offers.
+	 *
+	 * @param name        The name of the prompt or prompt template.
+	 * @param description An optional description of what this prompt provides.
+	 * @param arguments   A list of arguments to use for templating the prompt.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	public record Prompt( // @formatter:off
+		@JsonProperty("name") String name,
+		@JsonProperty("description") String description,
+		@JsonProperty("arguments") List<PromptArgument> arguments) {
+	} // @formatter:on
 
-	public record PromptArgument(String name, String description, Boolean required) {
-	}
+	/**
+	 * Describes an argument that a prompt can accept.
+	 *
+	 * @param name        The name of the argument.
+	 * @param description A human-readable description of the argument.
+	 * @param required    Whether this argument must be provided.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	public record PromptArgument( // @formatter:off
+		@JsonProperty("name") String name,
+		@JsonProperty("description") String description,
+		@JsonProperty("required") Boolean required) {
+	}// @formatter:on
 
-	public record PromptMessage(Role role, Content content) {
-	}
+	/**
+	 * Describes a message returned as part of a prompt.
+	 *
+	 * This is similar to `SamplingMessage`, but also supports the embedding of
+	 * resources
+	 * from the MCP server.
+	 * 
+	 * @param role    The sender or recipient of messages and data in a
+	 *                conversation.
+	 * @param content The content of the message of type {@link Content}.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	public record PromptMessage( // @formatter:off
+		@JsonProperty("role") Role role,
+		@JsonProperty("content") Content content) {
+	} // @formatter:on
+
+	/**
+	 * The server's response to a prompts/list request from the client.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	public record ListPromptsResult( // @formatter:off
+		@JsonProperty("prompts") List<Prompt> prompts,
+		@JsonProperty("nextCursor") String nextCursor) {
+	}// @formatter:on
+
+	/**
+	 * Used by the client to get a prompt provided by the server.
+	 * 
+	 * @param name      The name of the prompt or prompt template.
+	 * @param arguments Arguments to use for templating the prompt.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	public record GetPromptRequest(// @formatter:off
+		@JsonProperty("name") String name,
+		@JsonProperty("arguments") Map<String, Object> arguments) implements Request {
+	}// @formatter:off
+
+	/**
+	 * The server's response to a prompts/get request from the client.
+	 * 
+	 * @param description An optional description for the prompt.
+	 * @param messages A list of messages to display as part of the prompt.
+	 */
+	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	public record GetPromptResult( // @formatter:off
+		@JsonProperty("description") String description,
+		@JsonProperty("messages") List<PromptMessage> messages) {
+	} // @formatter:on
 
 	// ---------------------------
 	// Tool Interfaces

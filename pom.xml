@@ -28,8 +28,8 @@
 		<spring-ai.version>1.0.0-M4</spring-ai.version>
 	</properties>
 	<modules>
-		<module>mcp</module>
-		<module>spring</module>
+		<module>mcp-core</module>
+		<module>mcp-spring</module>
 	</modules>
 
 	<repositories>

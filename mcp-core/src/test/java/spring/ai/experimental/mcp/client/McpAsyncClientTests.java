@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Timeout;
 import spring.ai.experimental.mcp.client.stdio.ServerParameters;
 import spring.ai.experimental.mcp.client.stdio.StdioServerTransport;
 import spring.ai.experimental.mcp.spec.McpSchema.CallToolRequest;
+import spring.ai.experimental.mcp.spec.McpSchema.GetPromptRequest;
+import spring.ai.experimental.mcp.spec.McpSchema.Prompt;
 import spring.ai.experimental.mcp.spec.McpSchema.Resource;
 import spring.ai.experimental.mcp.spec.McpSchema.Tool;
 
@@ -52,8 +54,8 @@ class McpAsyncClientTests {
 	@BeforeEach
 	void setUp() {
 		stdioParams = ServerParameters.builder("npx")
-			.args("-y", "@modelcontextprotocol/server-everything", "dir")
-			.build();
+				.args("-y", "@modelcontextprotocol/server-everything", "dir")
+				.build();
 
 		assertThatCode(() -> {
 			mcpAsyncClient = McpClient.async(new StdioServerTransport(stdioParams), TIMEOUT, new ObjectMapper());
@@ -71,13 +73,13 @@ class McpAsyncClientTests {
 	@Test
 	void testConstructorWithInvalidArguments() {
 		assertThatThrownBy(() -> McpClient.sync(null, TIMEOUT, new ObjectMapper()))
-			.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(IllegalArgumentException.class);
 
 		assertThatThrownBy(() -> McpClient.sync(new StdioServerTransport(stdioParams), null, new ObjectMapper()))
-			.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(IllegalArgumentException.class);
 
 		assertThatThrownBy(() -> McpClient.sync(new StdioServerTransport(stdioParams), TIMEOUT, null))
-			.isInstanceOf(IllegalArgumentException.class);
+				.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
@@ -144,6 +146,35 @@ class McpAsyncClientTests {
 	@Test
 	void testMcpAsyncClientState() {
 		assertThat(mcpAsyncClient).isNotNull();
+	}
+
+	@Test
+	@Timeout(15)
+	void testListPrompts() {
+		mcpAsyncClient.listPrompts(null).subscribe(prompts -> {
+			assertThat(prompts).isNotNull()
+					.satisfies(result -> {
+						assertThat(result.prompts()).isNotNull();
+
+						if (!result.prompts().isEmpty()) {
+							Prompt firstPrompt = result.prompts().get(0);
+							assertThat(firstPrompt.name()).isNotNull();
+							assertThat(firstPrompt.description()).isNotNull();
+						}
+					});
+		});
+	}
+
+	@Test
+	@Timeout(15)
+	void testGetPrompt() {
+		mcpAsyncClient.getPrompt(new GetPromptRequest("simple_prompt", Map.of())).subscribe(prompt -> {
+			assertThat(prompt).isNotNull()
+					.satisfies(result -> {
+						assertThat(result.description()).isNotNull();
+						assertThat(result.messages()).isNotEmpty();
+					});
+		});
 	}
 
 }

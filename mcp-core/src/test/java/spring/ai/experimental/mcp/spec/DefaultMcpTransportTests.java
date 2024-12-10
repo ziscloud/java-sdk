@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class DefaultMcpTransportTests {
 
 	private AbstractMcpTransport transport;
+	
 	private ObjectMapper objectMapper;
 
 	@BeforeEach

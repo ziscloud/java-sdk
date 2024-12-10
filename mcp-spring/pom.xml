@@ -3,24 +3,19 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>spring.ai.experimental</groupId>
+	<groupId>org.springframework.experimental</groupId>
 	<artifactId>mcp-spring</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.1.0-SNAPSHOT</version>
 	<name>mcp-spring</name>
 	<description>Demo project for Spring Boot</description>
-	<url />
-	<licenses>
-		<license />
-	</licenses>
-	<developers>
-		<developer />
-	</developers>
+
+	<url>https://github.com/spring-projects-experimental/spring-ai-mcp</url>
 	<scm>
-		<connection />
-		<developerConnection />
-		<tag />
-		<url />
+		<url>https://github.com/spring-projects-experimental/spring-ai-mcp</url>
+		<connection>git://github.com/spring-projects-experimental/spring-ai-mcp.git</connection>
+		<developerConnection>git@github.com:spring-projects-experimental/spring-ai-mcp.git</developerConnection>
 	</scm>
+
 	<properties>
 		<java.version>17</java.version>
 		<spring-ai.version>1.0.0-M4</spring-ai.version>
@@ -31,9 +26,9 @@
 			<artifactId>spring-ai-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>spring.ai.experimental</groupId>
+			<groupId>org.springframework.experimental</groupId>
 			<artifactId>mcp-core</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.1.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>

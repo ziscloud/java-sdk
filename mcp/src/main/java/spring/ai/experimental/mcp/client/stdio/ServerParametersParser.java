@@ -25,7 +25,7 @@ import spring.ai.experimental.mcp.client.stdio.ServerParametersParser.McpServerC
 
 /**
  * @author Christian Tzolov
- * @since 1.0.0
+ * @author Dariusz Jędrzejczyk
  */
 
 public class ServerParametersParser {

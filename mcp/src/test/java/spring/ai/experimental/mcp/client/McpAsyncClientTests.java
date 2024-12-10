@@ -23,8 +23,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import spring.ai.experimental.mcp.client.McpAsyncClient;
-import spring.ai.experimental.mcp.client.McpClient;
 import spring.ai.experimental.mcp.client.stdio.ServerParameters;
 import spring.ai.experimental.mcp.client.stdio.StdioServerTransport;
 import spring.ai.experimental.mcp.spec.McpSchema.CallToolRequest;

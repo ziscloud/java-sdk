@@ -8,7 +8,7 @@ skinparam class {
 }
 
 ' Interfaces
-interface McpAsyncTransport {
+interface McpTransport {
     +start(): void
     +close(): void
     +setInboudMessageHandler(Consumer<JSONRPCMessage>): void
@@ -42,16 +42,16 @@ class DefaultMcpTransport {
 }
 
 class McpAsyncClient {
-    -transport: McpAsyncTransport
+    -transport: McpTransport
     -session: McpAsyncSession
-    +McpAsyncClient(McpAsyncTransport)
+    +McpAsyncClient(McpTransport)
     +initialize(): Mono<InitializeResult>
     +close(): void
 }
 
 class McpSyncClient {
     -asyncClient: McpAsyncClient
-    +McpSyncClient(McpAsyncTransport)
+    +McpSyncClient(McpTransport)
     +initialize(): InitializeResult
     +close(): void
 }
@@ -79,14 +79,14 @@ class Assert {
 }
 
 ' Relationships
-McpAsyncTransport <|.. DefaultMcpTransport
+McpTransport <|.. DefaultMcpTransport
 DefaultMcpTransport <|-- StdioServerTransport
 
 McpClient <|.. McpSyncClient
 McpAsyncSession <|.. McpAsyncClient
 
 McpSyncClient o-- McpAsyncClient
-McpAsyncClient o-- McpAsyncTransport
+McpAsyncClient o-- McpTransport
 McpAsyncClient o-- McpAsyncSession
 
 StdioServerTransport o-- ServerParameters
@@ -94,7 +94,7 @@ ServerParameters <.. ServerParametersParser : creates
 
 ' Package organization
 package "spring.ai.mcp.spec" {
-    ' McpAsyncTransport
+    ' McpTransport
     ' McpAsyncSession
     ' DefaultMcpTransport
 }

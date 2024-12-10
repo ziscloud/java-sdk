@@ -101,7 +101,7 @@ The SDK follows a layered architecture:
 - **McpClient**: Main interface defining the synchronous operations
 - **McpAsyncClient**: Async implementation using Project Reactor
 - **McpSyncClient**: Synchronous wrapper around the async client
-- **McpAsyncTransport**: Transport layer interface
+- **McpTransport**: Transport layer interface
 - **DefaultMcpTransport**: Base transport implementation
 - **StdioServerTransport**: Stdio-based server communication
 

@@ -21,6 +21,9 @@ import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCResponse;
 
 /**
  * Stdio client for communicating with a server process.
+ * 
+ * @author Christian Tzolov
+ * @author Dariusz Jędrzejczyk
  */
 public class StdioServerTransport extends DefaultMcpTransport {
 

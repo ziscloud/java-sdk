@@ -11,7 +11,13 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import spring.ai.experimental.mcp.client.util.Assert;
 
-public class McpAsyncSession {
+/**
+ * Implementation of the MCP client session.
+ * 
+ * @author Christian Tzolov
+ * @author Dariusz Jędrzejczyk
+ */
+public class McpSession {
 
 	private final ConcurrentHashMap<Object, MonoSink<McpSchema.JSONRPCResponse>> pendingResponses = new ConcurrentHashMap<>();
 
@@ -19,9 +25,9 @@ public class McpAsyncSession {
 
 	private final ObjectMapper objectMapper;
 
-	private final McpAsyncTransport transport;
+	private final McpTransport transport;
 
-	public McpAsyncSession(Duration requestTimeout, ObjectMapper objectMapper, McpAsyncTransport transport) {
+	public McpSession(Duration requestTimeout, ObjectMapper objectMapper, McpTransport transport) {
 
 		Assert.notNull(objectMapper, "The ObjectMapper can not be null");
 		Assert.notNull(requestTimeout, "The requstTimeout can not be null");
@@ -50,7 +56,7 @@ public class McpAsyncSession {
 			}
 		});
 
-		this.transport.setErrorHandler(error -> System.out.println("Error received " + error));
+		this.transport.setInboundErrorHandler(error -> System.out.println("Error received " + error));
 
 		this.transport.start();
 	}

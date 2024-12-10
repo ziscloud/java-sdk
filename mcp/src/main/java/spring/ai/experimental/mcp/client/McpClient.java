@@ -18,15 +18,14 @@ package spring.ai.experimental.mcp.client;
 import java.time.Duration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import spring.ai.experimental.mcp.spec.McpAsyncTransport;
+import spring.ai.experimental.mcp.spec.McpTransport;
 
 /**
  * The MCP client is the main entry point for interacting with the Model Context Protocol
  * (MCP) server.
  * 
- * 
  * @author Christian Tzolov
- * @since 1.0.0
+ * @author Dariusz Jędrzejczyk
  */
 public class McpClient {
 
@@ -40,20 +39,20 @@ public class McpClient {
 	//                                               JSONtoPOJOCodec type
 	//           .sync();
 
-	public static McpAsyncClient async(McpAsyncTransport transport) {
+	public static McpAsyncClient async(McpTransport transport) {
 		return new McpAsyncClient(transport);
 	}
 
-	public static McpAsyncClient async(McpAsyncTransport transport, Duration requestTimeout,
+	public static McpAsyncClient async(McpTransport transport, Duration requestTimeout,
 			ObjectMapper objectMapper) {
 		return new McpAsyncClient(transport, requestTimeout, objectMapper);
 	}
 
-	public static McpSyncClient sync(McpAsyncTransport transport) {
+	public static McpSyncClient sync(McpTransport transport) {
 		return new McpSyncClient(async(transport));
 	}
 
-	public static McpSyncClient sync(McpAsyncTransport transport, Duration requestTimeout,
+	public static McpSyncClient sync(McpTransport transport, Duration requestTimeout,
 			ObjectMapper objectMapper) {
 		return new McpSyncClient(async(transport, requestTimeout, objectMapper));
 	}

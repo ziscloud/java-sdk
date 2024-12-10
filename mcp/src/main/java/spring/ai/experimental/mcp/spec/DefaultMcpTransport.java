@@ -25,9 +25,9 @@ import spring.ai.experimental.mcp.spec.McpSchema.JSONRPCMessage;
 
 /**
  * @author Christian Tzolov
- * @since 1.0.0
+ * @author Dariusz Jędrzejczyk
  */
-public class DefaultMcpTransport implements McpAsyncTransport {
+public class DefaultMcpTransport implements McpTransport {
 
 	protected final ObjectMapper objectMapper;
 
@@ -93,7 +93,7 @@ public class DefaultMcpTransport implements McpAsyncTransport {
 		this.inboundMessageHandler = inboundMessageHandler;
 	}
 
-	public void setErrorHandler(Consumer<String> errorHandler) {
+	public void setInboundErrorHandler(Consumer<String> errorHandler) {
 		this.errorHandler = errorHandler;
 	}
 

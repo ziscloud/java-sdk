@@ -13,6 +13,9 @@ import spring.ai.experimental.mcp.client.util.Assert;
 
 /**
  * Server parameters for stdio client.
+ * 
+ * @author Christian Tzolov
+ * @author Dariusz Jędrzejczyk
  */
 @JsonInclude(JsonInclude.Include.NON_ABSENT)
 public class ServerParameters {

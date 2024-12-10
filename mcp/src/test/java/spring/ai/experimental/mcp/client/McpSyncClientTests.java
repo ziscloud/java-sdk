@@ -16,29 +16,26 @@
 package spring.ai.experimental.mcp.client;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
-import spring.ai.experimental.mcp.client.McpClient;
-import spring.ai.experimental.mcp.client.McpSyncClient;
 import spring.ai.experimental.mcp.client.stdio.ServerParameters;
 import spring.ai.experimental.mcp.client.stdio.StdioServerTransport;
 import spring.ai.experimental.mcp.spec.McpSchema.CallToolRequest;
 import spring.ai.experimental.mcp.spec.McpSchema.CallToolResult;
-import spring.ai.experimental.mcp.spec.McpSchema.Content;
 import spring.ai.experimental.mcp.spec.McpSchema.ListResourcesResult;
 import spring.ai.experimental.mcp.spec.McpSchema.ListToolsResult;
 import spring.ai.experimental.mcp.spec.McpSchema.Resource;
 import spring.ai.experimental.mcp.spec.McpSchema.TextContent;
 import spring.ai.experimental.mcp.spec.McpSchema.Tool;
 
-import static org.assertj.core.api.Assertions.*;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Unit tests for MCP Client Session functionality.

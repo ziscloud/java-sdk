@@ -107,7 +107,7 @@ class DefaultMcpTransportTests {
     @Test
     void customErrorHandlerShouldReceiveErrors() {
         AtomicReference<String> receivedError = new AtomicReference<>();
-        transport.setErrorHandler(receivedError::set);
+        transport.setInboundErrorHandler(receivedError::set);
         transport.start();
 
         String errorMessage = "Test error";
@@ -124,7 +124,7 @@ class DefaultMcpTransportTests {
         AtomicReference<String> receivedError = new AtomicReference<>();
 
         transport.setInboudMessageHandler(receivedMessage::set);
-        transport.setErrorHandler(receivedError::set);
+        transport.setInboundErrorHandler(receivedError::set);
         transport.start();
 
         JSONRPCRequest message = new JSONRPCRequest(

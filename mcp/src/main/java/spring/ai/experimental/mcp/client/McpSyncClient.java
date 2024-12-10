@@ -5,6 +5,10 @@ import java.time.Duration;
 import spring.ai.experimental.mcp.client.util.Assert;
 import spring.ai.experimental.mcp.spec.McpSchema;
 
+/**
+ * @author Dariusz Jędrzejczyk
+ * @author Christian Tzolov
+ */
 public class McpSyncClient implements AutoCloseable {
 
 	// TODO: Consider providing a client config to set this properly

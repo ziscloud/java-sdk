@@ -9,7 +9,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>spring-ai-mcp-spring-boot</artifactId>
-	<name>spring-ai-mcp-spring-boot</name>
+	<name>Spring AI MCP Spring Boot</name>
 	<description>Spring AI MCP Spring Boot Integration</description>
 
 	<url>https://github.com/spring-projects-experimental/spring-ai-mcp</url>

@@ -11,7 +11,7 @@
 	<packaging>pom</packaging>
 	<url>https://github.com/spring-projects-experimental/spring-ai-mcp</url>
 
-	<name>mcp-parent</name>
+	<name>Spring AI MCP</name>
 	<description>Demo project for Spring Boot</description>
 
 
@@ -91,9 +91,9 @@
 	</properties>
 
 	<modules>
-		<module>mcp-core</module>
-		<module>mcp-spring</module>
-		<module>mcp-spring-boot</module>
+		<module>spring-ai-mcp-core</module>
+		<module>spring-ai-mcp-spring</module>
+		<module>spring-ai-mcp-spring-boot</module>
 	</modules>
 
 	<build>

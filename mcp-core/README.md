@@ -1,6 +1,6 @@
 # Model Context Protocol (MCP) Java SDK
 
-A Java implementation of the [Model Context Protocol](https://modelcontextprotocol.io/docs/concepts/architecture) specification, providing both synchronous and asynchronous clients for MCP server interactions.
+A Java implementation of the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture) specification, providing both synchronous and asynchronous clients for MCP server interactions.
 
 ## Overview
 
@@ -11,9 +11,10 @@ This SDK implements the Model Context Protocol, enabling seamless integration wi
 - Synchronous and Asynchronous client implementations
 - Standard MCP operations support:
   - Tool discovery and execution
-  - Resource management
-  - Message creation
-  - Server initialization
+  - Resource management and templates
+  - Prompt handling and management
+  - Resource subscription system
+  - Server initialization and ping
 - Stdio-based server transport
 - Reactive programming support using Project Reactor
 
@@ -43,53 +44,80 @@ ServerParameters params = ServerParameters.builder("npx")
 Duration timeout = Duration.ofSeconds(10);
 McpAsyncClient client = McpClient.async(
     new StdioServerTransport(params), 
-    timeout,
-    new ObjectMapper()
+    timeout
 );
 
 // Initialize the connection
-client.initialize();
+client.initialize()
+    .flatMap(result -> {
+        // Connection initialized
+        return client.listTools(null);
+    })
+    .flatMap(tools -> {
+        // Process tools
+        return client.callTool(new McpSchema.CallToolRequest("echo", 
+            Map.of("message", "Hello MCP!")));
+    })
+    .flatMap(result -> {
+        // Handle tool result
+        return client.listPrompts(null);
+    })
+    .flatMap(prompts -> {
+        // Process available prompts
+        return client.getPrompt(new McpSchema.GetPromptRequest("prompt-id"));
+    })
+    .subscribe(prompt -> {
+        // Handle prompt result
+    });
 
-// List available tools
-client.listTools(null).subscribe(result -> {
-    List<Tool> tools = result.tools();
-    // Process tools...
-});
-
-// Call a tool
-CallToolRequest request = new CallToolRequest(
-    "echo", 
-    Map.of("message", "Hello MCP!")
-);
-client.callTool(request).subscribe(result -> {
-    // Handle tool execution result...
-});
+// Resource management example
+client.listResources(null)
+    .flatMap(resources -> {
+        // Subscribe to resource changes
+        return client.subscribeResource(new McpSchema.SubscribeRequest("resource-uri"));
+    })
+    .subscribe();
 
 // Cleanup
-client.close();
+client.closeGracefully(timeout).block();
 ```
 
 ### Sync Client Example
 
 ```java
 // Create and initialize sync client
-McpClient syncClient = McpClient.sync(
+McpSyncClient client = McpClient.sync(
     new StdioServerTransport(params),
-    timeout,
-    new ObjectMapper()
+    timeout
 );
 
-// Initialize connection
-syncClient.initialize();
+try {
+    // Initialize connection
+    McpSchema.InitializeResult initResult = client.initialize();
 
-// List tools synchronously
-ListToolsResult tools = syncClient.listTools(null);
+    // List tools synchronously
+    McpSchema.ListToolsResult tools = client.listTools(null);
 
-// Call tool synchronously
-CallToolResult result = syncClient.callTool("echo", Map.of("message", "Hello!"));
+    // Call tool synchronously
+    McpSchema.CallToolResult result = client.callTool(
+        new McpSchema.CallToolRequest("echo", Map.of("message", "Hello!"))
+    );
 
-// Cleanup
-syncClient.close();
+    // Resource management
+    McpSchema.ListResourcesResult resources = client.listResources(null);
+    McpSchema.ReadResourceResult resource = client.readResource(
+        new McpSchema.ReadResourceRequest("resource-uri")
+    );
+
+    // Prompt management
+    ListPromptsResult prompts = client.listPrompts(null);
+    GetPromptResult prompt = client.getPrompt(
+        new McpSchema.GetPromptRequest("prompt-id")
+    );
+} finally {
+    // Cleanup
+    client.close();
+}
 ```
 
 ## Architecture
@@ -98,11 +126,13 @@ The SDK follows a layered architecture:
 
 ### Core Components
 
-- **McpClient**: Main interface defining the synchronous operations
-- **McpAsyncClient**: Async implementation using Project Reactor
+- **McpClient**: Factory class for creating sync and async clients
+- **McpAsyncClient**: Primary async implementation using Project Reactor
 - **McpSyncClient**: Synchronous wrapper around the async client
+- **McpSession**: Core session interface defining communication patterns
 - **McpTransport**: Transport layer interface
-- **AbstracttMcpTransport**: Abstract transport implementation
+- **McpSchema**: Comprehensive protocol schema definitions
+- **AbstractMcpTransport**: Base transport implementation
 - **StdioServerTransport**: Stdio-based server communication
 
 ### Key Interactions
@@ -113,11 +143,23 @@ The SDK follows a layered architecture:
    - Protocol handshake
 
 2. Message Flow
-   - Request creation
+   - JSON-RPC message creation
    - Transport layer handling
    - Response processing
+   - Error handling
 
-3. Tool Execution
+3. Resource Management
+   - Resource listing and reading
+   - Template management
+   - Subscription handling
+   - Change notifications
+
+4. Prompt System
+   - Prompt discovery
+   - Prompt retrieval
+   - Change notifications
+
+5. Tool Execution
    - Tool discovery
    - Parameter validation
    - Execution handling
@@ -125,13 +167,15 @@ The SDK follows a layered architecture:
 
 ## Error Handling
 
-The SDK provides comprehensive error handling:
+The SDK provides comprehensive error handling through the McpError class:
 
 - Transport-level errors
 - Protocol violations
 - Tool execution failures
+- Resource access errors
+- Subscription handling errors
+- Prompt management errors
 - Timeout handling
-- Resource management errors
 
 ## Contributing
 

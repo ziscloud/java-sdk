@@ -32,7 +32,7 @@ jobs:
           mvn -s settings.xml -Pjavadoc --batch-mode --update-snapshots deploy
 
       - name: Generate Java docs
-        run: mvn javadoc:aggregate
+        run: mvn -Pjavadoc javadoc:aggregate
 
       - name: Capture project version
         run: echo PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version --quiet -DforceStdout) >> $GITHUB_ENV

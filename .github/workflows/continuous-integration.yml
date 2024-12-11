@@ -19,6 +19,12 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
       - name: Build with Maven and deploy to Artifactory
         env:
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}

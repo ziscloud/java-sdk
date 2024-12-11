@@ -35,4 +35,4 @@ jobs:
         env:
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-        run: mvn -P artifactory-staging -s settings.xml --batch-mode -Dmaven.test.skip=true deploy
+        run: mvn -P artifactory-staging -P javadoc -s settings.xml --batch-mode -Dmaven.test.skip=true deploy

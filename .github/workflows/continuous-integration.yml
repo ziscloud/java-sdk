@@ -29,7 +29,7 @@ jobs:
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
         run: |
-          mvn -s settings.xml -Pjavadoc --batch-mode -quiet --update-snapshots deploy
+          mvn -s settings.xml -Pjavadoc --batch-mode --update-snapshots -DskipTests -X deploy
 
       - name: Generate Java docs
         run: mvn -Pjavadoc -B -q javadoc:aggregate

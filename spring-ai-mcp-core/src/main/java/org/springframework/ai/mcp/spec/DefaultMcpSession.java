@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.mcp.spec;
 
 import java.time.Duration;
@@ -9,11 +25,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
+
 import org.springframework.ai.mcp.client.util.Assert;
 
 /**
  * Implementation of the MCP client session.
- * 
+ *
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
@@ -39,16 +56,19 @@ public class DefaultMcpSession implements McpSession {
 
 		this.transport.setInboudMessageHandler(message -> {
 
-			if ( message instanceof McpSchema.JSONRPCResponse response) {
+			if (message instanceof McpSchema.JSONRPCResponse response) {
 				var sink = pendingResponses.remove(response.id());
 				if (sink == null) {
 					System.out.println("Unexpected response for unkown id " + response.id());
-				} else {
+				}
+				else {
 					sink.success(response);
 				}
-			} else if ( message instanceof McpSchema.JSONRPCRequest request) {
+			}
+			else if (message instanceof McpSchema.JSONRPCRequest request) {
 				System.out.println("Client does not yet support server requests");
-			} else if ( message instanceof McpSchema.JSONRPCNotification notification) {
+			}
+			else if (message instanceof McpSchema.JSONRPCNotification notification) {
 				System.out.println("Notifications not yet supported");
 			}
 		});
@@ -70,23 +90,26 @@ public class DefaultMcpSession implements McpSession {
 				// TODO: This is non-blocking, but it's actually a synchronous call,
 				// perhaps there's no need to make it return Mono?
 				this.transport.sendMessage(jsonrpcRequest)
-						// TODO: It's most efficient to create a dedicated
-						// Subscriber here
-						.subscribe(v -> {
-						}, e -> {
-							this.pendingResponses.remove(requestId);
-							sink.error(e);
-						});
-			} catch (Exception e) {
+					// TODO: It's most efficient to create a dedicated
+					// Subscriber here
+					.subscribe(v -> {
+					}, e -> {
+						this.pendingResponses.remove(requestId);
+						sink.error(e);
+					});
+			}
+			catch (Exception e) {
 				sink.error(e);
 			}
 		}).timeout(this.requestTimeout).handle((jsonRpcResponse, s) -> {
 			if (jsonRpcResponse.error() != null) {
 				s.error(new McpError(jsonRpcResponse.error()));
-			} else {
+			}
+			else {
 				if (typeRef.getType().getTypeName().equals("java.lang.Void")) {
 					s.complete();
-				} else {
+				}
+				else {
 					s.next(this.objectMapper.convertValue(jsonRpcResponse.result(), typeRef));
 				}
 			}
@@ -99,7 +122,8 @@ public class DefaultMcpSession implements McpSession {
 				method, params);
 		try {
 			this.transport.sendMessage(jsonrpcNotification);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			return Mono.error(new McpError(e));
 		}
 		return Mono.empty();

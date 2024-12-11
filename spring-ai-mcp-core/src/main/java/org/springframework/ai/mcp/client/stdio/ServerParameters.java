@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.mcp.client.stdio;
 
 import java.util.ArrayList;
@@ -9,11 +25,12 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.springframework.ai.mcp.client.util.Assert;
 
 /**
  * Server parameters for stdio client.
- * 
+ *
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
@@ -22,11 +39,11 @@ public class ServerParameters {
 
 	// Environment variables to inherit by default
 	private static final List<String> DEFAULT_INHERITED_ENV_VARS = System.getProperty("os.name")
-			.toLowerCase()
-			.contains("win")
-					? Arrays.asList("APPDATA", "HOMEDRIVE", "HOMEPATH", "LOCALAPPDATA", "PATH",
-							"PROCESSOR_ARCHITECTURE", "SYSTEMDRIVE", "SYSTEMROOT", "TEMP", "USERNAME", "USERPROFILE")
-					: Arrays.asList("HOME", "LOGNAME", "PATH", "SHELL", "TERM", "USER");
+		.toLowerCase()
+		.contains("win")
+				? Arrays.asList("APPDATA", "HOMEDRIVE", "HOMEPATH", "LOCALAPPDATA", "PATH", "PROCESSOR_ARCHITECTURE",
+						"SYSTEMDRIVE", "SYSTEMROOT", "TEMP", "USERNAME", "USERPROFILE")
+				: Arrays.asList("HOME", "LOGNAME", "PATH", "SHELL", "TERM", "USER");
 
 	@JsonProperty("command")
 	private String command;
@@ -117,17 +134,17 @@ public class ServerParameters {
 	}
 
 	/**
-	 * Returns a default environment object including only environment variables
-	 * deemed safe to inherit.
+	 * Returns a default environment object including only environment variables deemed
+	 * safe to inherit.
 	 */
 	private static Map<String, String> getDefaultEnvironment() {
 		return System.getenv()
-				.entrySet()
-				.stream()
-				.filter(entry -> DEFAULT_INHERITED_ENV_VARS.contains(entry.getKey()))
-				.filter(entry -> entry.getValue() != null)
-				.filter(entry -> !entry.getValue().startsWith("()"))
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+			.entrySet()
+			.stream()
+			.filter(entry -> DEFAULT_INHERITED_ENV_VARS.contains(entry.getKey()))
+			.filter(entry -> entry.getValue() != null)
+			.filter(entry -> !entry.getValue().startsWith("()"))
+			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 }

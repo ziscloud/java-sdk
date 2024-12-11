@@ -1,18 +1,19 @@
 /*
-* Copyright 2024 - 2024 the original author or authors.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* https://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2024-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.mcp.spec;
 
 import java.util.function.Consumer;
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+
 import org.springframework.ai.mcp.client.util.Assert;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCMessage;
 
@@ -32,14 +34,17 @@ public abstract class AbstractMcpTransport implements McpTransport {
 	protected final ObjectMapper objectMapper;
 
 	private final Sinks.Many<String> errorSink;
+
 	private final Sinks.Many<JSONRPCMessage> inboundSink;
+
 	private final Sinks.Many<JSONRPCMessage> outboundSink;
 
 	private Consumer<JSONRPCMessage> inboundMessageHandler = message -> System.out
-			.println("Received message: " + message);
+		.println("Received message: " + message);
+
 	private Consumer<String> errorHandler = error -> System.err.println("Received error: " + error);
 
-	public AbstractMcpTransport() {		
+	public AbstractMcpTransport() {
 		this(new ObjectMapper());
 	}
 
@@ -66,8 +71,7 @@ public abstract class AbstractMcpTransport implements McpTransport {
 	}
 
 	private void handleIncomingMessages() {
-		this.inboundSink.asFlux()
-				.subscribe(message -> this.inboundMessageHandler.accept(message));
+		this.inboundSink.asFlux().subscribe(message -> this.inboundMessageHandler.accept(message));
 	}
 
 	private void handleIncomingErrors() {
@@ -112,8 +116,10 @@ public abstract class AbstractMcpTransport implements McpTransport {
 			// In this approach we delegate the retry and the backpressure onto the
 			// caller. This might be enough for most cases.
 			return Mono.empty();
-		} else {
+		}
+		else {
 			return Mono.error(new RuntimeException("Failed to enqueue message"));
 		}
 	}
+
 }

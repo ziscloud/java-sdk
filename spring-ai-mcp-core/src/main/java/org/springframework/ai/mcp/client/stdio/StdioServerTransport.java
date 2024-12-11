@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.mcp.client.stdio;
 
 import java.io.BufferedReader;
@@ -13,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+
 import org.springframework.ai.mcp.client.util.Assert;
 import org.springframework.ai.mcp.spec.AbstractMcpTransport;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCMessage;
@@ -22,7 +39,7 @@ import org.springframework.ai.mcp.spec.McpSchema.JSONRPCResponse;
 
 /**
  * Stdio client for communicating with a server process.
- * 
+ *
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
@@ -34,11 +51,15 @@ public class StdioServerTransport extends AbstractMcpTransport {
 	private Process process;
 
 	private BufferedReader processErrorReader;
+
 	private BufferedReader processReader;
+
 	private BufferedWriter processWriter;
 
 	private Scheduler inboundScheduler;
+
 	private Scheduler outboundScheduler;
+
 	private Scheduler errorScheduler;
 
 	volatile boolean isRunning;
@@ -59,12 +80,9 @@ public class StdioServerTransport extends AbstractMcpTransport {
 		this.params = params;
 
 		// Start threads
-		this.inboundScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
-				"inbound");
-		this.outboundScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
-				"outbound");
-		this.errorScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(),
-				"error");
+		this.inboundScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(), "inbound");
+		this.outboundScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(), "outbound");
+		this.errorScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(), "error");
 	}
 
 	@Override
@@ -81,7 +99,8 @@ public class StdioServerTransport extends AbstractMcpTransport {
 		// Start the process
 		try {
 			this.process = processBuilder.start();
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new RuntimeException("Failed to start process with command: " + fullCommand, e);
 		}
 
@@ -110,7 +129,8 @@ public class StdioServerTransport extends AbstractMcpTransport {
 	public void awaitForExit() {
 		try {
 			this.process.waitFor();
-		} catch (InterruptedException e) {
+		}
+		catch (InterruptedException e) {
 			throw new RuntimeException("Process interrupted", e);
 		}
 	}
@@ -124,15 +144,18 @@ public class StdioServerTransport extends AbstractMcpTransport {
 						System.out.println("Received error line: " + line);
 						// TODO: handle errors, etc.
 						this.getErrorSink().tryEmitNext(line);
-					} catch (Exception e) {
+					}
+					catch (Exception e) {
 						throw new RuntimeException(e);
 					}
 				}
-			} catch (IOException e) {
+			}
+			catch (IOException e) {
 				if (this.isRunning) {
 					throw new RuntimeException(e);
 				}
-			} finally {
+			}
+			finally {
 				this.isRunning = false;
 			}
 		});
@@ -149,15 +172,18 @@ public class StdioServerTransport extends AbstractMcpTransport {
 							// TODO: Back off, reschedule, give up?
 							throw new RuntimeException("Failed to enqueue message");
 						}
-					} catch (Exception e) {
+					}
+					catch (Exception e) {
 						throw new RuntimeException(e);
 					}
 				}
-			} catch (IOException e) {
+			}
+			catch (IOException e) {
 				if (isRunning) {
 					throw new RuntimeException(e);
 				}
-			} finally {
+			}
+			finally {
 				isRunning = false;
 			}
 		});
@@ -170,9 +196,11 @@ public class StdioServerTransport extends AbstractMcpTransport {
 		// Determine message type based on specific JSON structure
 		if (map.containsKey("method") && map.containsKey("id")) {
 			return this.objectMapper.convertValue(map, JSONRPCRequest.class);
-		} else if (map.containsKey("method") && !map.containsKey("id")) {
+		}
+		else if (map.containsKey("method") && !map.containsKey("id")) {
 			return this.objectMapper.convertValue(map, JSONRPCNotification.class);
-		} else if (map.containsKey("result") || map.containsKey("error")) {
+		}
+		else if (map.containsKey("result") || map.containsKey("error")) {
 			return this.objectMapper.convertValue(map, JSONRPCResponse.class);
 		}
 
@@ -181,23 +209,24 @@ public class StdioServerTransport extends AbstractMcpTransport {
 
 	private void startOutboundProcessing() {
 		this.getOutboundSink()
-				.asFlux()
-				// this bit is important since writes come from user threads and we
-				// want to ensure that the actual writing happens on a dedicated thread
-				.publishOn(outboundScheduler)
-				.handle((message, s) -> {
-					if (message != null) {
-						try {
-							this.processWriter.write(objectMapper.writeValueAsString(message));
-							this.processWriter.newLine();
-							this.processWriter.flush();
-							s.next(message);
-						} catch (IOException e) {
-							s.error(new RuntimeException(e));
-						}
+			.asFlux()
+			// this bit is important since writes come from user threads and we
+			// want to ensure that the actual writing happens on a dedicated thread
+			.publishOn(outboundScheduler)
+			.handle((message, s) -> {
+				if (message != null) {
+					try {
+						this.processWriter.write(objectMapper.writeValueAsString(message));
+						this.processWriter.newLine();
+						this.processWriter.flush();
+						s.next(message);
 					}
-				})
-				.subscribe();
+					catch (IOException e) {
+						s.error(new RuntimeException(e));
+					}
+				}
+			})
+			.subscribe();
 	}
 
 	@Override
@@ -205,41 +234,40 @@ public class StdioServerTransport extends AbstractMcpTransport {
 
 		this.isRunning = false;
 
-		return Mono.whenDelayError(
-				Mono.fromRunnable(() -> {
-					try {
-						this.processErrorReader.close();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
+		return Mono.whenDelayError(Mono.fromRunnable(() -> {
+			try {
+				this.processErrorReader.close();
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}).subscribeOn(errorScheduler), Mono.fromRunnable(() -> {
+			try {
+				this.processReader.close();
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}).subscribeOn(inboundScheduler), Mono.fromRunnable(() -> {
+			try {
+				this.processWriter.close();
+			}
+			catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}).subscribeOn(outboundScheduler))
+			.then(Mono.whenDelayError(inboundScheduler.disposeGracefully(), outboundScheduler.disposeGracefully(),
+					errorScheduler.disposeGracefully()))
+			.then(Mono.fromRunnable(() -> {
+				if (this.process != null) {
+					var process = this.process.destroyForcibly();
+					if (process.exitValue() != 0) {
+						throw new RuntimeException("Failed to destroy process");
 					}
-				}).subscribeOn(errorScheduler),
-				Mono.fromRunnable(() -> {
-					try {
-						this.processReader.close();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				}).subscribeOn(inboundScheduler),
-				Mono.fromRunnable(() -> {
-					try {
-						this.processWriter.close();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
-				}).subscribeOn(outboundScheduler))
-				.then(Mono.whenDelayError(inboundScheduler.disposeGracefully(),
-						outboundScheduler.disposeGracefully(),
-						errorScheduler.disposeGracefully()))
-				.then(Mono.fromRunnable(() -> {
-					if (this.process != null) {
-						var process = this.process.destroyForcibly();
-						if (process.exitValue() != 0) {
-							throw new RuntimeException("Failed to destroy process");
-						}
-					}
-				}))
-				.then()
-				.subscribeOn(Schedulers.boundedElastic());
+				}
+			}))
+			.then()
+			.subscribeOn(Schedulers.boundedElastic());
 	}
 
 }

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
@@ -32,8 +48,7 @@ public class McpSyncClient implements AutoCloseable {
 	}
 
 	/**
-	 * The initialization phase MUST be the first interaction between client and
-	 * server.
+	 * The initialization phase MUST be the first interaction between client and server.
 	 * During this phase, the client and server:
 	 * <ul>
 	 * <li>Establish protocol version compatibility</li>
@@ -41,8 +56,7 @@ public class McpSyncClient implements AutoCloseable {
 	 * <li>Share implementation details</li>
 	 * </ul>
 	 * <br/>
-	 * The client MUST initiate this phase by sending an initialize request
-	 * containing:
+	 * The client MUST initiate this phase by sending an initialize request containing:
 	 * <ul>
 	 * <li>The protocol version the client supports</li>
 	 * <li>The client's capabilities</li>
@@ -51,8 +65,7 @@ public class McpSyncClient implements AutoCloseable {
 	 *
 	 * The server MUST respond with its own capabilities and information:
 	 * {@link McpSchema.ServerCapabilities}. <br/>
-	 * After successful initialization, the client MUST send an initialized
-	 * notification
+	 * After successful initialization, the client MUST send an initialized notification
 	 * to indicate it is ready to begin normal operations.
 	 *
 	 * <br/>
@@ -60,7 +73,6 @@ public class McpSyncClient implements AutoCloseable {
 	 * <a href=
 	 * "https://github.com/modelcontextprotocol/specification/blob/main/docs/specification/basic/lifecycle.md#initialization">Initialization
 	 * Spec</a>
-	 * 
 	 * @return the initialize result.
 	 */
 	public McpSchema.InitializeResult initialize() {
@@ -88,7 +100,6 @@ public class McpSyncClient implements AutoCloseable {
 	// --------------------------
 	/**
 	 * Send a tools/call request.
-	 * 
 	 * @param callToolRequest the call tool request.
 	 * @return the call tool result.
 	 */
@@ -98,7 +109,6 @@ public class McpSyncClient implements AutoCloseable {
 
 	/**
 	 * Send a tools/list request.
-	 * 
 	 * @return the list of tools result.
 	 */
 	public McpSchema.ListToolsResult listTools(String cursor) {
@@ -111,7 +121,6 @@ public class McpSyncClient implements AutoCloseable {
 
 	/**
 	 * Send a resources/list request.
-	 * 
 	 * @param cursor the cursor
 	 * @return the list of resources result.
 	 */
@@ -121,7 +130,6 @@ public class McpSyncClient implements AutoCloseable {
 
 	/**
 	 * Send a resources/read request.
-	 * 
 	 * @param resource the resource to read
 	 * @return the resource content.
 	 */
@@ -131,7 +139,6 @@ public class McpSyncClient implements AutoCloseable {
 
 	/**
 	 * Send a resources/read request.
-	 * 
 	 * @param readResourceRequest the read resource request.
 	 * @return the resource content.
 	 */
@@ -144,7 +151,6 @@ public class McpSyncClient implements AutoCloseable {
 	 * templates. Arguments may be auto-completed through the completion API.
 	 *
 	 * Request a list of resource templates the server has.
-	 * 
 	 * @param cursor the cursor
 	 * @return the list of resource templates result.
 	 */
@@ -153,8 +159,7 @@ public class McpSyncClient implements AutoCloseable {
 	}
 
 	/**
-	 * List Changed Notification. When the list of available resources changes,
-	 * servers
+	 * List Changed Notification. When the list of available resources changes, servers
 	 * that declared the listChanged capability SHOULD send a notification:
 	 */
 	public void sendResourcesListChanged() {
@@ -162,14 +167,13 @@ public class McpSyncClient implements AutoCloseable {
 	}
 
 	/**
-	 * Subscriptions. The protocol supports optional subscriptions to resource
-	 * changes. Clients can subscribe to specific resources and receive
-	 * notifications when they change.
+	 * Subscriptions. The protocol supports optional subscriptions to resource changes.
+	 * Clients can subscribe to specific resources and receive notifications when they
+	 * change.
 	 *
 	 * Send a resources/subscribe request.
-	 * 
-	 * @param subscribeRequest the subscribe request contains the uri of the
-	 *                         resource to subscribe to.
+	 * @param subscribeRequest the subscribe request contains the uri of the resource to
+	 * subscribe to.
 	 */
 	public void subscribeResource(McpSchema.SubscribeRequest subscribeRequest) {
 		this.delegate.subscribeResource(subscribeRequest).block();
@@ -177,10 +181,8 @@ public class McpSyncClient implements AutoCloseable {
 
 	/**
 	 * Send a resources/unsubscribe request.
-	 * 
-	 * @param unsubscribeRequest the unsubscribe request contains the uri of the
-	 *                           resource
-	 *                           to unsubscribe from.
+	 * @param unsubscribeRequest the unsubscribe request contains the uri of the resource
+	 * to unsubscribe from.
 	 */
 	public void unsubscribeResource(McpSchema.UnsubscribeRequest unsubscribeRequest) {
 		this.delegate.unsubscribeResource(unsubscribeRequest).block();
@@ -198,11 +200,12 @@ public class McpSyncClient implements AutoCloseable {
 	}
 
 	/**
-	 * (Server) An optional notification from the server to the client, informing it
-	 * that the list of prompts it offers has changed. This may be issued by servers
-	 * without any previous subscription from the client.
+	 * (Server) An optional notification from the server to the client, informing it that
+	 * the list of prompts it offers has changed. This may be issued by servers without
+	 * any previous subscription from the client.
 	 */
 	public void promptListChangedNotification() {
 		this.delegate.promptListChangedNotification().block();
 	}
+
 }

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2024-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
@@ -5,14 +20,15 @@ import java.time.Duration;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import reactor.core.publisher.Mono;
+
 import org.springframework.ai.mcp.spec.DefaultMcpSession;
-import org.springframework.ai.mcp.spec.McpTransport;
 import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptRequest;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
 import org.springframework.ai.mcp.spec.McpSchema.PaginatedRequest;
+import org.springframework.ai.mcp.spec.McpTransport;
 
 /**
  * @author Dariusz Jędrzejczyk
@@ -32,8 +48,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	}
 
 	/**
-	 * The initialization phase MUST be the first interaction between client and
-	 * server.
+	 * The initialization phase MUST be the first interaction between client and server.
 	 * During this phase, the client and server:
 	 * <ul>
 	 * <li>Establish protocol version compatibility</li>
@@ -41,8 +56,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * <li>Share implementation details</li>
 	 * </ul>
 	 * <br/>
-	 * The client MUST initiate this phase by sending an initialize request
-	 * containing:
+	 * The client MUST initiate this phase by sending an initialize request containing:
 	 * <ul>
 	 * <li>The protocol version the client supports</li>
 	 * <li>The client's capabilities</li>
@@ -51,8 +65,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 *
 	 * The server MUST respond with its own capabilities and information:
 	 * {@link McpSchema.ServerCapabilities}. <br/>
-	 * After successful initialization, the client MUST send an initialized
-	 * notification
+	 * After successful initialization, the client MUST send an initialized notification
 	 * to indicate it is ready to begin normal operations.
 	 *
 	 * <br/>
@@ -60,7 +73,6 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * <a href=
 	 * "https://github.com/modelcontextprotocol/specification/blob/main/docs/specification/basic/lifecycle.md#initialization">Initialization
 	 * Spec</a>
-	 * 
 	 * @return the initialize result.
 	 */
 	public Mono<McpSchema.InitializeResult> initialize() {
@@ -75,12 +87,11 @@ public class McpAsyncClient extends DefaultMcpSession {
 
 		return result.flatMap(initializeResult -> {
 			if (!McpSchema.LATEST_PROTOCOL_VERSION.equals(initializeResult.protocolVersion())) {
-				return Mono.error(
-						new McpError("Unsupported protocol version from the server: "
-								+ initializeResult.protocolVersion()));
-			} else {
-				return this.sendNotification("notifications/initialized", null)
-						.thenReturn(initializeResult);
+				return Mono.error(new McpError(
+						"Unsupported protocol version from the server: " + initializeResult.protocolVersion()));
+			}
+			else {
+				return this.sendNotification("notifications/initialized", null).thenReturn(initializeResult);
 			}
 		});
 	}
@@ -104,12 +115,12 @@ public class McpAsyncClient extends DefaultMcpSession {
 	// --------------------------
 	private static TypeReference<McpSchema.CallToolResult> CALL_TOOL_RESULT_TYPE_REF = new TypeReference<McpSchema.CallToolResult>() {
 	};
+
 	private static TypeReference<McpSchema.ListToolsResult> LIST_TOOLS_RESULT_TYPE_REF = new TypeReference<McpSchema.ListToolsResult>() {
 	};
 
 	/**
 	 * Send a tools/call request.
-	 * 
 	 * @param callToolRequest the call tool request.
 	 * @return the call tool result.
 	 */
@@ -119,7 +130,6 @@ public class McpAsyncClient extends DefaultMcpSession {
 
 	/**
 	 * Send a tools/list request.
-	 * 
 	 * @return the list of tools result.
 	 */
 	public Mono<McpSchema.ListToolsResult> listTools(String cursor) {
@@ -132,14 +142,15 @@ public class McpAsyncClient extends DefaultMcpSession {
 
 	private static TypeReference<McpSchema.ListResourcesResult> LIST_RESOURCES_RESULT_TYPE_REF = new TypeReference<McpSchema.ListResourcesResult>() {
 	};
+
 	private static TypeReference<McpSchema.ReadResourceResult> READ_RESOURCE_RESULT_TYPE_REF = new TypeReference<McpSchema.ReadResourceResult>() {
 	};
+
 	private static TypeReference<McpSchema.ListResourceTemplatesResult> LIST_RESOURCE_TEMPLATES_RESULT_TYPE_REF = new TypeReference<McpSchema.ListResourceTemplatesResult>() {
 	};
 
 	/**
 	 * Send a resources/list request.
-	 * 
 	 * @param cursor the cursor
 	 * @return the list of resources result.
 	 */
@@ -150,7 +161,6 @@ public class McpAsyncClient extends DefaultMcpSession {
 
 	/**
 	 * Send a resources/read request.
-	 * 
 	 * @param resource the resource to read
 	 * @return the resource content.
 	 */
@@ -160,7 +170,6 @@ public class McpAsyncClient extends DefaultMcpSession {
 
 	/**
 	 * Send a resources/read request.
-	 * 
 	 * @param readResourceRequest the read resource request.
 	 * @return the resource content.
 	 */
@@ -173,7 +182,6 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * templates. Arguments may be auto-completed through the completion API.
 	 *
 	 * Request a list of resource templates the server has.
-	 * 
 	 * @param cursor the cursor
 	 * @return the list of resource templates result.
 	 */
@@ -183,23 +191,21 @@ public class McpAsyncClient extends DefaultMcpSession {
 	}
 
 	/**
-	 * List Changed Notification. When the list of available resources changes,
-	 * servers that declared the listChanged capability SHOULD send a notification:
+	 * List Changed Notification. When the list of available resources changes, servers
+	 * that declared the listChanged capability SHOULD send a notification:
 	 */
 	public Mono<Void> sendResourcesListChanged() {
 		return this.sendNotification("notifications/resources/list_changed");
 	}
 
 	/**
-	 * Subscriptions. The protocol supports optional subscriptions to resource
-	 * changes.
-	 * Clients can subscribe to specific resources and receive notifications when
-	 * they change.
+	 * Subscriptions. The protocol supports optional subscriptions to resource changes.
+	 * Clients can subscribe to specific resources and receive notifications when they
+	 * change.
 	 *
 	 * Send a resources/subscribe request.
-	 * 
-	 * @param subscribeRequest the subscribe request contains the uri of the
-	 *                         resource to subscribe to.
+	 * @param subscribeRequest the subscribe request contains the uri of the resource to
+	 * subscribe to.
 	 */
 	public Mono<Void> subscribeResource(McpSchema.SubscribeRequest subscribeRequest) {
 		return this.sendRequest("resources/subscribe", subscribeRequest, VOID_TYPE_REFERENCE);
@@ -207,9 +213,8 @@ public class McpAsyncClient extends DefaultMcpSession {
 
 	/**
 	 * Send a resources/unsubscribe request.
-	 * 
-	 * @param unsubscribeRequest the unsubscribe request contains the uri of the
-	 *                           resource to unsubscribe from.
+	 * @param unsubscribeRequest the unsubscribe request contains the uri of the resource
+	 * to unsubscribe from.
 	 */
 	public Mono<Void> unsubscribeResource(McpSchema.UnsubscribeRequest unsubscribeRequest) {
 		return this.sendRequest("resources/unsubscribe", unsubscribeRequest, VOID_TYPE_REFERENCE);
@@ -220,12 +225,12 @@ public class McpAsyncClient extends DefaultMcpSession {
 	// --------------------------
 	private static TypeReference<McpSchema.ListPromptsResult> LIST_PROMPTS_RESULT_TYPE_REF = new TypeReference<McpSchema.ListPromptsResult>() {
 	};
+
 	private static TypeReference<McpSchema.GetPromptResult> GET_PROMPT_RESULT_TYPE_REF = new TypeReference<McpSchema.GetPromptResult>() {
 	};
 
 	public Mono<ListPromptsResult> listPrompts(String cursor) {
-		return this
-				.sendRequest("prompts/list", new PaginatedRequest(cursor), LIST_PROMPTS_RESULT_TYPE_REF);
+		return this.sendRequest("prompts/list", new PaginatedRequest(cursor), LIST_PROMPTS_RESULT_TYPE_REF);
 	}
 
 	public Mono<GetPromptResult> getPrompt(GetPromptRequest getPromptRequest) {
@@ -233,10 +238,8 @@ public class McpAsyncClient extends DefaultMcpSession {
 	}
 
 	/**
-	 * (Server) An optional notification from the server to the client, informing it
-	 * that
-	 * the list of prompts it offers has changed. This may be issued by servers
-	 * without
+	 * (Server) An optional notification from the server to the client, informing it that
+	 * the list of prompts it offers has changed. This may be issued by servers without
 	 * any previous subscription from the client.
 	 */
 	public Mono<Void> promptListChangedNotification() {

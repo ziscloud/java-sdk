@@ -1,11 +1,11 @@
 /*
- * Copyright 2024 - 2024 the original author or authors.
+ * Copyright 2024-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * https://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+
 import org.springframework.ai.mcp.client.stdio.ServerParameters;
 import org.springframework.ai.mcp.client.stdio.StdioServerTransport;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
@@ -54,8 +56,8 @@ class McpAsyncClientTests {
 	@BeforeEach
 	void setUp() {
 		stdioParams = ServerParameters.builder("npx")
-				.args("-y", "@modelcontextprotocol/server-everything", "dir")
-				.build();
+			.args("-y", "@modelcontextprotocol/server-everything", "dir")
+			.build();
 
 		assertThatCode(() -> {
 			mcpAsyncClient = McpClient.async(new StdioServerTransport(stdioParams), TIMEOUT, new ObjectMapper());
@@ -73,13 +75,13 @@ class McpAsyncClientTests {
 	@Test
 	void testConstructorWithInvalidArguments() {
 		assertThatThrownBy(() -> McpClient.sync(null, TIMEOUT, new ObjectMapper()))
-				.isInstanceOf(IllegalArgumentException.class);
+			.isInstanceOf(IllegalArgumentException.class);
 
 		assertThatThrownBy(() -> McpClient.sync(new StdioServerTransport(stdioParams), null, new ObjectMapper()))
-				.isInstanceOf(IllegalArgumentException.class);
+			.isInstanceOf(IllegalArgumentException.class);
 
 		assertThatThrownBy(() -> McpClient.sync(new StdioServerTransport(stdioParams), TIMEOUT, null))
-				.isInstanceOf(IllegalArgumentException.class);
+			.isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
@@ -152,16 +154,15 @@ class McpAsyncClientTests {
 	@Timeout(15)
 	void testListPrompts() {
 		mcpAsyncClient.listPrompts(null).subscribe(prompts -> {
-			assertThat(prompts).isNotNull()
-					.satisfies(result -> {
-						assertThat(result.prompts()).isNotNull();
+			assertThat(prompts).isNotNull().satisfies(result -> {
+				assertThat(result.prompts()).isNotNull();
 
-						if (!result.prompts().isEmpty()) {
-							Prompt firstPrompt = result.prompts().get(0);
-							assertThat(firstPrompt.name()).isNotNull();
-							assertThat(firstPrompt.description()).isNotNull();
-						}
-					});
+				if (!result.prompts().isEmpty()) {
+					Prompt firstPrompt = result.prompts().get(0);
+					assertThat(firstPrompt.name()).isNotNull();
+					assertThat(firstPrompt.description()).isNotNull();
+				}
+			});
 		});
 	}
 
@@ -169,11 +170,10 @@ class McpAsyncClientTests {
 	@Timeout(15)
 	void testGetPrompt() {
 		mcpAsyncClient.getPrompt(new GetPromptRequest("simple_prompt", Map.of())).subscribe(prompt -> {
-			assertThat(prompt).isNotNull()
-					.satisfies(result -> {
-						assertThat(result.description()).isNotNull();
-						assertThat(result.messages()).isNotEmpty();
-					});
+			assertThat(prompt).isNotNull().satisfies(result -> {
+				assertThat(result.description()).isNotNull();
+				assertThat(result.messages()).isNotEmpty();
+			});
 		});
 	}
 

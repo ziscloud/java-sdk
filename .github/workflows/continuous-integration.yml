@@ -29,10 +29,10 @@ jobs:
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
         run: |
-          mvn -s settings.xml -Pjavadoc --batch-mode --update-snapshots deploy
+          mvn -s settings.xml -Pjavadoc --batch-mode -quiet --update-snapshots deploy
 
       - name: Generate Java docs
-        run: mvn -Pjavadoc javadoc:aggregate
+        run: mvn -Pjavadoc -B -q javadoc:aggregate
 
       - name: Capture project version
         run: echo PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version --quiet -DforceStdout) >> $GITHUB_ENV

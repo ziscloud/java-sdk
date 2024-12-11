@@ -36,6 +36,7 @@ jobs:
           cd nexus/org/springframework/experimental/spring-ai-mcp-core/$RELEASE_VERSION
           wget --user="$ARTIFACTORY_USERNAME" --password="$ARTIFACTORY_PASSWORD" $ARTIFACTORY_URL/spring-ai-mcp-core/$RELEASE_VERSION/spring-ai-mcp-core-$RELEASE_VERSION.pom
           wget --user="$ARTIFACTORY_USERNAME" --password="$ARTIFACTORY_PASSWORD" $ARTIFACTORY_URL/spring-ai-mcp-core/$RELEASE_VERSION/spring-ai-mcp-core-$RELEASE_VERSION.jar
+          wget --user="$ARTIFACTORY_USERNAME" --password="$ARTIFACTORY_PASSWORD" $ARTIFACTORY_URL/spring-ai-mcp-core/$RELEASE_VERSION/spring-ai-mcp-core-$RELEASE_VERSION-javadoc.jar
           wget --user="$ARTIFACTORY_USERNAME" --password="$ARTIFACTORY_PASSWORD" $ARTIFACTORY_URL/spring-ai-mcp-core/$RELEASE_VERSION/spring-ai-mcp-core-$RELEASE_VERSION-sources.jar
 
           echo "Downloading spring artifacts"
@@ -43,6 +44,7 @@ jobs:
           cd nexus/org/springframework/experimental/spring-ai-mcp-spring/$RELEASE_VERSION
           wget --user="$ARTIFACTORY_USERNAME" --password="$ARTIFACTORY_PASSWORD" $ARTIFACTORY_URL/spring-ai-mcp-spring/$RELEASE_VERSION/spring-ai-mcp-spring-$RELEASE_VERSION.pom
           wget --user="$ARTIFACTORY_USERNAME" --password="$ARTIFACTORY_PASSWORD" $ARTIFACTORY_URL/spring-ai-mcp-spring/$RELEASE_VERSION/spring-ai-mcp-spring-$RELEASE_VERSION.jar
+          wget --user="$ARTIFACTORY_USERNAME" --password="$ARTIFACTORY_PASSWORD" $ARTIFACTORY_URL/spring-ai-mcp-spring/$RELEASE_VERSION/spring-ai-mcp-spring-$RELEASE_VERSION-javadoc.jar
           wget --user="$ARTIFACTORY_USERNAME" --password="$ARTIFACTORY_PASSWORD" $ARTIFACTORY_URL/spring-ai-mcp-spring/$RELEASE_VERSION/spring-ai-mcp-spring-$RELEASE_VERSION-sources.jar
 
       - name: Sign artifacts and release them to Maven Central

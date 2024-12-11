@@ -291,6 +291,18 @@
 					</snapshots>
 				</repository>
 			</distributionManagement>
+			<profile>
+				<id>artifactory-milestone</id>
+				<distributionManagement>
+					<repository>
+						<id>spring-milestones</id>
+						<url>https://repo.spring.io/libs-milestone-local</url>
+						<snapshots>
+							<enabled>false</enabled>
+						</snapshots>
+					</repository>
+				</distributionManagement>
+			</profile>
 		</profile>
 	</profiles>
 

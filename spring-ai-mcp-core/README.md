@@ -24,9 +24,9 @@ Add the following dependency to your Maven project:
 
 ```xml
 <dependency>
-    <groupId>spring.ai.experimental</groupId>
-    <artifactId>mcp-core</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <groupId>org.springframework.experimental</groupId>
+    <artifactId>spring-ai-mcp-core</artifactId>
+    <version>0.1.0</version>
 </dependency>
 ```
 

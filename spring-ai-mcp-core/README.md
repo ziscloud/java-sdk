@@ -38,66 +38,15 @@ Detailed UML class diagrams showing the relationships between components can be 
 
 ## Usage
 
-### Async Client Example
-
-```java
-// Create server parameters
-ServerParameters params = ServerParameters.builder("npx")
-    .args("-y", "@modelcontextprotocol/server-everything", "dir")
-    .build();
-
-// Initialize the async client
-Duration timeout = Duration.ofSeconds(10);
-McpAsyncClient client = McpClient.async(
-    new StdioServerTransport(params), 
-    timeout
-);
-
-// Initialize the connection
-client.initialize()
-    .flatMap(result -> {
-        // Connection initialized
-        return client.listTools(null);
-    })
-    .flatMap(tools -> {
-        // Process tools
-        return client.callTool(new McpSchema.CallToolRequest("echo", 
-            Map.of("message", "Hello MCP!")));
-    })
-    .flatMap(result -> {
-        // Handle tool result
-        return client.listPrompts(null);
-    })
-    .flatMap(prompts -> {
-        // Process available prompts
-        return client.getPrompt(new McpSchema.GetPromptRequest("prompt-id"));
-    })
-    .subscribe(prompt -> {
-        // Handle prompt result
-    });
-
-// Resource management example
-client.listResources(null)
-    .flatMap(resources -> {
-        // Subscribe to resource changes
-        return client.subscribeResource(new McpSchema.SubscribeRequest("resource-uri"));
-    })
-    .subscribe();
-
-// Cleanup
-client.closeGracefully(timeout).block();
-```
-
 ### Sync Client Example
 
 ```java
 // Create and initialize sync client
-McpSyncClient client = McpClient.sync(
-    new StdioServerTransport(params),
-    timeout
-);
+ServerParameters params = ServerParameters.builder("npx")
+    .args("-y", "@modelcontextprotocol/server-everything", "dir")
+    .build();
 
-try {
+try (McpSyncClient client = McpClient.sync(new StdioServerTransport(params))) {
     // Initialize connection
     McpSchema.InitializeResult initResult = client.initialize();
 
@@ -118,12 +67,59 @@ try {
     // Prompt management
     ListPromptsResult prompts = client.listPrompts(null);
     GetPromptResult prompt = client.getPrompt(
-        new McpSchema.GetPromptRequest("prompt-id")
+        new McpSchema.GetPromptRequest("prompt-id", Map.of())
     );
-} finally {
-    // Cleanup
-    client.close();
 }
+```
+
+### Async Client Example
+
+```java
+// Create server parameters
+ServerParameters params = ServerParameters.builder("npx")
+    .args("-y", "@modelcontextprotocol/server-everything", "dir")
+    .build();
+
+// Initialize the async client
+McpAsyncClient client = McpClient.async(
+    new StdioServerTransport(params)
+);
+
+// Initialize the connection
+var promptResult = client.initialize()
+    flatMap(result -> {
+        // Connection initialized
+        return client.listTools(null);
+    })
+    .flatMap(tools -> {
+        // Process tools
+        return client.callTool(new McpSchema.CallToolRequest("echo",
+            Map.of("message", "Hello MCP!")));
+    })
+    .flatMap(result -> {
+        // Handle tool result
+        return client.listPrompts(null);
+    })
+    .flatMap(prompts -> {
+        // Process available prompts
+        return client.getPrompt(new McpSchema.GetPromptRequest("prompt-id", Map.of()));
+    });
+
+// Handle prompt result, e.g. by blocking on it
+McpSchema.GetPromptResult result = promptResult.block();
+
+// Resource management example
+var resourcesResult = client.listResources(null)
+    .flatMap(resources -> {
+        // Subscribe to resource changes
+        return client.subscribeResource(new McpSchema.SubscribeRequest("resource-uri"));
+    });
+
+// Handle resources result
+resourcesResult.block();
+
+// Cleanup
+client.closeGracefully().block();
 ```
 
 ## Architecture

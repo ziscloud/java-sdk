@@ -52,7 +52,7 @@ class McpSyncClientTests {
 
 	private ServerParameters stdioParams;
 
-	private static final Duration TIMEOUT = Duration.ofSeconds(10);
+	private static final Duration TIMEOUT = Duration.ofSeconds(20);
 
 	private static final String TEST_MESSAGE = "Hello MCP Spring AI!";
 

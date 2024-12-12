@@ -40,7 +40,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	};
 
 	public McpAsyncClient(McpTransport transport) {
-		this(transport, Duration.ofSeconds(10), new ObjectMapper());
+		this(transport, Duration.ofSeconds(20), new ObjectMapper());
 	}
 
 	public McpAsyncClient(McpTransport transport, Duration requestTimeout, ObjectMapper objectMapper) {

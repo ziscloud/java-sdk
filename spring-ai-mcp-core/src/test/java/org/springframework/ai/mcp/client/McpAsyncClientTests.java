@@ -22,7 +22,6 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import reactor.test.StepVerifier;
@@ -45,7 +44,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
-@Disabled
 @Timeout(15) // Giving extra time beyond the client timeout
 class McpAsyncClientTests {
 
@@ -53,7 +51,7 @@ class McpAsyncClientTests {
 
 	private ServerParameters stdioParams;
 
-	private static final Duration TIMEOUT = Duration.ofSeconds(10);
+	private static final Duration TIMEOUT = Duration.ofSeconds(20);
 
 	private static final String TEST_MESSAGE = "Hello MCP Spring AI!";
 
@@ -144,7 +142,6 @@ class McpAsyncClientTests {
 		}).verifyComplete();
 	}
 
-	@Disabled
 	@Test
 	void testMcpAsyncClientState() {
 		assertThat(mcpAsyncClient).isNotNull();

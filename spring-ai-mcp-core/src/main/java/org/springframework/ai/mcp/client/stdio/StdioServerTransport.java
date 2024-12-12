@@ -19,6 +19,7 @@ package org.springframework.ai.mcp.client.stdio;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -212,9 +213,10 @@ public class StdioServerTransport extends AbstractMcpTransport {
 			.handle((message, s) -> {
 				if (message != null) {
 					try {
-						this.process.outputWriter().write(objectMapper.writeValueAsString(message));
-						this.process.outputWriter().newLine();
-						this.process.outputWriter().flush();
+						String jsonMessage = objectMapper.writeValueAsString(message);
+						this.process.getOutputStream().write(jsonMessage.getBytes(StandardCharsets.UTF_8));
+						this.process.getOutputStream().write("\n".getBytes(StandardCharsets.UTF_8));
+						this.process.getOutputStream().flush();
 						s.next(message);
 					}
 					catch (IOException e) {

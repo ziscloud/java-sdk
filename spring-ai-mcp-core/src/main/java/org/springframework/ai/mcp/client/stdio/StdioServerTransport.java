@@ -58,8 +58,6 @@ public class StdioServerTransport extends AbstractMcpTransport {
 
 	private Scheduler errorScheduler;
 
-	volatile boolean isRunning;
-
 	private final ServerParameters params;
 
 	public StdioServerTransport(ServerParameters params) {
@@ -112,7 +110,6 @@ public class StdioServerTransport extends AbstractMcpTransport {
 		}
 
 		// Start threads
-		this.isRunning = true;
 		startInboundProcessing();
 		startOutboundProcessing();
 		startErrorProcessing();
@@ -136,7 +133,7 @@ public class StdioServerTransport extends AbstractMcpTransport {
 			try (BufferedReader processErrorReader = new BufferedReader(
 					new InputStreamReader(process.getErrorStream()))) {
 				String line;
-				while (isRunning && processErrorReader != null && (line = processErrorReader.readLine()) != null) {
+				while ((line = processErrorReader.readLine()) != null) {
 					try {
 						System.out.println("Received error line: " + line);
 						// TODO: handle errors, etc.
@@ -148,12 +145,7 @@ public class StdioServerTransport extends AbstractMcpTransport {
 				}
 			}
 			catch (IOException e) {
-				if (this.isRunning) {
-					throw new RuntimeException(e);
-				}
-			}
-			finally {
-				this.isRunning = false;
+				throw new RuntimeException(e);
 			}
 		});
 	}
@@ -162,7 +154,7 @@ public class StdioServerTransport extends AbstractMcpTransport {
 		this.inboundScheduler.schedule(() -> {
 			try (BufferedReader processReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 				String line;
-				while (this.isRunning && processReader != null && (line = processReader.readLine()) != null) {
+				while ((line = processReader.readLine()) != null) {
 					try {
 						JSONRPCMessage message = deserializeJsonRpcMessage(line);
 						if (!this.getInboundSink().tryEmitNext(message).isSuccess()) {
@@ -176,12 +168,7 @@ public class StdioServerTransport extends AbstractMcpTransport {
 				}
 			}
 			catch (IOException e) {
-				if (isRunning) {
-					throw new RuntimeException(e);
-				}
-			}
-			finally {
-				isRunning = false;
+				throw new RuntimeException(e);
 			}
 		});
 	}
@@ -229,8 +216,6 @@ public class StdioServerTransport extends AbstractMcpTransport {
 
 	@Override
 	public Mono<Void> closeGracefully() {
-
-		this.isRunning = false;
 
 		return Mono.fromFuture(() -> {
 			System.out.println("Sending TERM to process");

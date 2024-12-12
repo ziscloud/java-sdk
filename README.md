@@ -12,7 +12,7 @@ Spring AI MCP is an experimental project that provides Java and Spring Framework
 
 The project consists of two main modules:
 
-### spring-ai-mcp-core
+### [spring-ai-mcp-core](./spring-ai-mcp-core/README.md)
 
 The core module provides a Java implementation of the Model Context Protocol specification. It includes:
 - Synchronous and asynchronous client implementations
@@ -20,7 +20,9 @@ The core module provides a Java implementation of the Model Context Protocol spe
 - Stdio-based server transport
 - Reactive programming support using Project Reactor
 
-### spring-ai-mcp-spring
+[find more](./spring-ai-mcp-core/README.md)
+
+### [spring-ai-mcp-spring](./spring-ai-mcp-spring/README.md)
 
 The Spring integration module provides Spring-specific functionality:
 - Integration with Spring AI's function calling system

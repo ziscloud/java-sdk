@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 
@@ -35,6 +37,8 @@ import org.springframework.ai.mcp.client.util.Assert;
  * @author Dariusz Jędrzejczyk
  */
 public class DefaultMcpSession implements McpSession {
+
+	private static final Logger logger = LoggerFactory.getLogger(DefaultMcpSession.class);
 
 	private final ConcurrentHashMap<Object, MonoSink<McpSchema.JSONRPCResponse>> pendingResponses = new ConcurrentHashMap<>();
 
@@ -59,21 +63,21 @@ public class DefaultMcpSession implements McpSession {
 			if (message instanceof McpSchema.JSONRPCResponse response) {
 				var sink = pendingResponses.remove(response.id());
 				if (sink == null) {
-					System.out.println("Unexpected response for unkown id " + response.id());
+					logger.warn("Unexpected response for unkown id {}", response.id());
 				}
 				else {
 					sink.success(response);
 				}
 			}
 			else if (message instanceof McpSchema.JSONRPCRequest request) {
-				System.out.println("Client does not yet support server requests");
+				logger.info("Client does not yet support server requests");
 			}
 			else if (message instanceof McpSchema.JSONRPCNotification notification) {
-				System.out.println("Notifications not yet supported");
+				logger.info("Notifications not yet supported");
 			}
 		});
 
-		this.transport.setInboundErrorHandler(error -> System.out.println("Error received " + error));
+		this.transport.setInboundErrorHandler(error -> logger.error("Error received: {}", error));
 
 		this.transport.start();
 	}

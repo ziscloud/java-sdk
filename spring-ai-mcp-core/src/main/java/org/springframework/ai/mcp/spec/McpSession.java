@@ -16,7 +16,6 @@
 
 package org.springframework.ai.mcp.spec;
 
-import java.time.Duration;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;

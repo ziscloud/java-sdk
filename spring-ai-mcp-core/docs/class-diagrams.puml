@@ -57,6 +57,10 @@ class StdioServerTransport {
   -ServerParameters parameters
 }
 
+class SseServerTransport {
+  -WebClient webClient
+}
+
 class McpSchema {
   +class ErrorCodes
   +interface Request
@@ -72,6 +76,7 @@ class McpError {
 
 McpTransport <|.. AbstractMcpTransport
 AbstractMcpTransport <|-- StdioServerTransport
+AbstractMcpTransport <|-- SseServerTransport
 McpSession <|-- DefaultMcpSession
 DefaultMcpSession <|-- McpAsyncClient
 McpClient ..> McpAsyncClient : creates

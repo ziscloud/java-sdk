@@ -36,7 +36,7 @@ import org.springframework.ai.mcp.spec.McpTransport;
  */
 public class McpAsyncClient extends DefaultMcpSession {
 
-	private static TypeReference<Void> VOID_TYPE_REFERENCE = new TypeReference<Void>() {
+	private static TypeReference<Void> VOID_TYPE_REFERENCE = new TypeReference<>() {
 	};
 
 	public McpAsyncClient(McpTransport transport) {
@@ -113,10 +113,10 @@ public class McpAsyncClient extends DefaultMcpSession {
 	// --------------------------
 	// Tools
 	// --------------------------
-	private static TypeReference<McpSchema.CallToolResult> CALL_TOOL_RESULT_TYPE_REF = new TypeReference<McpSchema.CallToolResult>() {
+	private static TypeReference<McpSchema.CallToolResult> CALL_TOOL_RESULT_TYPE_REF = new TypeReference<>() {
 	};
 
-	private static TypeReference<McpSchema.ListToolsResult> LIST_TOOLS_RESULT_TYPE_REF = new TypeReference<McpSchema.ListToolsResult>() {
+	private static TypeReference<McpSchema.ListToolsResult> LIST_TOOLS_RESULT_TYPE_REF = new TypeReference<>() {
 	};
 
 	/**
@@ -149,13 +149,13 @@ public class McpAsyncClient extends DefaultMcpSession {
 	// Resources
 	// --------------------------
 
-	private static TypeReference<McpSchema.ListResourcesResult> LIST_RESOURCES_RESULT_TYPE_REF = new TypeReference<McpSchema.ListResourcesResult>() {
+	private static TypeReference<McpSchema.ListResourcesResult> LIST_RESOURCES_RESULT_TYPE_REF = new TypeReference<>() {
 	};
 
-	private static TypeReference<McpSchema.ReadResourceResult> READ_RESOURCE_RESULT_TYPE_REF = new TypeReference<McpSchema.ReadResourceResult>() {
+	private static TypeReference<McpSchema.ReadResourceResult> READ_RESOURCE_RESULT_TYPE_REF = new TypeReference<>() {
 	};
 
-	private static TypeReference<McpSchema.ListResourceTemplatesResult> LIST_RESOURCE_TEMPLATES_RESULT_TYPE_REF = new TypeReference<McpSchema.ListResourceTemplatesResult>() {
+	private static TypeReference<McpSchema.ListResourceTemplatesResult> LIST_RESOURCE_TEMPLATES_RESULT_TYPE_REF = new TypeReference<>() {
 	};
 
 	/**
@@ -251,10 +251,10 @@ public class McpAsyncClient extends DefaultMcpSession {
 	// --------------------------
 	// Prompts
 	// --------------------------
-	private static TypeReference<McpSchema.ListPromptsResult> LIST_PROMPTS_RESULT_TYPE_REF = new TypeReference<McpSchema.ListPromptsResult>() {
+	private static TypeReference<McpSchema.ListPromptsResult> LIST_PROMPTS_RESULT_TYPE_REF = new TypeReference<>() {
 	};
 
-	private static TypeReference<McpSchema.GetPromptResult> GET_PROMPT_RESULT_TYPE_REF = new TypeReference<McpSchema.GetPromptResult>() {
+	private static TypeReference<McpSchema.GetPromptResult> GET_PROMPT_RESULT_TYPE_REF = new TypeReference<>() {
 	};
 
 	/**

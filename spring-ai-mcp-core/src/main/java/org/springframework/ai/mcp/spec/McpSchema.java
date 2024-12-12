@@ -16,6 +16,8 @@
 
 package org.springframework.ai.mcp.spec;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Based on the <a href="http://www.jsonrpc.org/specification">JSON-RPC 2.0
@@ -33,7 +37,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
  * Context Protocol Schema</a>.
  *
  * @author Christian Tzolov
- * @since 1.0.0
  */
 public class McpSchema {
 
@@ -61,6 +64,38 @@ public class McpSchema {
 	public sealed interface Request
 			permits InitializeRequest, CallToolRequest, CreateMessageRequest, CompleteRequest, GetPromptRequest {
 
+	}
+
+	private final static TypeReference<HashMap<String, Object>> MAP_TYPE_REF = new TypeReference<>() {
+	};
+
+	/**
+	 * Deserializes a JSON string into a JSONRPCMessage object.
+	 * @param objectMapper The ObjectMapper instance to use for deserialization
+	 * @param jsonText The JSON string to deserialize
+	 * @return A JSONRPCMessage instance using either the {@link JSONRPCRequest},
+	 * {@link JSONRPCNotification}, or {@link JSONRPCResponse} classes.
+	 * @throws IOException If there's an error during deserialization
+	 * @throws IllegalArgumentException If the JSON structure doesn't match any known
+	 * message type
+	 */
+	public static JSONRPCMessage deserializeJsonRpcMessage(ObjectMapper objectMapper, String jsonText)
+			throws IOException {
+
+		var map = objectMapper.readValue(jsonText, MAP_TYPE_REF);
+
+		// Determine message type based on specific JSON structure
+		if (map.containsKey("method") && map.containsKey("id")) {
+			return objectMapper.convertValue(map, JSONRPCRequest.class);
+		}
+		else if (map.containsKey("method") && !map.containsKey("id")) {
+			return objectMapper.convertValue(map, JSONRPCNotification.class);
+		}
+		else if (map.containsKey("result") || map.containsKey("error")) {
+			return objectMapper.convertValue(map, JSONRPCResponse.class);
+		}
+
+		throw new IllegalArgumentException("Cannot deserialize JSONRPCMessage: " + jsonText);
 	}
 
 	// ---------------------------
@@ -311,6 +346,7 @@ public class McpSchema {
 	 * actually be represented as text (not binary data).
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record TextResourceContents( // @formatter:off
 		@JsonProperty("uri") String uri,
 		@JsonProperty("mimeType") String mimeType,
@@ -327,6 +363,7 @@ public class McpSchema {
 	 * (not text).
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record BlobResourceContents( // @formatter:off
 		@JsonProperty("uri") String uri,
 		@JsonProperty("mimeType") String mimeType,
@@ -452,11 +489,11 @@ public class McpSchema {
 	// Sampling and Message Creation
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record CreateMessageRequest(// @formatter:off
-		@JsonProperty("messages") List<SamplingMessage> messages, 
+		@JsonProperty("messages") List<SamplingMessage> messages,
 		@JsonProperty("modelPreferences") ModelPreferences modelPreferences,
-		@JsonProperty("systemPrompt") String systemPrompt, 
-		@JsonProperty("includeContext") ContextInclusionStrategy includeContext, 
-		@JsonProperty("temperature") Double temperature, 
+		@JsonProperty("systemPrompt") String systemPrompt,
+		@JsonProperty("includeContext") ContextInclusionStrategy includeContext,
+		@JsonProperty("temperature") Double temperature,
 		@JsonProperty("maxTokens") int maxTokens,
 		@JsonProperty("stopSequences") List<String> stopSequences, 			
 		@JsonProperty("metadata") Map<String, Object> metadata) implements Request {
@@ -506,14 +543,14 @@ public class McpSchema {
 	// Progress and Logging
 	// ---------------------------
 	public record ProgressNotification(// @formatter:off
-		@JsonProperty("progressToken") String progressToken, 
-		@JsonProperty("progress") double progress, 
+		@JsonProperty("progressToken") String progressToken,
+		@JsonProperty("progress") double progress,
 		@JsonProperty("total") Double total) {
 	}// @formatter:on
 
 	public record LoggingMessageNotification(// @formatter:off
-		@JsonProperty("level") LoggingLevel level, 
-		@JsonProperty("logger") String logger, 
+		@JsonProperty("level") LoggingLevel level,
+		@JsonProperty("logger") String logger,
 		@JsonProperty("data") Object data) {
 	}// @formatter:on
 
@@ -528,25 +565,25 @@ public class McpSchema {
 		}
 
 		public record PromptReference(// @formatter:off
-			@JsonProperty("type") String type, 
+			@JsonProperty("type") String type,
 			@JsonProperty("name") String name) implements PromptOrResourceReference {
 		}// @formatter:on
 
 		public record ResourceReference(// @formatter:off
-			@JsonProperty("type") String type, 
+			@JsonProperty("type") String type,
 			@JsonProperty("uri") String uri) implements PromptOrResourceReference {
 		}// @formatter:on
 
 		public record CompleteArgument(// @formatter:off
-			@JsonProperty("name") String name, 
+			@JsonProperty("name") String name,
 			@JsonProperty("value") String value) {
 		}// @formatter:on
 	}
 
 	public record CompleteResult(CompleteCompletion completion) {
 		public record CompleteCompletion(// @formatter:off
-			@JsonProperty("values") List<String> values, 
-			@JsonProperty("total") Integer total, 
+			@JsonProperty("values") List<String> values,
+			@JsonProperty("total") Integer total,
 			@JsonProperty("hasMore") Boolean hasMore) {
 		}// @formatter:on
 	}

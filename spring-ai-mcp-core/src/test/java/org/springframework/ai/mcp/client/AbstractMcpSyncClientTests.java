@@ -23,10 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 
-import org.springframework.ai.mcp.client.stdio.ServerParameters;
-import org.springframework.ai.mcp.client.stdio.StdioServerTransport;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListResourcesResult;
@@ -34,6 +31,7 @@ import org.springframework.ai.mcp.spec.McpSchema.ListToolsResult;
 import org.springframework.ai.mcp.spec.McpSchema.Resource;
 import org.springframework.ai.mcp.spec.McpSchema.TextContent;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
+import org.springframework.ai.mcp.spec.McpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -45,25 +43,24 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
-@Timeout(15) // Giving extra time beyond the client timeout
-class McpSyncClientTests {
+public abstract class AbstractMcpSyncClientTests {
 
 	private McpSyncClient mcpSyncClient;
-
-	private ServerParameters stdioParams;
 
 	private static final Duration TIMEOUT = Duration.ofSeconds(20);
 
 	private static final String TEST_MESSAGE = "Hello MCP Spring AI!";
 
+	protected McpTransport mcpTransport;
+
+	abstract protected void createMcpTransport();
+
 	@BeforeEach
 	void setUp() {
-		stdioParams = ServerParameters.builder("npx")
-			.args("-y", "@modelcontextprotocol/server-everything", "dir")
-			.build();
+		createMcpTransport();
 
 		assertThatCode(() -> {
-			mcpSyncClient = McpClient.sync(new StdioServerTransport(stdioParams), TIMEOUT, new ObjectMapper());
+			mcpSyncClient = McpClient.sync(mcpTransport, TIMEOUT, new ObjectMapper());
 			mcpSyncClient.initialize();
 		}).doesNotThrowAnyException();
 	}
@@ -80,10 +77,10 @@ class McpSyncClientTests {
 		assertThatThrownBy(() -> McpClient.sync(null, TIMEOUT, new ObjectMapper()))
 			.isInstanceOf(IllegalArgumentException.class);
 
-		assertThatThrownBy(() -> McpClient.sync(new StdioServerTransport(stdioParams), null, new ObjectMapper()))
+		assertThatThrownBy(() -> McpClient.sync(mcpTransport, null, new ObjectMapper()))
 			.isInstanceOf(IllegalArgumentException.class);
 
-		assertThatThrownBy(() -> McpClient.sync(new StdioServerTransport(stdioParams), TIMEOUT, null))
+		assertThatThrownBy(() -> McpClient.sync(mcpTransport, TIMEOUT, null))
 			.isInstanceOf(IllegalArgumentException.class);
 	}
 
@@ -113,8 +110,6 @@ class McpSyncClientTests {
 			assertThat(content).isNotNull();
 			assertThat(content.text()).isNotNull();
 			assertThat(content.text()).contains("7");
-
-			System.out.println(content);
 		});
 	}
 

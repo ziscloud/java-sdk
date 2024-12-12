@@ -10,13 +10,19 @@ This SDK implements the Model Context Protocol, enabling seamless integration wi
 
 - Synchronous and Asynchronous client implementations
 - Standard MCP operations support:
+  - Protocol version compatibility negotiation
+  - Client-server capability exchange
   - Tool discovery and execution
-  - Resource management and templates
-  - Prompt handling and management
+  - Resource management with URI templates
   - Resource subscription system
+  - Prompt handling and management
   - Server initialization and ping
-- Stdio-based server transport
+- Multiple transport implementations:
+  - Stdio-based transport for process-based communication
+  - SSE-based transport for HTTP streaming
 - Reactive programming support using Project Reactor
+- Configurable request timeouts
+- Customizable JSON serialization/deserialization
 
 ## Installation
 
@@ -38,6 +44,41 @@ Detailed UML class diagrams showing the relationships between components can be 
 
 ## Usage
 
+### Transport Layer Options
+
+The SDK provides two transport implementations:
+
+#### StdioServerTransport
+Standard I/O based transport for process-based communication with MCP servers:
+
+```java
+ServerParameters params = ServerParameters.builder("npx")
+    .args("-y", "@modelcontextprotocol/server-everything", "dir")
+    .build();
+McpTransport transport = new StdioServerTransport(params);
+```
+
+#### SseServerTransport
+Server-Sent Events (SSE) based transport following the MCP HTTP with SSE transport specification:
+
+```java
+WebClient.Builder webClientBuilder = WebClient.builder()
+    .baseUrl("http://your-mcp-server");
+McpTransport transport = new SseServerTransport(webClientBuilder);
+
+// Or with custom ObjectMapper
+ObjectMapper mapper = new ObjectMapper();
+McpTransport transport = new SseServerTransport(webClientBuilder, mapper);
+```
+
+The SSE transport provides:
+- Bidirectional communication over HTTP
+- Automatic reconnection for transient failures
+- Inbound message streaming via SSE
+- Outbound message delivery via HTTP POST
+- Graceful shutdown handling
+- Configurable JSON serialization
+
 ### Sync Client Example
 
 ```java
@@ -47,32 +88,32 @@ ServerParameters params = ServerParameters.builder("npx")
     .build();
 
 try (McpSyncClient client = McpClient.sync(new StdioServerTransport(params))) {
-    // Initialize connection
+    // Initialize connection with protocol version and capabilities
     McpSchema.InitializeResult initResult = client.initialize();
 
-    // List tools synchronously
-    McpSchema.ListToolsResult tools = client.listTools(null);
+    // List available tools
+    McpSchema.ListToolsResult tools = client.listTools();
 
-    // Call tool synchronously
+    // Execute a tool
     McpSchema.CallToolResult result = client.callTool(
         new McpSchema.CallToolRequest("echo", Map.of("message", "Hello!"))
     );
 
     // Resource management
-    McpSchema.ListResourcesResult resources = client.listResources(null);
+    McpSchema.ListResourcesResult resources = client.listResources();
     McpSchema.ReadResourceResult resource = client.readResource(
         new McpSchema.ReadResourceRequest("resource-uri")
     );
 
-    // Prompt management
-    ListPromptsResult prompts = client.listPrompts(null);
+    // List and retrieve prompts
+    ListPromptsResult prompts = client.listPrompts();
     GetPromptResult prompt = client.getPrompt(
         new McpSchema.GetPromptRequest("prompt-id", Map.of())
     );
 }
 ```
 
-### Async Client Example
+### Async Client Example with Custom Configuration
 
 ```java
 // Create server parameters
@@ -80,43 +121,42 @@ ServerParameters params = ServerParameters.builder("npx")
     .args("-y", "@modelcontextprotocol/server-everything", "dir")
     .build();
 
-// Initialize the async client
+// Initialize async client with custom timeout and object mapper
 McpAsyncClient client = McpClient.async(
-    new StdioServerTransport(params)
+    new StdioServerTransport(params),
+    Duration.ofSeconds(30),
+    new ObjectMapper()
 );
 
-// Initialize the connection
-var promptResult = client.initialize()
-    flatMap(result -> {
-        // Connection initialized
-        return client.listTools(null);
+// Initialize connection and chain operations
+var result = client.initialize()
+    .flatMap(initResult -> {
+        // Connection initialized with protocol version compatibility
+        return client.listTools();
     })
     .flatMap(tools -> {
-        // Process tools
+        // Process available tools
         return client.callTool(new McpSchema.CallToolRequest("echo",
             Map.of("message", "Hello MCP!")));
     })
-    .flatMap(result -> {
-        // Handle tool result
-        return client.listPrompts(null);
+    .flatMap(toolResult -> {
+        // Handle tool execution result
+        return client.listPrompts();
     })
     .flatMap(prompts -> {
         // Process available prompts
         return client.getPrompt(new McpSchema.GetPromptRequest("prompt-id", Map.of()));
     });
 
-// Handle prompt result, e.g. by blocking on it
-McpSchema.GetPromptResult result = promptResult.block();
-
-// Resource management example
-var resourcesResult = client.listResources(null)
+// Subscribe to resource changes
+var subscription = client.listResources()
     .flatMap(resources -> {
-        // Subscribe to resource changes
         return client.subscribeResource(new McpSchema.SubscribeRequest("resource-uri"));
     });
 
-// Handle resources result
-resourcesResult.block();
+// Handle results reactively or block if needed
+McpSchema.GetPromptResult promptResult = result.block();
+subscription.block();
 
 // Cleanup
 client.closeGracefully().block();
@@ -124,62 +164,68 @@ client.closeGracefully().block();
 
 ## Architecture
 
-The SDK follows a layered architecture:
+The SDK follows a layered architecture with clear separation of concerns:
 
 ### Core Components
 
-- **McpClient**: Factory class for creating sync and async clients
-- **McpAsyncClient**: Primary async implementation using Project Reactor
-- **McpSyncClient**: Synchronous wrapper around the async client
+- **McpClient**: Factory class for creating sync and async clients with optional custom configuration
+- **McpAsyncClient**: Primary async implementation using Project Reactor for non-blocking operations
+- **McpSyncClient**: Synchronous wrapper around the async client for blocking operations
 - **McpSession**: Core session interface defining communication patterns
-- **McpTransport**: Transport layer interface
+- **McpTransport**: Transport layer interface for server communication
 - **McpSchema**: Comprehensive protocol schema definitions
-- **AbstractMcpTransport**: Base transport implementation
-- **StdioServerTransport**: Stdio-based server communication
+- **DefaultMcpSession**: Base implementation of the session management
+- **StdioServerTransport**: Standard I/O based server communication
+- **SseServerTransport**: HTTP-based transport using Server-Sent Events for bidirectional communication
 
 <img src="docs/spring-ai-mcp-uml-classdiagram.svg" width="600"/>
 
 ### Key Interactions
 
-1. Client initialization
-   - Transport setup
-   - Server connection establishment
-   - Protocol handshake
+1. Client Initialization
+   - Transport setup and connection establishment
+   - Protocol version compatibility check
+   - Capability negotiation
+   - Implementation details exchange
 
 2. Message Flow
-   - JSON-RPC message creation
+   - JSON-RPC message creation and validation
    - Transport layer handling
-   - Response processing
-   - Error handling
+   - Response processing with type safety
+   - Error handling with specific error codes
 
 3. Resource Management
-   - Resource listing and reading
-   - Template management
-   - Subscription handling
-   - Change notifications
+   - Resource discovery and listing
+   - URI template-based resource access
+   - Subscription system for change notifications
+   - Resource content retrieval
 
 4. Prompt System
-   - Prompt discovery
-   - Prompt retrieval
-   - Change notifications
+   - Prompt discovery and listing
+   - Parameter-based prompt retrieval
+   - Change notifications support
+   - Prompt content management
 
 5. Tool Execution
-   - Tool discovery
-   - Parameter validation
-   - Execution handling
-   - Result processing
+   - Tool discovery and capability checking
+   - Parameter validation and processing
+   - Execution handling with timeout support
+   - Result processing with error handling
 
 ## Error Handling
 
 The SDK provides comprehensive error handling through the McpError class:
 
-- Transport-level errors
-- Protocol violations
+- Protocol version incompatibility
+- Transport-level communication errors
+- JSON-RPC protocol violations
 - Tool execution failures
-- Resource access errors
-- Subscription handling errors
+- Resource access and subscription errors
 - Prompt management errors
-- Timeout handling
+- Request timeout handling
+- Server capability mismatches
+- SSE connection failures and retry handling
+- HTTP request/response errors
 
 ## Contributing
 

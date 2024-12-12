@@ -23,46 +23,45 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import reactor.test.StepVerifier;
 
-import org.springframework.ai.mcp.client.stdio.ServerParameters;
-import org.springframework.ai.mcp.client.stdio.StdioServerTransport;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptRequest;
 import org.springframework.ai.mcp.spec.McpSchema.Prompt;
 import org.springframework.ai.mcp.spec.McpSchema.Resource;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
+import org.springframework.ai.mcp.spec.McpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Unit tests for MCP Client Session functionality.
+ * Test suite for the {@link McpAsyncClient} that can be used with different
+ * {@link McpTransport} implementations.
  *
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
-@Timeout(15) // Giving extra time beyond the client timeout
-class McpAsyncClientTests {
+public abstract class AbstractMcpAsyncClientTests {
 
 	private McpAsyncClient mcpAsyncClient;
 
-	private ServerParameters stdioParams;
+	protected McpTransport mcpTransport;
 
 	private static final Duration TIMEOUT = Duration.ofSeconds(20);
 
-	private static final String TEST_MESSAGE = "Hello MCP Spring AI!";
+	private static final String ECHO_TEST_MESSAGE = "Hello MCP Spring AI!";
+
+	abstract protected void createMcpTransport();
 
 	@BeforeEach
 	void setUp() {
-		stdioParams = ServerParameters.builder("npx")
-			.args("-y", "@modelcontextprotocol/server-everything", "dir")
-			.build();
+
+		createMcpTransport();
 
 		assertThatCode(() -> {
-			mcpAsyncClient = McpClient.async(new StdioServerTransport(stdioParams), TIMEOUT, new ObjectMapper());
+			mcpAsyncClient = McpClient.async(mcpTransport, TIMEOUT, new ObjectMapper());
 			mcpAsyncClient.initialize().block(Duration.ofSeconds(10));
 		}).doesNotThrowAnyException();
 	}
@@ -80,10 +79,10 @@ class McpAsyncClientTests {
 		assertThatThrownBy(() -> McpClient.sync(null, TIMEOUT, new ObjectMapper()))
 			.isInstanceOf(IllegalArgumentException.class);
 
-		assertThatThrownBy(() -> McpClient.sync(new StdioServerTransport(stdioParams), null, new ObjectMapper()))
+		assertThatThrownBy(() -> McpClient.sync(mcpTransport, null, new ObjectMapper()))
 			.isInstanceOf(IllegalArgumentException.class);
 
-		assertThatThrownBy(() -> McpClient.sync(new StdioServerTransport(stdioParams), TIMEOUT, null))
+		assertThatThrownBy(() -> McpClient.sync(mcpTransport, TIMEOUT, null))
 			.isInstanceOf(IllegalArgumentException.class);
 	}
 
@@ -105,7 +104,7 @@ class McpAsyncClientTests {
 
 	@Test
 	void testCallTool() {
-		CallToolRequest callToolRequest = new CallToolRequest("echo", Map.of("message", TEST_MESSAGE));
+		CallToolRequest callToolRequest = new CallToolRequest("echo", Map.of("message", ECHO_TEST_MESSAGE));
 
 		StepVerifier.create(mcpAsyncClient.callTool(callToolRequest)).consumeNextWith(callToolResult -> {
 			assertThat(callToolResult).isNotNull().satisfies(result -> {
@@ -117,7 +116,7 @@ class McpAsyncClientTests {
 
 	@Test
 	void testCallToolWithInvalidTool() {
-		CallToolRequest invalidRequest = new CallToolRequest("nonexistent_tool", Map.of("message", TEST_MESSAGE));
+		CallToolRequest invalidRequest = new CallToolRequest("nonexistent_tool", Map.of("message", ECHO_TEST_MESSAGE));
 
 		assertThatThrownBy(() -> mcpAsyncClient.callTool(invalidRequest).block()).isInstanceOf(Exception.class);
 	}

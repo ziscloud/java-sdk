@@ -19,6 +19,8 @@ package org.springframework.ai.mcp.spec;
 import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
@@ -34,6 +36,8 @@ import org.springframework.ai.mcp.spec.McpSchema.JSONRPCMessage;
 // proper encapsulation and state management.
 public abstract class AbstractMcpTransport implements McpTransport {
 
+	private static final Logger logger = LoggerFactory.getLogger(AbstractMcpTransport.class);
+
 	protected final ObjectMapper objectMapper;
 
 	private final Sinks.Many<String> errorSink;
@@ -42,10 +46,9 @@ public abstract class AbstractMcpTransport implements McpTransport {
 
 	private final Sinks.Many<JSONRPCMessage> outboundSink;
 
-	private Consumer<JSONRPCMessage> inboundMessageHandler = message -> System.out
-		.println("Received message: " + message);
+	private Consumer<JSONRPCMessage> inboundMessageHandler = message -> logger.debug("Received message: {}", message);
 
-	private Consumer<String> errorHandler = error -> System.err.println("Received error: " + error);
+	private Consumer<String> errorHandler = error -> logger.error("Received error: {}", error);
 
 	public AbstractMcpTransport() {
 		this(new ObjectMapper());

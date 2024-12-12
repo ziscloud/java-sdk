@@ -164,17 +164,24 @@ public class McpSchema {
 	} // @formatter:on
 
 	// Existing Enums and Base Types (from previous implementation)
-	public enum Role {
+	public enum Role {// @formatter:off
 
-		USER, ASSISTANT
+		@JsonProperty("user") USER,
+		@JsonProperty("assistant") ASSISTANT
+	}// @formatter:on
 
-	}
+	public enum LoggingLevel {// @formatter:off
 
-	public enum LoggingLevel {
+		@JsonProperty("debug") DEBUG,
+		@JsonProperty("info") INFO,
+		@JsonProperty("notice") NOTICE,
+		@JsonProperty("warning") WARNING,
+		@JsonProperty("error") ERROR,
+		@JsonProperty("critical") CRITICAL,
+		@JsonProperty("alert") ALERT,
+		@JsonProperty("emergency") EMERGENCY
 
-		DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY
-
-	}
+	} // @formatter:on
 
 	// ---------------------------
 	// Resource Interfaces
@@ -448,20 +455,22 @@ public class McpSchema {
 			String systemPrompt, ContextInclusionStrategy includeContext, Double temperature, int maxTokens,
 			List<String> stopSequences, Map<String, Object> metadata) implements Request {
 
-		public enum ContextInclusionStrategy {
-
-			NONE, THIS_SERVER, ALL_SERVERS
-
-		}
+		public enum ContextInclusionStrategy {// @formatter:off
+			@JsonProperty("none") NONE,
+			@JsonProperty("this_server") THIS_SERVER,
+			@JsonProperty("all_server") ALL_SERVERS
+		}	// @formatter:on
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record CreateMessageResult(Role role, Content content, String model, StopReason stopReason) {
 		public enum StopReason {
 
-			END_TURN, STOP_SEQUENCE, MAX_TOKENS
-
-		}
+		// @formatter:off
+			@JsonProperty("end_turn") END_TURN,
+			@JsonProperty("stop_sequence") STOP_SEQUENCE,
+			@JsonProperty("max_tokens") MAX_TOKENS
+		} // @formatter:on
 	}
 
 	// ---------------------------

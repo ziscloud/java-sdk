@@ -451,16 +451,22 @@ public class McpSchema {
 
 	// Sampling and Message Creation
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
-	public record CreateMessageRequest(List<SamplingMessage> messages, ModelPreferences modelPreferences,
-			String systemPrompt, ContextInclusionStrategy includeContext, Double temperature, int maxTokens,
-			List<String> stopSequences, Map<String, Object> metadata) implements Request {
+	public record CreateMessageRequest(// @formatter:off
+		@JsonProperty("messages") List<SamplingMessage> messages, 
+		@JsonProperty("modelPreferences") ModelPreferences modelPreferences,
+		@JsonProperty("systemPrompt") String systemPrompt, 
+		@JsonProperty("includeContext") ContextInclusionStrategy includeContext, 
+		@JsonProperty("temperature") Double temperature, 
+		@JsonProperty("maxTokens") int maxTokens,
+		@JsonProperty("stopSequences") List<String> stopSequences, 			
+		@JsonProperty("metadata") Map<String, Object> metadata) implements Request {
 
-		public enum ContextInclusionStrategy {// @formatter:off
+		public enum ContextInclusionStrategy {
 			@JsonProperty("none") NONE,
 			@JsonProperty("this_server") THIS_SERVER,
 			@JsonProperty("all_server") ALL_SERVERS
-		}	// @formatter:on
-	}
+		}
+	}// @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record CreateMessageResult(Role role, Content content, String model, StopReason stopReason) {
@@ -499,11 +505,17 @@ public class McpSchema {
 	// ---------------------------
 	// Progress and Logging
 	// ---------------------------
-	public record ProgressNotification(String progressToken, double progress, Double total) {
-	}
+	public record ProgressNotification(// @formatter:off
+		@JsonProperty("progressToken") String progressToken, 
+		@JsonProperty("progress") double progress, 
+		@JsonProperty("total") Double total) {
+	}// @formatter:on
 
-	public record LoggingMessageNotification(LoggingLevel level, String logger, Object data) {
-	}
+	public record LoggingMessageNotification(// @formatter:off
+		@JsonProperty("level") LoggingLevel level, 
+		@JsonProperty("logger") String logger, 
+		@JsonProperty("data") Object data) {
+	}// @formatter:on
 
 	// ---------------------------
 	// Autocomplete
@@ -515,19 +527,28 @@ public class McpSchema {
 
 		}
 
-		public record PromptReference(String type, String name) implements PromptOrResourceReference {
-		}
+		public record PromptReference(// @formatter:off
+			@JsonProperty("type") String type, 
+			@JsonProperty("name") String name) implements PromptOrResourceReference {
+		}// @formatter:on
 
-		public record ResourceReference(String type, String uri) implements PromptOrResourceReference {
-		}
+		public record ResourceReference(// @formatter:off
+			@JsonProperty("type") String type, 
+			@JsonProperty("uri") String uri) implements PromptOrResourceReference {
+		}// @formatter:on
 
-		public record CompleteArgument(String name, String value) {
-		}
+		public record CompleteArgument(// @formatter:off
+			@JsonProperty("name") String name, 
+			@JsonProperty("value") String value) {
+		}// @formatter:on
 	}
 
 	public record CompleteResult(CompleteCompletion completion) {
-		public record CompleteCompletion(List<String> values, Integer total, Boolean hasMore) {
-		}
+		public record CompleteCompletion(// @formatter:off
+			@JsonProperty("values") List<String> values, 
+			@JsonProperty("total") Integer total, 
+			@JsonProperty("hasMore") Boolean hasMore) {
+		}// @formatter:on
 	}
 
 	// ---------------------------

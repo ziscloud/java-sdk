@@ -17,8 +17,8 @@
 package org.springframework.ai.mcp.client.stdio;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,12 +50,6 @@ public class StdioServerTransport extends AbstractMcpTransport {
 	};
 
 	private Process process;
-
-	private BufferedReader processErrorReader;
-
-	private BufferedReader processReader;
-
-	private BufferedWriter processWriter;
 
 	private Scheduler inboundScheduler;
 
@@ -116,11 +110,6 @@ public class StdioServerTransport extends AbstractMcpTransport {
 			throw new RuntimeException("Process input or output stream is null");
 		}
 
-		// Initialize readers and writers
-		this.processErrorReader = this.process.errorReader();
-		this.processReader = this.process.inputReader();
-		this.processWriter = this.process.outputWriter();
-
 		// Start threads
 		this.isRunning = true;
 		startInboundProcessing();
@@ -143,7 +132,8 @@ public class StdioServerTransport extends AbstractMcpTransport {
 
 	private void startErrorProcessing() {
 		this.errorScheduler.schedule(() -> {
-			try {
+			try (BufferedReader processErrorReader = new BufferedReader(
+					new InputStreamReader(process.getErrorStream()))) {
 				String line;
 				while (isRunning && processErrorReader != null && (line = processErrorReader.readLine()) != null) {
 					try {
@@ -169,9 +159,9 @@ public class StdioServerTransport extends AbstractMcpTransport {
 
 	private void startInboundProcessing() {
 		this.inboundScheduler.schedule(() -> {
-			try {
+			try (BufferedReader processReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 				String line;
-				while (this.isRunning && this.processReader != null && (line = this.processReader.readLine()) != null) {
+				while (this.isRunning && processReader != null && (line = processReader.readLine()) != null) {
 					try {
 						JSONRPCMessage message = deserializeJsonRpcMessage(line);
 						if (!this.getInboundSink().tryEmitNext(message).isSuccess()) {
@@ -222,9 +212,9 @@ public class StdioServerTransport extends AbstractMcpTransport {
 			.handle((message, s) -> {
 				if (message != null) {
 					try {
-						this.processWriter.write(objectMapper.writeValueAsString(message));
-						this.processWriter.newLine();
-						this.processWriter.flush();
+						this.process.outputWriter().write(objectMapper.writeValueAsString(message));
+						this.process.outputWriter().newLine();
+						this.process.outputWriter().flush();
 						s.next(message);
 					}
 					catch (IOException e) {

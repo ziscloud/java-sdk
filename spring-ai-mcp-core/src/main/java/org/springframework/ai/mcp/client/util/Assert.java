@@ -20,7 +20,6 @@ import reactor.util.annotation.Nullable;
 
 /**
  * @author Christian Tzolov
- * @since 1.0.0
  */
 
 public class Assert {
@@ -48,7 +47,6 @@ public class Assert {
 	 * @param text the String to check
 	 * @param message the exception message to use if the assertion fails
 	 * @throws IllegalArgumentException if the text does not contain valid text content
-	 * @see StringUtils#hasText
 	 */
 	public static void hasText(@Nullable String text, String message) {
 		if (!hasText(text)) {
@@ -65,8 +63,6 @@ public class Assert {
 	 * @param str the {@code String} to check (may be {@code null})
 	 * @return {@code true} if the {@code String} is not {@code null}, its length is
 	 * greater than 0, and it does not contain whitespace only
-	 * @see #hasText(CharSequence)
-	 * @see #hasLength(String)
 	 * @see Character#isWhitespace
 	 */
 	public static boolean hasText(@Nullable String str) {

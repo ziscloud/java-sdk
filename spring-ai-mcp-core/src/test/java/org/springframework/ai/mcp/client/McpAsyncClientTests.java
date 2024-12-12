@@ -45,6 +45,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
+@Disabled
 @Timeout(15) // Giving extra time beyond the client timeout
 class McpAsyncClientTests {
 

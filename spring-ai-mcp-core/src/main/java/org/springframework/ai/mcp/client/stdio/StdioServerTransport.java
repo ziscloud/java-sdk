@@ -253,31 +253,13 @@ public class StdioServerTransport extends AbstractMcpTransport {
 			if (process.exitValue() != 0) {
 				System.out.println("Process terminated with code " + process.exitValue());
 			}
-		}).then(Mono.whenDelayError(Mono.fromRunnable(() -> {
-			try {
-				this.processErrorReader.close();
-			}
-			catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}), Mono.fromRunnable(() -> {
-			try {
-				this.processReader.close();
-			}
-			catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}), Mono.fromRunnable(() -> {
-			try {
-				this.processWriter.close();
-			}
-			catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		})))
-			.then(Mono.whenDelayError(inboundScheduler.disposeGracefully(), outboundScheduler.disposeGracefully(),
-					errorScheduler.disposeGracefully()))
-			.subscribeOn(Schedulers.boundedElastic());
+		}).then(Mono.fromRunnable(() -> {
+			// The Threads are blocked on readLine so disposeGracefully would not
+			// interrupt them, therefore we issue an async hard dispose.
+			inboundScheduler.dispose();
+			errorScheduler.dispose();
+			outboundScheduler.dispose();
+		})).then().subscribeOn(Schedulers.boundedElastic());
 	}
 
 }

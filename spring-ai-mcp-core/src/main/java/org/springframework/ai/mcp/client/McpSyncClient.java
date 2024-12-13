@@ -111,6 +111,15 @@ public class McpSyncClient implements AutoCloseable {
 	 * Send a tools/list request.
 	 * @return the list of tools result.
 	 */
+	public McpSchema.ListToolsResult listTools() {
+		return this.delegate.listTools().block();
+	}
+
+	/**
+	 * Send a tools/list request.
+	 * @param cursor the cursor
+	 * @return the list of tools result.
+	 */
 	public McpSchema.ListToolsResult listTools(String cursor) {
 		return this.delegate.listTools(cursor).block();
 	}
@@ -126,6 +135,14 @@ public class McpSyncClient implements AutoCloseable {
 	 */
 	public McpSchema.ListResourcesResult listResources(String cursor) {
 		return this.delegate.listResources(cursor).block();
+	}
+
+	/**
+	 * Send a resources/list request.
+	 * @return the list of resources result.
+	 */
+	public McpSchema.ListResourcesResult listResources() {
+		return this.delegate.listResources().block();
 	}
 
 	/**
@@ -156,6 +173,14 @@ public class McpSyncClient implements AutoCloseable {
 	 */
 	public McpSchema.ListResourceTemplatesResult listResourceTemplates(String cursor) {
 		return this.delegate.listResourceTemplates(cursor).block();
+	}
+
+	/**
+	 * Request a list of resource templates the server has.
+	 * @return the list of resource templates result.
+	 */
+	public McpSchema.ListResourceTemplatesResult listResourceTemplates() {
+		return this.delegate.listResourceTemplates().block();
 	}
 
 	/**
@@ -193,6 +218,10 @@ public class McpSyncClient implements AutoCloseable {
 	// --------------------------
 	public ListPromptsResult listPrompts(String cursor) {
 		return this.delegate.listPrompts(cursor).block();
+	}
+
+	public ListPromptsResult listPrompts() {
+		return this.delegate.listPrompts().block();
 	}
 
 	public GetPromptResult getPrompt(GetPromptRequest getPromptRequest) {

@@ -48,6 +48,15 @@ public class DefaultMcpSession implements McpSession {
 
 	private final McpTransport transport;
 
+	private final ConcurrentHashMap<String, RequestHandler> requestHandlers = new ConcurrentHashMap<>();
+
+	@FunctionalInterface
+	public interface RequestHandler {
+
+		Mono<Object> handle(Object params);
+
+	}
+
 	public DefaultMcpSession(Duration requestTimeout, ObjectMapper objectMapper, McpTransport transport) {
 
 		Assert.notNull(objectMapper, "The ObjectMapper can not be null");
@@ -70,7 +79,13 @@ public class DefaultMcpSession implements McpSession {
 				}
 			}
 			else if (message instanceof McpSchema.JSONRPCRequest request) {
-				logger.info("Client does not yet support server requests");
+				handleIncomingRequest(request).subscribe(response -> transport.sendMessage(response).subscribe(),
+						error -> {
+							var errorResponse = new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(),
+									null, new McpSchema.JSONRPCResponse.JSONRPCError(
+											McpSchema.ErrorCodes.INTERNAL_ERROR, error.getMessage(), null));
+							transport.sendMessage(errorResponse).subscribe();
+						});
 			}
 			else if (message instanceof McpSchema.JSONRPCNotification notification) {
 				logger.info("Notifications not yet supported");
@@ -80,6 +95,27 @@ public class DefaultMcpSession implements McpSession {
 		this.transport.setInboundErrorHandler(error -> logger.error("Error received: {}", error));
 
 		this.transport.start();
+	}
+
+	private Mono<McpSchema.JSONRPCResponse> handleIncomingRequest(McpSchema.JSONRPCRequest request) {
+		return Mono.defer(() -> {
+			var handler = requestHandlers.get(request.method());
+			if (handler == null) {
+				return Mono.just(new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(), null,
+						new McpSchema.JSONRPCResponse.JSONRPCError(McpSchema.ErrorCodes.METHOD_NOT_FOUND,
+								"Method not found: " + request.method(), null)));
+			}
+
+			return handler.handle(request.params())
+				.map(result -> new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(), result, null))
+				.onErrorResume(error -> Mono.just(new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(),
+						null, new McpSchema.JSONRPCResponse.JSONRPCError(McpSchema.ErrorCodes.INTERNAL_ERROR,
+								error.getMessage(), null))));
+		});
+	}
+
+	public void registerRequestHandler(String method, RequestHandler handler) {
+		requestHandlers.put(method, handler);
 	}
 
 	@Override

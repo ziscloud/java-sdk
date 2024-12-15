@@ -53,7 +53,7 @@ class SseServerTransportTests {
 	static String host = "http://localhost:3001";
 
 	@SuppressWarnings("resource")
-	static GenericContainer<?> container = new GenericContainer<>("tzolov/mcp-everything-server:v1")
+	static GenericContainer<?> container = new GenericContainer<>("docker.io/tzolov/mcp-everything-server:v1")
 		.withLogConsumer(outputFrame -> System.out.println(outputFrame.getUtf8String()))
 		.withExposedPorts(3001)
 		.waitingFor(Wait.forHttp("/").forStatusCode(404));

@@ -51,7 +51,7 @@ class SseServerTransportTests {
 	static String host = "http://localhost:3001";
 
 	@SuppressWarnings("resource")
-	static GenericContainer<?> container = new GenericContainer<>("docker.io/tzolov/mcp-everything-server:v1")
+	GenericContainer<?> container = new GenericContainer<>("docker.io/tzolov/mcp-everything-server:v1")
 		.withLogConsumer(outputFrame -> System.out.println(outputFrame.getUtf8String()))
 		.withExposedPorts(3001)
 		.waitingFor(Wait.forHttp("/").forStatusCode(404));
@@ -98,8 +98,7 @@ class SseServerTransportTests {
 
 	}
 
-	@BeforeAll
-	static void beforeAll() {
+	void startContainer() {
 		container.start();
 		int port = container.getMappedPort(3001);
 		host = "http://" + container.getHost() + ":" + port;
@@ -107,6 +106,7 @@ class SseServerTransportTests {
 
 	@BeforeEach
 	void setUp() {
+		startContainer();
 		webClientBuilder = WebClient.builder().baseUrl(host);
 		objectMapper = new ObjectMapper();
 		transport = new TestSseServerTransport(webClientBuilder, objectMapper);
@@ -117,10 +117,10 @@ class SseServerTransportTests {
 		if (transport != null) {
 			assertThatCode(() -> transport.closeGracefully().block(Duration.ofSeconds(10))).doesNotThrowAnyException();
 		}
+		cleanup();
 	}
 
-	@AfterAll
-	static void cleanup() {
+	void cleanup() {
 		container.stop();
 	}
 

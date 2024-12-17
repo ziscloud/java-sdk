@@ -16,8 +16,8 @@
 
 package org.springframework.ai.mcp.client.sse;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -38,7 +38,7 @@ class SseMcpSyncClientTests extends AbstractMcpSyncClientTests {
 
 	// Uses the https://github.com/tzolov/mcp-everything-server-docker-image
 	@SuppressWarnings("resource")
-	static GenericContainer<?> container = new GenericContainer<>("docker.io/tzolov/mcp-everything-server:v1")
+	GenericContainer<?> container = new GenericContainer<>("docker.io/tzolov/mcp-everything-server:v1")
 		.withLogConsumer(outputFrame -> System.out.println(outputFrame.getUtf8String()))
 		.withExposedPorts(3001)
 		.waitingFor(Wait.forHttp("/").forStatusCode(404));
@@ -48,15 +48,15 @@ class SseMcpSyncClientTests extends AbstractMcpSyncClientTests {
 		this.mcpTransport = new SseServerTransport(WebClient.builder().baseUrl(host));
 	}
 
-	@BeforeAll
-	static void beforeAll() {
+	@Override
+	protected void onStart() {
 		container.start();
 		int port = container.getMappedPort(3001);
 		host = "http://" + container.getHost() + ":" + port;
 	}
 
-	@AfterAll
-	public static void cleanup() {
+	@Override
+	protected void onClose() {
 		container.stop();
 	}
 

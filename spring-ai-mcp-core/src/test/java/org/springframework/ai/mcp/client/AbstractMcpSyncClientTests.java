@@ -55,8 +55,13 @@ public abstract class AbstractMcpSyncClientTests {
 
 	abstract protected void createMcpTransport();
 
+	abstract protected void onStart();
+
+	abstract protected void onClose();
+
 	@BeforeEach
 	void setUp() {
+		onStart();
 		createMcpTransport();
 
 		assertThatCode(() -> {
@@ -70,6 +75,7 @@ public abstract class AbstractMcpSyncClientTests {
 		if (mcpSyncClient != null) {
 			assertThatCode(() -> mcpSyncClient.close()).doesNotThrowAnyException();
 		}
+		onClose();
 	}
 
 	@Test

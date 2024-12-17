@@ -55,9 +55,13 @@ public abstract class AbstractMcpAsyncClientTests {
 
 	abstract protected void createMcpTransport();
 
+	abstract protected void onStart();
+
+	abstract protected void onClose();
+
 	@BeforeEach
 	void setUp() {
-
+		onStart();
 		createMcpTransport();
 
 		assertThatCode(() -> {
@@ -72,6 +76,7 @@ public abstract class AbstractMcpAsyncClientTests {
 			assertThatCode(() -> mcpAsyncClient.closeGracefully().block(Duration.ofSeconds(10)))
 				.doesNotThrowAnyException();
 		}
+		onClose();
 	}
 
 	@Test

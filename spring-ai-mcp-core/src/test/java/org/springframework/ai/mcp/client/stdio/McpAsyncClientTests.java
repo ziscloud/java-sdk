@@ -37,4 +37,14 @@ class McpAsyncClientTests extends AbstractMcpAsyncClientTests {
 		this.mcpTransport = new StdioServerTransport(stdioParams);
 	}
 
+	@Override
+	protected void onStart() {
+
+	}
+
+	@Override
+	protected void onClose() {
+
+	}
+
 }

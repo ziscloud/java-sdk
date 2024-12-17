@@ -16,8 +16,9 @@
 
 package org.springframework.ai.mcp.spec;
 
-import java.util.function.Consumer;
+import java.util.function.Function;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import reactor.core.publisher.Mono;
 
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCMessage;
@@ -59,7 +60,7 @@ public interface McpTransport {
 	 * necessary resources and establishes the connection to the server.
 	 * </p>
 	 */
-	void start();
+	Mono<Void> connect(Function<Mono<JSONRPCMessage>, Mono<JSONRPCMessage>> handler);
 
 	/**
 	 * Closes the transport connection and releases any associated resources.
@@ -81,30 +82,6 @@ public interface McpTransport {
 	Mono<Void> closeGracefully();
 
 	/**
-	 * Sets the handler for processing incoming messages from the server.
-	 *
-	 * <p>
-	 * The provided handler will be called whenever a new message is received from the
-	 * server. Messages are expected to follow the JSON-RPC format as defined in the MCP
-	 * specification.
-	 * </p>
-	 * @param inboundMessageHandler a consumer that processes incoming
-	 * {@link JSONRPCMessage}s
-	 */
-	void setInboundMessageHandler(Consumer<JSONRPCMessage> inboundMessageHandler);
-
-	/**
-	 * Sets the handler for processing transport-level errors.
-	 *
-	 * <p>
-	 * The provided handler will be called when errors occur during transport operations,
-	 * such as connection failures or protocol violations.
-	 * </p>
-	 * @param inboundErrorHandler a consumer that processes error messages
-	 */
-	void setInboundErrorHandler(Consumer<String> inboundErrorHandler);
-
-	/**
 	 * Sends a message to the server asynchronously.
 	 *
 	 * <p>
@@ -115,5 +92,7 @@ public interface McpTransport {
 	 * @return a {@link Mono<Void>} that completes when the message has been sent
 	 */
 	Mono<Void> sendMessage(JSONRPCMessage message);
+
+	<T> T unmarshalFrom(Object data, TypeReference<T> typeRef);
 
 }

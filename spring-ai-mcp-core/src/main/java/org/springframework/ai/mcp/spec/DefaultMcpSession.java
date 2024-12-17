@@ -23,13 +23,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 
-import org.springframework.ai.mcp.client.util.Assert;
+import org.springframework.ai.mcp.util.Assert;
 
 /**
  * Default implementation of the MCP (Model Context Protocol) session that manages
@@ -56,9 +56,6 @@ public class DefaultMcpSession implements McpSession {
 	/** Duration to wait for request responses before timing out */
 	private final Duration requestTimeout;
 
-	/** JSON object mapper for serialization/deserialization */
-	private final ObjectMapper objectMapper;
-
 	/** Transport layer implementation for message exchange */
 	private final McpTransport transport;
 
@@ -76,6 +73,8 @@ public class DefaultMcpSession implements McpSession {
 
 	/** Atomic counter for generating unique request IDs */
 	private final AtomicLong requestCounter = new AtomicLong(0);
+
+	private final Disposable connection;
 
 	/**
 	 * Functional interface for handling incoming JSON-RPC requests. Implementations
@@ -112,37 +111,36 @@ public class DefaultMcpSession implements McpSession {
 	/**
 	 * Creates a new DefaultMcpSession with the specified configuration.
 	 * @param requestTimeout Duration to wait for responses
-	 * @param objectMapper JSON object mapper for message serialization
 	 * @param transport Transport implementation for message exchange
 	 */
-	public DefaultMcpSession(Duration requestTimeout, ObjectMapper objectMapper, McpTransport transport) {
-		this(requestTimeout, objectMapper, transport, Map.of(), Map.of());
+	public DefaultMcpSession(Duration requestTimeout, McpTransport transport) {
+		this(requestTimeout, transport, Map.of(), Map.of());
 	}
 
 	/**
 	 * Creates a new DefaultMcpSession with the specified configuration and handlers.
 	 * @param requestTimeout Duration to wait for responses
-	 * @param objectMapper JSON object mapper for message serialization
 	 * @param transport Transport implementation for message exchange
 	 * @param requestHandlers Map of method names to request handlers
 	 * @param notificationHandlers Map of method names to notification handlers
 	 */
-	public DefaultMcpSession(Duration requestTimeout, ObjectMapper objectMapper, McpTransport transport,
+	public DefaultMcpSession(Duration requestTimeout, McpTransport transport,
 			Map<String, RequestHandler> requestHandlers, Map<String, NotificationHandler> notificationHandlers) {
 
-		Assert.notNull(objectMapper, "The ObjectMapper can not be null");
 		Assert.notNull(requestTimeout, "The requstTimeout can not be null");
 		Assert.notNull(transport, "The transport can not be null");
 		Assert.notNull(requestHandlers, "The requestHandlers can not be null");
 		Assert.notNull(notificationHandlers, "The notificationHandlers can not be null");
 
 		this.requestTimeout = requestTimeout;
-		this.objectMapper = objectMapper;
 		this.transport = transport;
 		this.requestHandlers.putAll(requestHandlers);
 		this.notificationHandlers.putAll(notificationHandlers);
 
-		this.transport.setInboundMessageHandler(message -> {
+		// TODO: consider mono.transformDeferredContextual where the Context contains the
+		// Observation associated with the individual message - it can be used to
+		// create child Observation and emit it together with the message to the consumer
+		this.connection = this.transport.connect(mono -> mono.doOnNext(message -> {
 			if (message instanceof McpSchema.JSONRPCResponse response) {
 				var sink = pendingResponses.remove(response.id());
 				if (sink == null) {
@@ -165,11 +163,7 @@ public class DefaultMcpSession implements McpSession {
 				handleIncomingNotification(notification).subscribe(null,
 						error -> logger.error("Error handling notification: {}", error.getMessage()));
 			}
-		});
-
-		this.transport.setInboundErrorHandler(error -> logger.error("Error received: {}", error));
-
-		this.transport.start();
+		})).subscribe();
 	}
 
 	/**
@@ -252,7 +246,7 @@ public class DefaultMcpSession implements McpSession {
 					sink.complete();
 				}
 				else {
-					sink.next(this.objectMapper.convertValue(jsonRpcResponse.result(), typeRef));
+					sink.next(this.transport.unmarshalFrom(jsonRpcResponse.result(), typeRef));
 				}
 			}
 		});
@@ -277,6 +271,7 @@ public class DefaultMcpSession implements McpSession {
 	 */
 	@Override
 	public Mono<Void> closeGracefully() {
+		this.connection.dispose();
 		return transport.closeGracefully();
 	}
 
@@ -285,6 +280,7 @@ public class DefaultMcpSession implements McpSession {
 	 */
 	@Override
 	public void close() {
+		this.connection.dispose();
 		transport.close();
 	}
 

@@ -1,25 +1,18 @@
 @startuml Core Components
 
 interface McpTransport {
-  +void start()
+  +Mono<Void> connect(Function<Mono<JSONRPCMessage>, 
+                       Mono<JSONRPCMessage>> handler)
+  +Mono<Void> sendMessage()
   +void close()
   +Mono<Void> closeGracefully()
-  +void setInboudMessageHandler()
-  +void setInboundErrorHandler()
-  +Mono<Void> sendMessage()
-}
-
-abstract class AbstractMcpTransport {
-  #ObjectMapper objectMapper
-  #getInboundSink()
-  #getOutboundSink()
-  #getErrorSink()
 }
 
 interface McpSession {
-  +<T> Mono<T> sendRequest()
-  +Mono<Void> sendNotification()
+  +<T> Mono<T> sendRequest(String method, Object requestParams, TypeReference<T> typeRef)
+  +Mono<Void> sendNotification(String method, Map<String, Object> params)
   +Mono<Void> closeGracefully()
+  +close()
 }
 
 class DefaultMcpSession {
@@ -52,12 +45,12 @@ class McpSyncClient {
   +GetPromptResult getPrompt()
 }
 
-class StdioServerTransport {
+class StdioClientTransport {
   -Process serverProcess
   -ServerParameters parameters
 }
 
-class SseServerTransport {
+class SseClientTransport {
   -WebClient webClient
 }
 
@@ -74,11 +67,10 @@ class McpError {
   -String message
 }
 
-McpTransport <|.. AbstractMcpTransport
-AbstractMcpTransport <|-- StdioServerTransport
-AbstractMcpTransport <|-- SseServerTransport
+McpTransport <|-- StdioClientTransport
+McpTransport <|-- SseClientTransport
 McpSession <|-- DefaultMcpSession
-DefaultMcpSession <|-- McpAsyncClient
+DefaultMcpSession --o McpAsyncClient
 McpClient ..> McpAsyncClient : creates
 McpClient ..> McpSyncClient : creates
 McpSyncClient o-- McpAsyncClient

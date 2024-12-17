@@ -19,9 +19,10 @@ package org.springframework.ai.mcp.client.stdio;
 import org.junit.jupiter.api.Timeout;
 
 import org.springframework.ai.mcp.client.AbstractMcpAsyncClientTests;
+import org.springframework.ai.mcp.spec.McpTransport;
 
 /**
- * Tests for the {@link McpAsyncClient} with {@link StdioServerTransport}.
+ * Tests for the {@link McpAsyncClient} with {@link StdioClientTransport}.
  *
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
@@ -30,11 +31,11 @@ import org.springframework.ai.mcp.client.AbstractMcpAsyncClientTests;
 class McpAsyncClientTests extends AbstractMcpAsyncClientTests {
 
 	@Override
-	protected void createMcpTransport() {
+	protected McpTransport createMcpTransport() {
 		ServerParameters stdioParams = ServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-everything", "dir")
 			.build();
-		this.mcpTransport = new StdioServerTransport(stdioParams);
+		return new StdioClientTransport(stdioParams);
 	}
 
 	@Override

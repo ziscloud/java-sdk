@@ -18,9 +18,8 @@ package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.util.Assert;
 
 /**
  * Factory class providing static methods for creating Model Context Protocol (MCP)
@@ -39,8 +38,11 @@ import org.springframework.ai.mcp.spec.McpTransport;
  * including request timeout and JSON object mapping.
  *
  * <p>
- * Future implementations will introduce a builder pattern for more flexible client
- * configuration.
+ * Use the builder pattern for flexible client configuration: <pre>{@code
+ * McpClient.using(transport)
+ *     .withRequestTimeout(Duration.ofSeconds(5))
+ *     .sync(); // or .async()
+ * }</pre>
  *
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
@@ -54,55 +56,88 @@ public class McpClient {
 	private McpClient() {
 	}
 
-	// TODO: introduce a builder like:
-	// McpClient.using(transport)
-	// .withRequestTimeout(Duration.ofSeconds(5))
-	// .withObjectMapper(objectMapper); <- or even a more sophisticated
-	// JSONtoPOJOCodec type
-	// .sync();
+	/**
+	 * Start building an MCP client with the specified transport.
+	 * @param transport The transport layer implementation for MCP communication
+	 * @return A new builder instance
+	 */
+	public static Builder using(McpTransport transport) {
+		return new Builder(transport);
+	}
 
 	/**
-	 * Creates an asynchronous MCP client with default configuration.
-	 * @param transport The transport layer implementation for MCP communication
-	 * @return A new instance of {@link McpAsyncClient}
+	 * Builder class for creating MCP clients with custom configuration.
 	 */
+	public static class Builder {
+
+		private final McpTransport transport;
+
+		private Duration requestTimeout = Duration.ofSeconds(20); // Default timeout
+
+		private Builder(McpTransport transport) {
+			Assert.notNull(transport, "Transport must not be null");
+			this.transport = transport;
+		}
+
+		/**
+		 * Set the request timeout duration.
+		 * @param requestTimeout The duration to wait before timing out requests
+		 * @return This builder instance
+		 */
+		public Builder withRequestTimeout(Duration requestTimeout) {
+			Assert.notNull(requestTimeout, "Request timeout must not be null");
+			this.requestTimeout = requestTimeout;
+			return this;
+		}
+
+		/**
+		 * Build a synchronous MCP client.
+		 * @return A new instance of {@link McpSyncClient}
+		 */
+		public McpSyncClient sync() {
+			return new McpSyncClient(async());
+		}
+
+		/**
+		 * Build an asynchronous MCP client.
+		 * @return A new instance of {@link McpAsyncClient}
+		 */
+		public McpAsyncClient async() {
+			return new McpAsyncClient(transport, requestTimeout);
+		}
+
+	}
+
+	/**
+	 * @deprecated Use {@link #using(McpTransport)} instead.
+	 */
+	@Deprecated
 	public static McpAsyncClient async(McpTransport transport) {
-		return new McpAsyncClient(transport);
+		return using(transport).async();
 	}
 
 	/**
-	 * Creates an asynchronous MCP client with custom configuration.
-	 * @param transport The transport layer implementation for MCP communication
-	 * @param requestTimeout The duration to wait before timing out requests
-	 * @param objectMapper The Jackson object mapper for JSON
-	 * serialization/deserialization
-	 * @return A new instance of {@link McpAsyncClient}
+	 * @deprecated Use {@link #using(McpTransport)} instead.
 	 */
-	public static McpAsyncClient async(McpTransport transport, Duration requestTimeout, ObjectMapper objectMapper) {
-		return new McpAsyncClient(transport, requestTimeout, objectMapper);
+	@Deprecated
+	public static McpAsyncClient async(McpTransport transport, Duration requestTimeout) {
+		return using(transport).withRequestTimeout(requestTimeout).async();
 	}
 
 	/**
-	 * Creates a synchronous MCP client with default configuration. This method wraps an
-	 * asynchronous client to provide synchronous operations.
-	 * @param transport The transport layer implementation for MCP communication
-	 * @return A new instance of {@link McpSyncClient}
+	 * @deprecated Use {@link #using(McpTransport)} instead.
 	 */
+	@Deprecated
 	public static McpSyncClient sync(McpTransport transport) {
-		return new McpSyncClient(async(transport));
+		return using(transport).sync();
 	}
 
 	/**
-	 * Creates a synchronous MCP client with custom configuration. This method wraps an
-	 * asynchronous client to provide synchronous operations.
-	 * @param transport The transport layer implementation for MCP communication
-	 * @param requestTimeout The duration to wait before timing out requests
-	 * @param objectMapper The Jackson object mapper for JSON
-	 * serialization/deserialization
-	 * @return A new instance of {@link McpSyncClient}
+	 * @deprecated Use {@link #using(McpTransport)} instead.
 	 */
-	public static McpSyncClient sync(McpTransport transport, Duration requestTimeout, ObjectMapper objectMapper) {
-		return new McpSyncClient(async(transport, requestTimeout, objectMapper));
+	@Deprecated
+	public static McpSyncClient sync(McpTransport transport, Duration requestTimeout) {
+		return using(transport).withRequestTimeout(requestTimeout).sync();
 	}
 
 }

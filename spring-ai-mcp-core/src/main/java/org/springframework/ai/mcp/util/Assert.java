@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.ai.mcp.client.util;
+package org.springframework.ai.mcp.util;
 
 import reactor.util.annotation.Nullable;
 

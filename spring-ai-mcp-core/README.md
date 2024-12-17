@@ -20,7 +20,6 @@ This SDK implements the Model Context Protocol, enabling seamless integration wi
 - Multiple transport implementations:
   - Stdio-based transport for process-based communication
   - SSE-based transport for HTTP streaming
-- Reactive programming support using Project Reactor
 - Configurable request timeouts
 - Customizable JSON serialization/deserialization
 
@@ -32,15 +31,9 @@ Add the following dependency to your Maven project:
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>spring-ai-mcp-core</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0-SNAPSHOT</version>
 </dependency>
 ```
-
-## Documentation
-
-Detailed UML class diagrams showing the relationships between components can be found in [docs/class-diagrams.puml](docs/class-diagrams.puml). The diagrams include:
-- Core Components: Shows the main interfaces, classes, and their relationships
-- Message Flow: Illustrates the message and resource type hierarchies
 
 ## Usage
 
@@ -48,27 +41,27 @@ Detailed UML class diagrams showing the relationships between components can be 
 
 The SDK provides two transport implementations:
 
-#### StdioServerTransport
+#### StdioClientTransport
 Standard I/O based transport for process-based communication with MCP servers:
 
 ```java
 ServerParameters params = ServerParameters.builder("npx")
     .args("-y", "@modelcontextprotocol/server-everything", "dir")
     .build();
-McpTransport transport = new StdioServerTransport(params);
+McpTransport transport = new StdioClientTransport(params);
 ```
 
-#### SseServerTransport
+#### SseClientTransport
 Server-Sent Events (SSE) based transport following the MCP HTTP with SSE transport specification:
 
 ```java
 WebClient.Builder webClientBuilder = WebClient.builder()
     .baseUrl("http://your-mcp-server");
-McpTransport transport = new SseServerTransport(webClientBuilder);
+McpTransport transport = new SseClientTransport(webClientBuilder);
 
 // Or with custom ObjectMapper
 ObjectMapper mapper = new ObjectMapper();
-McpTransport transport = new SseServerTransport(webClientBuilder, mapper);
+McpTransport transport = new SseClientTransport(webClientBuilder, mapper);
 ```
 
 The SSE transport provides:
@@ -87,7 +80,7 @@ ServerParameters params = ServerParameters.builder("npx")
     .args("-y", "@modelcontextprotocol/server-everything", "dir")
     .build();
 
-try (McpSyncClient client = McpClient.sync(new StdioServerTransport(params))) {
+try (McpSyncClient client = McpClient.sync(new StdioClientTransport(params))) {
     // Initialize connection with protocol version and capabilities
     McpSchema.InitializeResult initResult = client.initialize();
 
@@ -123,7 +116,7 @@ ServerParameters params = ServerParameters.builder("npx")
 
 // Initialize async client with custom timeout and object mapper
 McpAsyncClient client = McpClient.async(
-    new StdioServerTransport(params),
+    new StdioClientTransport(params),
     Duration.ofSeconds(30),
     new ObjectMapper()
 );
@@ -172,11 +165,11 @@ The SDK follows a layered architecture with clear separation of concerns:
 - **McpAsyncClient**: Primary async implementation using Project Reactor for non-blocking operations
 - **McpSyncClient**: Synchronous wrapper around the async client for blocking operations
 - **McpSession**: Core session interface defining communication patterns
-- **McpTransport**: Transport layer interface for server communication
+- **McpTransport**: Transport layer interface for client/server communication
 - **McpSchema**: Comprehensive protocol schema definitions
-- **DefaultMcpSession**: Base implementation of the session management
-- **StdioServerTransport**: Standard I/O based server communication
-- **SseServerTransport**: HTTP-based transport using Server-Sent Events for bidirectional communication
+- **DefaultMcpSession**: Default implementation of the session management
+- **StdioClientTransport**: Standard I/O based client to server communication
+- **SseClientTransport**: HTTP-based transport using Server-Sent Events for bidirectional client-sever communication
 
 <img src="docs/spring-ai-mcp-uml-classdiagram.svg" width="600"/>
 

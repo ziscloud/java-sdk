@@ -19,7 +19,6 @@ package org.springframework.ai.mcp.client;
 import java.time.Duration;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +52,7 @@ public abstract class AbstractMcpSyncClientTests {
 
 	protected McpTransport mcpTransport;
 
-	abstract protected void createMcpTransport();
+	abstract protected McpTransport createMcpTransport();
 
 	abstract protected void onStart();
 
@@ -62,10 +61,10 @@ public abstract class AbstractMcpSyncClientTests {
 	@BeforeEach
 	void setUp() {
 		onStart();
-		createMcpTransport();
+		this.mcpTransport = createMcpTransport();
 
 		assertThatCode(() -> {
-			mcpSyncClient = McpClient.sync(mcpTransport, TIMEOUT, new ObjectMapper());
+			mcpSyncClient = McpClient.using(mcpTransport).withRequestTimeout(TIMEOUT).sync();
 			mcpSyncClient.initialize();
 		}).doesNotThrowAnyException();
 	}
@@ -80,14 +79,12 @@ public abstract class AbstractMcpSyncClientTests {
 
 	@Test
 	void testConstructorWithInvalidArguments() {
-		assertThatThrownBy(() -> McpClient.sync(null, TIMEOUT, new ObjectMapper()))
-			.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> McpClient.using(null).sync()).isInstanceOf(IllegalArgumentException.class)
+			.hasMessage("Transport must not be null");
 
-		assertThatThrownBy(() -> McpClient.sync(mcpTransport, null, new ObjectMapper()))
-			.isInstanceOf(IllegalArgumentException.class);
-
-		assertThatThrownBy(() -> McpClient.sync(mcpTransport, TIMEOUT, null))
-			.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> McpClient.using(mcpTransport).withRequestTimeout(null).sync())
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessage("Request timeout must not be null");
 	}
 
 	@Test

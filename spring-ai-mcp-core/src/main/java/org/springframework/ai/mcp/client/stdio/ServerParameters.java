@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.springframework.ai.mcp.client.util.Assert;
+import org.springframework.ai.mcp.util.Assert;
 
 /**
  * Server parameters for stdio client.

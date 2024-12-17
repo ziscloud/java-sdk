@@ -1,10 +1,10 @@
 # Spring AI MCP
 
-Java SDK for the Model Context Protocol (MCP), providing seamless integration between Java and Spring applications and MCP-compliant AI models and tools.
+Java SDK for the Model Context Protocol (MCP), providing seamless integration between Java and Spring applications and MCP-compliant AI resources and tools.
 
 ## Overview
 
-Spring AI MCP is an experimental project that provides Java and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). It enables Spring applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
+Spring AI MCP is an experimental project that provides Java and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
 
 <img src="spring-ai-mcp-architecture.jpg" width="600">
 
@@ -12,22 +12,20 @@ Spring AI MCP is an experimental project that provides Java and Spring Framework
 
 The project consists of two main modules:
 
-### [spring-ai-mcp-core](./spring-ai-mcp-core/README.md)
+### [mcp-core](./spring-ai-mcp-core/README.md)
 
 The core module provides a Java implementation of the Model Context Protocol specification. It includes:
 - Synchronous and asynchronous client implementations
-- Standard MCP operations support (tool discovery, resource management, prompt handling)
-- Stdio-based server transport
-- Reactive programming support using Project Reactor
+- Standard MCP operations support (tool discovery, resource management, prompt handling). Support for request and notificaiotn handling.
+- [Stdio](https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio) and [SSE](https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse) transport implementations. 
+- [Find more](./spring-ai-mcp-core/README.md).
 
-[find more](./spring-ai-mcp-core/README.md)
-
-### [spring-ai-mcp-spring](./spring-ai-mcp-spring/README.md)
+### [mcp-spring](./spring-ai-mcp-spring/README.md)
 
 The Spring integration module provides Spring-specific functionality:
 - Integration with Spring AI's function calling system
 - Spring-friendly abstractions for MCP clients
-- Automatic conversion between JSON and Java objects for tool arguments
+- Auto-configurations (WIP)
 
 ## Requirements
 

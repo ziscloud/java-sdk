@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.ai.mcp.client.stdio;
+package org.springframework.ai.mcp.attic;
 
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.springframework.ai.mcp.client.stdio.ServerParametersParser.McpServerConfigurations.McpServerConfiguration;
+import org.springframework.ai.mcp.attic.ServerParametersParser.McpServerConfigurations.McpServerConfiguration;
 
 /**
  * @author Christian Tzolov

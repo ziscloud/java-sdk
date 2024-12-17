@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `SseServerTransport` class implements the Model Context Protocol (MCP) HTTP with SSE transport specification, providing a bidirectional communication channel between clients and servers. This implementation is part of the Spring AI MCP Core library and follows the [MCP HTTP with SSE Transport Specification](https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse).
+The `SseClientTransport` class implements the Model Context Protocol (MCP) HTTP with SSE transport specification, providing a bidirectional communication channel between clients and servers. This implementation is part of the Spring AI MCP Core library and follows the [MCP HTTP with SSE Transport Specification](https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse).
 
 ## Key Features
 
@@ -53,7 +53,7 @@ WebClient.Builder webClientBuilder = WebClient.builder()
     .baseUrl("http://localhost:3001");
 
 // Initialize transport
-SseServerTransport transport = new SseServerTransport(webClientBuilder);
+SseClientTransport transport = new SseClientTransport(webClientBuilder);
 
 // Create a JSON-RPC request
 JSONRPCRequest request = new JSONRPCRequest(
@@ -141,4 +141,4 @@ The implementation includes comprehensive tests covering:
 - Shutdown procedures
 - Edge cases and failure scenarios
 
-For detailed test examples, see `SseServerTransportTests.java`.
+For detailed test examples, see `SseClientTransportTests.java`.

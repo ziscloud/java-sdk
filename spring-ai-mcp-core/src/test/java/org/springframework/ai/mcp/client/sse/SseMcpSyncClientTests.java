@@ -16,18 +16,17 @@
 
 package org.springframework.ai.mcp.client.sse;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Timeout;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import org.springframework.ai.mcp.client.AbstractMcpSyncClientTests;
 import org.springframework.ai.mcp.client.McpSyncClient;
+import org.springframework.ai.mcp.spec.McpTransport;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Tests for the {@link McpSyncClient} with {@link SseServerTransport}.
+ * Tests for the {@link McpSyncClient} with {@link SseClientTransport}.
  *
  * @author Christian Tzolov
  */
@@ -44,8 +43,8 @@ class SseMcpSyncClientTests extends AbstractMcpSyncClientTests {
 		.waitingFor(Wait.forHttp("/").forStatusCode(404));
 
 	@Override
-	protected void createMcpTransport() {
-		this.mcpTransport = new SseServerTransport(WebClient.builder().baseUrl(host));
+	protected McpTransport createMcpTransport() {
+		return new SseClientTransport(WebClient.builder().baseUrl(host));
 	}
 
 	@Override

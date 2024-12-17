@@ -18,11 +18,9 @@ package org.springframework.ai.mcp.attic;
 import java.time.Duration;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.ai.mcp.client.McpClient;
 import org.springframework.ai.mcp.client.McpSyncClient;
-import org.springframework.ai.mcp.client.sse.SseServerTransport;
+import org.springframework.ai.mcp.client.sse.SseClientTransport;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
@@ -40,9 +38,10 @@ public class MainSSE {
 
 	public static void main(String[] args) {
 
-		try (McpSyncClient mcpClient = McpClient.sync(
-				new SseServerTransport(WebClient.builder().baseUrl("http://localhost:3001")), Duration.ofSeconds(1000),
-				new ObjectMapper())) {
+		try (McpSyncClient mcpClient = McpClient
+			.using(new SseClientTransport(WebClient.builder().baseUrl("http://localhost:3001")))
+			.withRequestTimeout(Duration.ofSeconds(1000))
+			.sync()) {
 
 			mcpClient.initialize();
 

@@ -17,18 +17,24 @@
 package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
-import org.springframework.ai.mcp.client.util.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptRequest;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
+import org.springframework.ai.mcp.util.Assert;
 
 /**
  * @author Dariusz Jędrzejczyk
  * @author Christian Tzolov
  */
 public class McpSyncClient implements AutoCloseable {
+
+	private static final Logger logger = LoggerFactory.getLogger(McpSyncClient.class);
 
 	// TODO: Consider providing a client config to set this properly
 	// this is currently a concern only because AutoCloseable is used - perhaps it
@@ -44,7 +50,18 @@ public class McpSyncClient implements AutoCloseable {
 
 	@Override
 	public void close() {
-		this.delegate.closeGracefully().block(Duration.ofMillis(DEFAULT_CLOSE_TIMEOUT_MS));
+		this.delegate.close();
+	}
+
+	public boolean closeGracefully() {
+		try {
+			this.delegate.closeGracefully().block(Duration.ofMillis(DEFAULT_CLOSE_TIMEOUT_MS));
+		}
+		catch (RuntimeException e) {
+			logger.warn("Client didn't close within timeout of {} ms.", DEFAULT_CLOSE_TIMEOUT_MS, e);
+			return false;
+		}
+		return true;
 	}
 
 	/**

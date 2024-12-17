@@ -18,7 +18,6 @@ package org.springframework.ai.mcp.client;
 import java.time.Duration;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -33,22 +32,41 @@ import org.springframework.ai.mcp.spec.McpSchema.PaginatedRequest;
 import org.springframework.ai.mcp.spec.McpTransport;
 
 /**
+ * The Model Context Protocol (MCP) client implementation that provides asynchronous
+ * communication with MCP servers.
+ *
  * @author Dariusz Jędrzejczyk
  * @author Christian Tzolov
  */
-public class McpAsyncClient extends DefaultMcpSession {
+public class McpAsyncClient {
 
 	private final static Logger logger = LoggerFactory.getLogger(McpAsyncClient.class);
 
 	private static TypeReference<Void> VOID_TYPE_REFERENCE = new TypeReference<>() {
 	};
 
+	/**
+	 * The MCP session implementation that manages bidirectional JSON-RPC communication
+	 * between clients and servers.
+	 */
+	private final DefaultMcpSession mcpSession;
+
+	/**
+	 * Create a new McpAsyncClient with the given transport.
+	 * @param transport the transport to use.
+	 */
 	public McpAsyncClient(McpTransport transport) {
-		this(transport, Duration.ofSeconds(20), new ObjectMapper());
+		this(transport, Duration.ofSeconds(20));
 	}
 
-	public McpAsyncClient(McpTransport transport, Duration requestTimeout, ObjectMapper objectMapper) {
-		super(requestTimeout, objectMapper, transport);
+	/**
+	 * Create a new McpAsyncClient with the given transport and session request-response
+	 * timeout.
+	 * @param transport the transport to use.
+	 * @param requestTimeout the session request-response timeout.
+	 */
+	public McpAsyncClient(McpTransport transport, Duration requestTimeout) {
+		this.mcpSession = new DefaultMcpSession(requestTimeout, transport);
 	}
 
 	/**
@@ -85,7 +103,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 				new McpSchema.ClientCapabilities(null, new McpSchema.ClientCapabilities.RootCapabilities(true), null),
 				new McpSchema.Implementation("mcp-java-client", "0.0.1")); // @formatter:on
 
-		Mono<McpSchema.InitializeResult> result = this.sendRequest("initialize", initializeRequest,
+		Mono<McpSchema.InitializeResult> result = this.mcpSession.sendRequest("initialize", initializeRequest,
 				new TypeReference<McpSchema.InitializeResult>() {
 				});
 
@@ -100,7 +118,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 						"Unsupported protocol version from the server: " + initializeResult.protocolVersion()));
 			}
 			else {
-				return this.sendNotification("notifications/initialized", null).thenReturn(initializeResult);
+				return this.mcpSession.sendNotification("notifications/initialized", null).thenReturn(initializeResult);
 			}
 		});
 	}
@@ -109,14 +127,14 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * Send a roots/list_changed notification.
 	 */
 	public Mono<Void> sendRootsListChanged() {
-		return this.sendNotification("notifications/roots/list_changed");
+		return this.mcpSession.sendNotification("notifications/roots/list_changed");
 	}
 
 	/**
 	 * Send a synchronous ping request.
 	 */
 	public Mono<Void> ping() {
-		return this.sendRequest("ping", null, VOID_TYPE_REFERENCE);
+		return this.mcpSession.sendRequest("ping", null, VOID_TYPE_REFERENCE);
 	}
 
 	// --------------------------
@@ -134,7 +152,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the call tool result.
 	 */
 	public Mono<McpSchema.CallToolResult> callTool(McpSchema.CallToolRequest callToolRequest) {
-		return this.sendRequest("tools/call", callToolRequest, CALL_TOOL_RESULT_TYPE_REF);
+		return this.mcpSession.sendRequest("tools/call", callToolRequest, CALL_TOOL_RESULT_TYPE_REF);
 	}
 
 	/**
@@ -151,7 +169,8 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the list of tools result.
 	 */
 	public Mono<McpSchema.ListToolsResult> listTools(String cursor) {
-		return this.sendRequest("tools/list", new McpSchema.PaginatedRequest(cursor), LIST_TOOLS_RESULT_TYPE_REF);
+		return this.mcpSession.sendRequest("tools/list", new McpSchema.PaginatedRequest(cursor),
+				LIST_TOOLS_RESULT_TYPE_REF);
 	}
 
 	// --------------------------
@@ -181,7 +200,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the list of resources result.
 	 */
 	public Mono<McpSchema.ListResourcesResult> listResources(String cursor) {
-		return this.sendRequest("resources/list", new McpSchema.PaginatedRequest(cursor),
+		return this.mcpSession.sendRequest("resources/list", new McpSchema.PaginatedRequest(cursor),
 				LIST_RESOURCES_RESULT_TYPE_REF);
 	}
 
@@ -200,7 +219,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the resource content.
 	 */
 	public Mono<McpSchema.ReadResourceResult> readResource(McpSchema.ReadResourceRequest readResourceRequest) {
-		return this.sendRequest("resources/read", readResourceRequest, READ_RESOURCE_RESULT_TYPE_REF);
+		return this.mcpSession.sendRequest("resources/read", readResourceRequest, READ_RESOURCE_RESULT_TYPE_REF);
 	}
 
 	/**
@@ -223,7 +242,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the list of resource templates result.
 	 */
 	public Mono<McpSchema.ListResourceTemplatesResult> listResourceTemplates(String cursor) {
-		return this.sendRequest("resources/templates/list", new McpSchema.PaginatedRequest(cursor),
+		return this.mcpSession.sendRequest("resources/templates/list", new McpSchema.PaginatedRequest(cursor),
 				LIST_RESOURCE_TEMPLATES_RESULT_TYPE_REF);
 	}
 
@@ -232,7 +251,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * that declared the listChanged capability SHOULD send a notification:
 	 */
 	public Mono<Void> sendResourcesListChanged() {
-		return this.sendNotification("notifications/resources/list_changed");
+		return this.mcpSession.sendNotification("notifications/resources/list_changed");
 	}
 
 	/**
@@ -245,7 +264,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * subscribe to.
 	 */
 	public Mono<Void> subscribeResource(McpSchema.SubscribeRequest subscribeRequest) {
-		return this.sendRequest("resources/subscribe", subscribeRequest, VOID_TYPE_REFERENCE);
+		return this.mcpSession.sendRequest("resources/subscribe", subscribeRequest, VOID_TYPE_REFERENCE);
 	}
 
 	/**
@@ -254,7 +273,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * to unsubscribe from.
 	 */
 	public Mono<Void> unsubscribeResource(McpSchema.UnsubscribeRequest unsubscribeRequest) {
-		return this.sendRequest("resources/unsubscribe", unsubscribeRequest, VOID_TYPE_REFERENCE);
+		return this.mcpSession.sendRequest("resources/unsubscribe", unsubscribeRequest, VOID_TYPE_REFERENCE);
 	}
 
 	// --------------------------
@@ -280,7 +299,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the list of prompts result.
 	 */
 	public Mono<ListPromptsResult> listPrompts(String cursor) {
-		return this.sendRequest("prompts/list", new PaginatedRequest(cursor), LIST_PROMPTS_RESULT_TYPE_REF);
+		return this.mcpSession.sendRequest("prompts/list", new PaginatedRequest(cursor), LIST_PROMPTS_RESULT_TYPE_REF);
 	}
 
 	/**
@@ -289,7 +308,7 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * @return the get prompt result.
 	 */
 	public Mono<GetPromptResult> getPrompt(GetPromptRequest getPromptRequest) {
-		return this.sendRequest("prompts/get", getPromptRequest, GET_PROMPT_RESULT_TYPE_REF);
+		return this.mcpSession.sendRequest("prompts/get", getPromptRequest, GET_PROMPT_RESULT_TYPE_REF);
 	}
 
 	/**
@@ -298,7 +317,15 @@ public class McpAsyncClient extends DefaultMcpSession {
 	 * any previous subscription from the client.
 	 */
 	public Mono<Void> promptListChangedNotification() {
-		return this.sendNotification("notifications/prompts/list_changed");
+		return this.mcpSession.sendNotification("notifications/prompts/list_changed");
+	}
+
+	public void close() {
+		this.mcpSession.close();
+	}
+
+	public Mono<Void> closeGracefully() {
+		return this.mcpSession.closeGracefully();
 	}
 
 }

@@ -19,21 +19,23 @@ package org.springframework.ai.mcp.client.sse;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.test.StepVerifier;
 
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCRequest;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,12 +43,12 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Tests for the {@link SseServerTransport} class.
+ * Tests for the {@link SseClientTransport} class.
  *
  * @author Christian Tzolov
  */
 @Timeout(15)
-class SseServerTransportTests {
+class SseClientTransportTests {
 
 	static String host = "http://localhost:3001";
 
@@ -63,37 +65,44 @@ class SseServerTransportTests {
 	private ObjectMapper objectMapper;
 
 	// Test class to access protected methods
-	static class TestSseServerTransport extends SseServerTransport {
+	static class TestSseServerTransport extends SseClientTransport {
 
 		private final AtomicInteger inboundMessageCount = new AtomicInteger(0);
+
+		private Sinks.Many<ServerSentEvent<String>> events = Sinks.many().unicast().onBackpressureBuffer();
 
 		public TestSseServerTransport(WebClient.Builder webClientBuilder, ObjectMapper objectMapper) {
 			super(webClientBuilder, objectMapper);
 		}
 
-		// simulate receiving a message from the server
-		public void emitTestMessage(McpSchema.JSONRPCMessage message) {
-			getInboundSink().tryEmitNext(message);
-			inboundMessageCount.incrementAndGet();
+		// @Override
+		// public Mono<Void> connect(Function<Mono<McpSchema.JSONRPCMessage>,
+		// Mono<McpSchema.JSONRPCMessage>> handler) {
+		// simulateEndpointEvent("https://localhost:3001");
+		// return super.connect(handler);
+		// }
+
+		@Override
+		protected Flux<ServerSentEvent<String>> eventStream() {
+			return super.eventStream().mergeWith(events.asFlux());
 		}
 
 		public String getLastEndpoint() {
-			return messageEndpointSink.asFlux().blockFirst();
+			return messageEndpointSink.asMono().block();
 		}
 
 		public int getInboundMessageCount() {
 			return inboundMessageCount.get();
 		}
 
+		public void simulateEndpointEvent(String jsonMessage) {
+			events.tryEmitNext(ServerSentEvent.<String>builder().event("endpoint").data(jsonMessage).build());
+			inboundMessageCount.incrementAndGet();
+		}
+
 		public void simulateMessageEvent(String jsonMessage) {
-			try {
-				McpSchema.JSONRPCMessage message = McpSchema.deserializeJsonRpcMessage(getObjectMapper(), jsonMessage);
-				getInboundSink().tryEmitNext(message);
-				inboundMessageCount.incrementAndGet();
-			}
-			catch (Exception e) {
-				throw new RuntimeException("Failed to simulate message event", e);
-			}
+			events.tryEmitNext(ServerSentEvent.<String>builder().event("message").data(jsonMessage).build());
+			inboundMessageCount.incrementAndGet();
 		}
 
 	}
@@ -110,6 +119,7 @@ class SseServerTransportTests {
 		webClientBuilder = WebClient.builder().baseUrl(host);
 		objectMapper = new ObjectMapper();
 		transport = new TestSseServerTransport(webClientBuilder, objectMapper);
+		transport.connect(Function.identity()).block();
 	}
 
 	@AfterEach
@@ -131,10 +141,10 @@ class SseServerTransportTests {
 
 	@Test
 	void constructorValidation() {
-		assertThatThrownBy(() -> new SseServerTransport(null)).isInstanceOf(IllegalArgumentException.class)
+		assertThatThrownBy(() -> new SseClientTransport(null)).isInstanceOf(IllegalArgumentException.class)
 			.hasMessageContaining("WebClient.Builder must not be null");
 
-		assertThatThrownBy(() -> new SseServerTransport(webClientBuilder, null))
+		assertThatThrownBy(() -> new SseClientTransport(webClientBuilder, null))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageContaining("ObjectMapper must not be null");
 	}
@@ -242,7 +252,7 @@ class SseServerTransportTests {
 		// Create a WebClient that simulates connection failures
 		WebClient.Builder failingWebClientBuilder = WebClient.builder().baseUrl("http://non-existent-host");
 
-		SseServerTransport failingTransport = new SseServerTransport(failingWebClientBuilder);
+		SseClientTransport failingTransport = new SseClientTransport(failingWebClientBuilder);
 
 		// Verify that the transport attempts to reconnect
 		StepVerifier.create(Mono.delay(Duration.ofSeconds(2))).expectNextCount(1).verifyComplete();

@@ -16,12 +16,19 @@
 
 package org.springframework.ai.mcp.client.stdio;
 
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import org.springframework.ai.mcp.client.AbstractMcpSyncClientTests;
+import org.springframework.ai.mcp.client.McpSyncClient;
+import org.springframework.ai.mcp.spec.McpTransport;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for the {@link McpSyncClient} with {@link StdioServerTransport}.
+ * Tests for the {@link McpSyncClient} with {@link StdioClientTransport}.
  *
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
@@ -30,21 +37,31 @@ import org.springframework.ai.mcp.client.AbstractMcpSyncClientTests;
 class McpSyncClientTests extends AbstractMcpSyncClientTests {
 
 	@Override
-	protected void createMcpTransport() {
+	protected McpTransport createMcpTransport() {
 		ServerParameters stdioParams = ServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-everything", "dir")
 			.build();
-		this.mcpTransport = new StdioServerTransport(stdioParams);
+
+		return new StdioClientTransport(stdioParams);
+	}
+
+	@Test
+	void customErrorHandlerShouldReceiveErrors() {
+		AtomicReference<String> receivedError = new AtomicReference<>();
+		((StdioClientTransport) mcpTransport).errorHandler = receivedError::set;
+
+		String errorMessage = "Test error";
+		((StdioClientTransport) mcpTransport).getErrorSink().tryEmitNext(errorMessage);
+
+		assertThat(receivedError.get()).isNotNull().isEqualTo(errorMessage);
 	}
 
 	@Override
 	protected void onStart() {
-
 	}
 
 	@Override
 	protected void onClose() {
-
 	}
 
 }

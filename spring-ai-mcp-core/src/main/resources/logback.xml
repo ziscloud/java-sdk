@@ -20,7 +20,7 @@
     <logger name="org.springframework.ai.mcp.spec" level="INFO"/>
 
     <!-- Test packages -->
-    <logger name="org.springframework.ai.mcp.client.sse.SseServerTransportTests" level="DEBUG"/>
+    <logger name="org.springframework.ai.mcp.client.sse.SseClientTransportTests" level="DEBUG"/>
     <logger name="org.springframework.ai.mcp.client.stdio.McpAsyncClientTests" level="DEBUG"/>
     <logger name="org.springframework.ai.mcp.client.stdio.McpSyncClientTests" level="DEBUG"/>
 

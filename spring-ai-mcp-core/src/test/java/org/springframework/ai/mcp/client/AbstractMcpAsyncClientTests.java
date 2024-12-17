@@ -19,7 +19,6 @@ package org.springframework.ai.mcp.client;
 import java.time.Duration;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +52,7 @@ public abstract class AbstractMcpAsyncClientTests {
 
 	private static final String ECHO_TEST_MESSAGE = "Hello MCP Spring AI!";
 
-	abstract protected void createMcpTransport();
+	abstract protected McpTransport createMcpTransport();
 
 	abstract protected void onStart();
 
@@ -62,10 +61,10 @@ public abstract class AbstractMcpAsyncClientTests {
 	@BeforeEach
 	void setUp() {
 		onStart();
-		createMcpTransport();
+		this.mcpTransport = createMcpTransport();
 
 		assertThatCode(() -> {
-			mcpAsyncClient = McpClient.async(mcpTransport, TIMEOUT, new ObjectMapper());
+			mcpAsyncClient = McpClient.using(mcpTransport).withRequestTimeout(TIMEOUT).async();
 			mcpAsyncClient.initialize().block(Duration.ofSeconds(10));
 		}).doesNotThrowAnyException();
 	}
@@ -81,14 +80,12 @@ public abstract class AbstractMcpAsyncClientTests {
 
 	@Test
 	void testConstructorWithInvalidArguments() {
-		assertThatThrownBy(() -> McpClient.sync(null, TIMEOUT, new ObjectMapper()))
-			.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> McpClient.using(null).sync()).isInstanceOf(IllegalArgumentException.class)
+			.hasMessage("Transport must not be null");
 
-		assertThatThrownBy(() -> McpClient.sync(mcpTransport, null, new ObjectMapper()))
-			.isInstanceOf(IllegalArgumentException.class);
-
-		assertThatThrownBy(() -> McpClient.sync(mcpTransport, TIMEOUT, null))
-			.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> McpClient.using(mcpTransport).withRequestTimeout(null).sync())
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessage("Request timeout must not be null");
 	}
 
 	@Test

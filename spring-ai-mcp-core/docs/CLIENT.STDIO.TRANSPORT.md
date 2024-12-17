@@ -1,6 +1,6 @@
-# StdioServerTransport
+# StdioClientTransport
 
-The `StdioServerTransport` class implements the [MCP Stdio Transport](https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio) specification, providing communication with MCP servers over standard input/output streams.
+The `StdioClientTransport` class implements the [MCP Stdio Transport](https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio) specification, providing communication with MCP servers over standard input/output streams.
 
 ## Overview
 
@@ -84,7 +84,7 @@ ServerParameters params = ServerParameters.builder()
     .build();
 
 // Create transport
-StdioServerTransport transport = new StdioServerTransport(params);
+StdioClientTransport transport = new StdioClientTransport(params);
 
 // Start transport
 transport.start();

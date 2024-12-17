@@ -18,12 +18,10 @@ package org.springframework.ai.mcp.attic;
 
 import java.time.Duration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.ai.mcp.client.McpClient;
 import org.springframework.ai.mcp.client.McpSyncClient;
 import org.springframework.ai.mcp.client.stdio.ServerParameters;
-import org.springframework.ai.mcp.client.stdio.StdioServerTransport;
+import org.springframework.ai.mcp.client.stdio.StdioClientTransport;
 import org.springframework.ai.mcp.spec.McpSchema.ListResourcesResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListToolsResult;
 import org.springframework.ai.mcp.spec.McpSchema.Resource;
@@ -40,8 +38,9 @@ public class ClientSessionTests2 {
 			.args("--directory", "dir", "run", "mcp-server-sqlite", "--db-path", "~/test.db")
 			.build();
 
-		try (McpSyncClient clientSession = McpClient.sync(new StdioServerTransport(stdioParams), Duration.ofSeconds(10),
-				new ObjectMapper())) {
+		try (McpSyncClient clientSession = McpClient.using(new StdioClientTransport(stdioParams))
+			.withRequestTimeout(Duration.ofSeconds(10))
+			.sync()) {
 
 			clientSession.initialize();
 

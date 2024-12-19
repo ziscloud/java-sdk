@@ -287,6 +287,12 @@ public class StdioClientTransport implements McpTransport {
 				if (message != null) {
 					try {
 						String jsonMessage = objectMapper.writeValueAsString(message);
+						// Escape any embedded newlines in the JSON message as per spec:
+						// https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio
+						// - Messages are delimited by newlines, and MUST NOT contain
+						// embedded newlines.
+						jsonMessage = jsonMessage.replace("\r\n", "\\n").replace("\n", "\\n").replace("\r", "\\n");
+
 						this.process.getOutputStream().write(jsonMessage.getBytes(StandardCharsets.UTF_8));
 						this.process.getOutputStream().write("\n".getBytes(StandardCharsets.UTF_8));
 						this.process.getOutputStream().flush();

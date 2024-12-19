@@ -20,8 +20,8 @@ import java.time.Duration;
 
 import org.springframework.ai.mcp.client.McpClient;
 import org.springframework.ai.mcp.client.McpSyncClient;
-import org.springframework.ai.mcp.client.stdio.ServerParameters;
-import org.springframework.ai.mcp.client.stdio.StdioClientTransport;
+import org.springframework.ai.mcp.client.transport.ServerParameters;
+import org.springframework.ai.mcp.client.transport.StdioClientTransport;
 import org.springframework.ai.mcp.spec.McpSchema.ListResourcesResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListToolsResult;
 import org.springframework.ai.mcp.spec.McpSchema.Resource;

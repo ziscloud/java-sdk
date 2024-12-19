@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.ai.mcp.client.sse;
+package org.springframework.ai.mcp.client.transport;
 
 import java.time.Duration;
 import java.util.Map;

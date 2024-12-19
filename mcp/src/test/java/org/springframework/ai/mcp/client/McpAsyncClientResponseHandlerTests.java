@@ -23,11 +23,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-
-import static org.awaitility.Awaitility.await;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -36,12 +33,14 @@ import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
 import org.springframework.ai.mcp.spec.McpSchema;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCNotification;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCRequest;
 import org.springframework.ai.mcp.spec.McpSchema.Root;
 import org.springframework.ai.mcp.spec.McpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 class McpAsyncClientResponseHandlerTests {
 
@@ -150,9 +149,9 @@ class McpAsyncClientResponseHandlerTests {
 	void testRootsListRequestHandling() {
 		MockMcpTransport transport = new MockMcpTransport();
 
-		Supplier<List<Root>> rootsListProvider = () -> List.of(new Root("file:///test/path", "test-root"));
-
-		McpAsyncClient asyncMcpClient = McpClient.using(transport).rootsListProvider(rootsListProvider).async();
+		McpAsyncClient asyncMcpClient = McpClient.using(transport)
+			.roots(new Root("file:///test/path", "test-root"))
+			.async();
 
 		// Simulate incoming request
 		McpSchema.JSONRPCRequest request = new McpSchema.JSONRPCRequest(McpSchema.JSONRPC_VERSION, "roots/list",
@@ -259,6 +258,123 @@ class McpAsyncClientResponseHandlerTests {
 			assertThat(receivedPrompts.get(0).arguments()).hasSize(1);
 			assertThat(receivedPrompts.get(0).arguments().get(0).name()).isEqualTo("arg1");
 		});
+
+		asyncMcpClient.closeGracefully();
+	}
+
+	@Test
+	void testSamplingCreateMessageRequestHandling() {
+		MockMcpTransport transport = new MockMcpTransport();
+
+		// Create a test sampling handler that echoes back the input
+		Function<McpSchema.CreateMessageRequest, McpSchema.CreateMessageResult> samplingHandler = request -> {
+			var content = request.messages().get(0).content();
+			return new McpSchema.CreateMessageResult(McpSchema.Role.ASSISTANT, content, "test-model",
+					McpSchema.CreateMessageResult.StopReason.END_TURN);
+		};
+
+		// Create client with sampling capability and handler
+		McpAsyncClient asyncMcpClient = McpClient.using(transport)
+			.capabilities(ClientCapabilities.builder().sampling().build())
+			.sampling(samplingHandler)
+			.async();
+
+		// Create a mock create message request
+		var messageRequest = new McpSchema.CreateMessageRequest(
+				List.of(new McpSchema.SamplingMessage(McpSchema.Role.USER, new McpSchema.TextContent("Test message"))),
+				null, // modelPreferences
+				"Test system prompt", McpSchema.CreateMessageRequest.ContextInclusionStrategy.NONE, 0.7, // temperature
+				100, // maxTokens
+				null, // stopSequences
+				null // metadata
+		);
+
+		// Simulate incoming request
+		McpSchema.JSONRPCRequest request = new McpSchema.JSONRPCRequest(McpSchema.JSONRPC_VERSION,
+				"sampling/createMessage", "test-id", messageRequest);
+		transport.simulateIncomingMessage(request);
+
+		// Verify response
+		McpSchema.JSONRPCMessage sentMessage = transport.getLastSentMessage();
+		assertThat(sentMessage).isInstanceOf(McpSchema.JSONRPCResponse.class);
+
+		McpSchema.JSONRPCResponse response = (McpSchema.JSONRPCResponse) sentMessage;
+		assertThat(response.id()).isEqualTo("test-id");
+		assertThat(response.error()).isNull();
+
+		McpSchema.CreateMessageResult result = transport.unmarshalFrom(response.result(),
+				new TypeReference<McpSchema.CreateMessageResult>() {
+				});
+		assertThat(result).isNotNull();
+		assertThat(result.role()).isEqualTo(McpSchema.Role.ASSISTANT);
+		assertThat(result.content()).isNotNull();
+		assertThat(result.model()).isEqualTo("test-model");
+		assertThat(result.stopReason()).isEqualTo(McpSchema.CreateMessageResult.StopReason.END_TURN);
+
+		asyncMcpClient.closeGracefully();
+	}
+
+	@Test
+	void testSamplingCreateMessageRequestHandlingWithoutCapability() {
+		MockMcpTransport transport = new MockMcpTransport();
+
+		// Create client without sampling capability
+		McpAsyncClient asyncMcpClient = McpClient.using(transport)
+			.capabilities(ClientCapabilities.builder().build()) // No sampling capability
+			.async();
+
+		// Create a mock create message request
+		var messageRequest = new McpSchema.CreateMessageRequest(
+				List.of(new McpSchema.SamplingMessage(McpSchema.Role.USER, new McpSchema.TextContent("Test message"))),
+				null, null, null, null, 0, null, null);
+
+		// Simulate incoming request
+		McpSchema.JSONRPCRequest request = new McpSchema.JSONRPCRequest(McpSchema.JSONRPC_VERSION,
+				"sampling/createMessage", "test-id", messageRequest);
+		transport.simulateIncomingMessage(request);
+
+		// Verify error response
+		McpSchema.JSONRPCMessage sentMessage = transport.getLastSentMessage();
+		assertThat(sentMessage).isInstanceOf(McpSchema.JSONRPCResponse.class);
+
+		McpSchema.JSONRPCResponse response = (McpSchema.JSONRPCResponse) sentMessage;
+		assertThat(response.id()).isEqualTo("test-id");
+		assertThat(response.result()).isNull();
+		assertThat(response.error()).isNotNull();
+		assertThat(response.error().message()).contains("Method not found: sampling/createMessage");
+
+		asyncMcpClient.closeGracefully();
+	}
+
+	@Test
+	void testSamplingCreateMessageRequestHandlingWithNullHandler() {
+		MockMcpTransport transport = new MockMcpTransport();
+
+		// Create client with sampling capability but null handler
+		McpAsyncClient asyncMcpClient = McpClient.using(transport)
+			.capabilities(ClientCapabilities.builder().sampling().build())
+			.sampling(null) // Null handler
+			.async();
+
+		// Create a mock create message request
+		var messageRequest = new McpSchema.CreateMessageRequest(
+				List.of(new McpSchema.SamplingMessage(McpSchema.Role.USER, new McpSchema.TextContent("Test message"))),
+				null, null, null, null, 0, null, null);
+
+		// Simulate incoming request
+		McpSchema.JSONRPCRequest request = new McpSchema.JSONRPCRequest(McpSchema.JSONRPC_VERSION,
+				"sampling/createMessage", "test-id", messageRequest);
+		transport.simulateIncomingMessage(request);
+
+		// Verify error response
+		McpSchema.JSONRPCMessage sentMessage = transport.getLastSentMessage();
+		assertThat(sentMessage).isInstanceOf(McpSchema.JSONRPCResponse.class);
+
+		McpSchema.JSONRPCResponse response = (McpSchema.JSONRPCResponse) sentMessage;
+		assertThat(response.id()).isEqualTo("test-id");
+		assertThat(response.result()).isNull();
+		assertThat(response.error()).isNotNull();
+		assertThat(response.error().message()).contains("Method not found: sampling/createMessage");
 
 		asyncMcpClient.closeGracefully();
 	}

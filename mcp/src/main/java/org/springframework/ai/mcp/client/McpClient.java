@@ -18,11 +18,17 @@ package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.springframework.ai.mcp.spec.McpSchema;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
+import org.springframework.ai.mcp.spec.McpSchema.CreateMessageRequest;
+import org.springframework.ai.mcp.spec.McpSchema.CreateMessageResult;
+import org.springframework.ai.mcp.spec.McpSchema.Implementation;
 import org.springframework.ai.mcp.spec.McpSchema.Root;
 import org.springframework.ai.mcp.spec.McpTransport;
 import org.springframework.ai.mcp.util.Assert;
@@ -51,14 +57,7 @@ import org.springframework.ai.mcp.util.Assert;
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
-public class McpClient {
-
-	/**
-	 * Private constructor to prevent instantiation as this is a utility class containing
-	 * only static factory methods.
-	 */
-	private McpClient() {
-	}
+public interface McpClient {
 
 	/**
 	 * Start building an MCP client with the specified transport.
@@ -78,15 +77,19 @@ public class McpClient {
 
 		private Duration requestTimeout = Duration.ofSeconds(20); // Default timeout
 
-		private boolean rootsListChangedNotification = false;
+		private ClientCapabilities capabilities;
 
-		private List<Supplier<List<Root>>> rootsListProviders = new ArrayList<>();
+		private Implementation clientInfo = new Implementation("Spring AI MCP Client", "0.3.0");
+
+		private Map<String, Root> roots = new HashMap<>();
 
 		private List<Consumer<List<McpSchema.Tool>>> toolsChangeConsumers = new ArrayList<>();
 
 		private List<Consumer<List<McpSchema.Resource>>> resourcesChangeConsumers = new ArrayList<>();
 
 		private List<Consumer<List<McpSchema.Prompt>>> promptsChangeConsumers = new ArrayList<>();
+
+		private Function<CreateMessageRequest, CreateMessageResult> samplingHandler;
 
 		private Builder(McpTransport transport) {
 			Assert.notNull(transport, "Transport must not be null");
@@ -104,13 +107,32 @@ public class McpClient {
 			return this;
 		}
 
-		public Builder rootsListChangedNotification(boolean rootsListChangedNotification) {
-			this.rootsListChangedNotification = rootsListChangedNotification;
+		public Builder capabilities(ClientCapabilities capabilities) {
+			this.capabilities = capabilities;
 			return this;
 		}
 
-		public Builder rootsListProvider(Supplier<List<Root>> rootsListProvider) {
-			this.rootsListProviders.add(rootsListProvider);
+		public Builder clientInfo(Implementation clientInfo) {
+			this.clientInfo = clientInfo;
+			return this;
+		}
+
+		public Builder roots(List<Root> roots) {
+			for (Root root : roots) {
+				this.roots.put(root.uri(), root);
+			}
+			return this;
+		}
+
+		public Builder roots(Root... roots) {
+			for (Root root : roots) {
+				this.roots.put(root.uri(), root);
+			}
+			return this;
+		}
+
+		public Builder sampling(Function<CreateMessageRequest, CreateMessageResult> samplingHandler) {
+			this.samplingHandler = samplingHandler;
 			return this;
 		}
 
@@ -142,42 +164,10 @@ public class McpClient {
 		 * @return A new instance of {@link McpAsyncClient}
 		 */
 		public McpAsyncClient async() {
-			return new McpAsyncClient(transport, requestTimeout, rootsListProviders, rootsListChangedNotification,
-					toolsChangeConsumers, resourcesChangeConsumers, promptsChangeConsumers);
+			return new McpAsyncClient(transport, requestTimeout, clientInfo, capabilities, roots, toolsChangeConsumers,
+					resourcesChangeConsumers, promptsChangeConsumers, samplingHandler);
 		}
 
-	}
-
-	/**
-	 * @deprecated Use {@link #using(McpTransport)} instead.
-	 */
-	@Deprecated
-	public static McpAsyncClient async(McpTransport transport) {
-		return using(transport).async();
-	}
-
-	/**
-	 * @deprecated Use {@link #using(McpTransport)} instead.
-	 */
-	@Deprecated
-	public static McpAsyncClient async(McpTransport transport, Duration requestTimeout) {
-		return using(transport).requestTimeout(requestTimeout).async();
-	}
-
-	/**
-	 * @deprecated Use {@link #using(McpTransport)} instead.
-	 */
-	@Deprecated
-	public static McpSyncClient sync(McpTransport transport) {
-		return using(transport).sync();
-	}
-
-	/**
-	 * @deprecated Use {@link #using(McpTransport)} instead.
-	 */
-	@Deprecated
-	public static McpSyncClient sync(McpTransport transport, Duration requestTimeout) {
-		return using(transport).requestTimeout(requestTimeout).sync();
 	}
 
 }

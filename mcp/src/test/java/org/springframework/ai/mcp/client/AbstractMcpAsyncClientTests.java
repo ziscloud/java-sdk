@@ -17,9 +17,8 @@
 package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,11 +26,14 @@ import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptRequest;
 import org.springframework.ai.mcp.spec.McpSchema.Prompt;
 import org.springframework.ai.mcp.spec.McpSchema.Resource;
 import org.springframework.ai.mcp.spec.McpSchema.Root;
+import org.springframework.ai.mcp.spec.McpSchema.SubscribeRequest;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
+import org.springframework.ai.mcp.spec.McpSchema.UnsubscribeRequest;
 import org.springframework.ai.mcp.spec.McpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,9 +59,11 @@ public abstract class AbstractMcpAsyncClientTests {
 
 	abstract protected McpTransport createMcpTransport();
 
-	abstract protected void onStart();
+	protected void onStart() {
+	}
 
-	abstract protected void onClose();
+	protected void onClose() {
+	}
 
 	@BeforeEach
 	void setUp() {
@@ -67,7 +71,10 @@ public abstract class AbstractMcpAsyncClientTests {
 		this.mcpTransport = createMcpTransport();
 
 		assertThatCode(() -> {
-			mcpAsyncClient = McpClient.using(mcpTransport).requestTimeout(TIMEOUT).async();
+			mcpAsyncClient = McpClient.using(mcpTransport)
+				.requestTimeout(TIMEOUT)
+				.capabilities(ClientCapabilities.builder().roots(true).build())
+				.async();
 			mcpAsyncClient.initialize().block(Duration.ofSeconds(10));
 		}).doesNotThrowAnyException();
 	}
@@ -175,19 +182,142 @@ public abstract class AbstractMcpAsyncClientTests {
 
 	@Test
 	void testRootsListChanged() {
-		assertThatCode(() -> mcpAsyncClient.sendRootsListChanged().block()).doesNotThrowAnyException();
+		assertThatCode(() -> mcpAsyncClient.rootsListChangedNotification().block()).doesNotThrowAnyException();
 	}
 
 	@Test
 	void testInitializeWithRootsListProviders() {
 		var transport = createMcpTransport();
-		List<Supplier<List<Root>>> providers = List.of(() -> List.of(new Root("file:///test/path", "test-root")));
 
-		var client = McpClient.using(transport).requestTimeout(TIMEOUT).rootsListProvider(providers.get(0)).async();
+		var client = McpClient.using(transport)
+			.requestTimeout(TIMEOUT)
+			.roots(new Root("file:///test/path", "test-root"))
+			.async();
 
 		assertThatCode(() -> client.initialize().block(Duration.ofSeconds(10))).doesNotThrowAnyException();
 
 		assertThatCode(() -> client.closeGracefully().block(Duration.ofSeconds(10))).doesNotThrowAnyException();
+	}
+
+	@Test
+	void testAddRoot() {
+		Root newRoot = new Root("file:///new/test/path", "new-test-root");
+		assertThatCode(() -> mcpAsyncClient.addRoot(newRoot).block()).doesNotThrowAnyException();
+	}
+
+	@Test
+	void testAddRootWithNullValue() {
+		assertThatThrownBy(() -> mcpAsyncClient.addRoot(null).block()).hasMessageContaining("Root must not be null");
+	}
+
+	@Test
+	void testRemoveRoot() {
+		Root root = new Root("file:///test/path/to/remove", "root-to-remove");
+		assertThatCode(() -> {
+			mcpAsyncClient.addRoot(root).block();
+			mcpAsyncClient.removeRoot(root.uri()).block();
+		}).doesNotThrowAnyException();
+	}
+
+	@Test
+	void testRemoveNonExistentRoot() {
+		assertThatThrownBy(() -> mcpAsyncClient.removeRoot("nonexistent-uri").block())
+			.hasMessageContaining("Root with uri 'nonexistent-uri' not found");
+	}
+
+	// @Test
+	void testReadResource() {
+		StepVerifier.create(mcpAsyncClient.listResources()).consumeNextWith(resources -> {
+			if (!resources.resources().isEmpty()) {
+				Resource firstResource = resources.resources().get(0);
+				StepVerifier.create(mcpAsyncClient.readResource(firstResource)).consumeNextWith(result -> {
+					assertThat(result).isNotNull();
+					assertThat(result.contents()).isNotNull();
+				}).verifyComplete();
+			}
+		}).verifyComplete();
+	}
+
+	@Test
+	void testListResourceTemplates() {
+		StepVerifier.create(mcpAsyncClient.listResourceTemplates()).consumeNextWith(result -> {
+			assertThat(result).isNotNull();
+			assertThat(result.resourceTemplates()).isNotNull();
+		}).verifyComplete();
+	}
+
+	// @Test
+	void testResourceSubscription() {
+		StepVerifier.create(mcpAsyncClient.listResources()).consumeNextWith(resources -> {
+			if (!resources.resources().isEmpty()) {
+				Resource firstResource = resources.resources().get(0);
+
+				// Test subscribe
+				StepVerifier.create(mcpAsyncClient.subscribeResource(new SubscribeRequest(firstResource.uri())))
+					.verifyComplete();
+
+				// Test unsubscribe
+				StepVerifier.create(mcpAsyncClient.unsubscribeResource(new UnsubscribeRequest(firstResource.uri())))
+					.verifyComplete();
+			}
+		}).verifyComplete();
+	}
+
+	@Test
+	void testNotificationHandlers() {
+		AtomicBoolean toolsNotificationReceived = new AtomicBoolean(false);
+		AtomicBoolean resourcesNotificationReceived = new AtomicBoolean(false);
+		AtomicBoolean promptsNotificationReceived = new AtomicBoolean(false);
+
+		var transport = createMcpTransport();
+		var client = McpClient.using(transport)
+			.requestTimeout(TIMEOUT)
+			.toolsChangeConsumer(tools -> toolsNotificationReceived.set(true))
+			.resourcesChangeConsumer(resources -> resourcesNotificationReceived.set(true))
+			.promptsChangeConsumer(prompts -> promptsNotificationReceived.set(true))
+			.async();
+
+		assertThatCode(() -> {
+			client.initialize().block();
+			// Trigger notifications
+			client.sendResourcesListChanged().block();
+			client.promptListChangedNotification().block();
+			client.closeGracefully().block();
+		}).doesNotThrowAnyException();
+	}
+
+	@Test
+	void testInitializeWithSamplingCapability() {
+		var transport = createMcpTransport();
+
+		var capabilities = ClientCapabilities.builder().sampling().build();
+
+		var client = McpClient.using(transport).requestTimeout(TIMEOUT).capabilities(capabilities).async();
+
+		assertThatCode(() -> {
+			client.initialize().block(Duration.ofSeconds(10));
+			client.closeGracefully().block(Duration.ofSeconds(10));
+		}).doesNotThrowAnyException();
+	}
+
+	@Test
+	void testInitializeWithAllCapabilities() {
+		var transport = createMcpTransport();
+
+		var capabilities = ClientCapabilities.builder()
+			.experimental(Map.of("feature", "test"))
+			.roots(true)
+			.sampling()
+			.build();
+
+		var client = McpClient.using(transport).requestTimeout(TIMEOUT).capabilities(capabilities).async();
+
+		assertThatCode(() -> {
+			var result = client.initialize().block(Duration.ofSeconds(10));
+			assertThat(result).isNotNull();
+			assertThat(result.capabilities()).isNotNull();
+			client.closeGracefully().block(Duration.ofSeconds(10));
+		}).doesNotThrowAnyException();
 	}
 
 }

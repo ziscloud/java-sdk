@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.ai.mcp.client.stdio;
+package org.springframework.ai.mcp.client.transport;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -14,38 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.ai.mcp.client.stdio;
+package org.springframework.ai.mcp.server;
 
-import org.junit.jupiter.api.Timeout;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.springframework.ai.mcp.client.AbstractMcpAsyncClientTests;
+import org.springframework.ai.mcp.server.transport.StdioServerTransport;
 import org.springframework.ai.mcp.spec.McpTransport;
 
 /**
- * Tests for the {@link McpAsyncClient} with {@link StdioClientTransport}.
+ * Tests for {@link McpAsyncServer} using {@link StdioServerTransport}.
  *
  * @author Christian Tzolov
- * @author Dariusz Jędrzejczyk
  */
-@Timeout(15) // Giving extra time beyond the client timeout
-class McpAsyncClientTests extends AbstractMcpAsyncClientTests {
+class StdioMcpAsyncServerTests extends AbstractMcpAsyncServerTests {
 
 	@Override
 	protected McpTransport createMcpTransport() {
-		ServerParameters stdioParams = ServerParameters.builder("npx")
-			.args("-y", "@modelcontextprotocol/server-everything", "dir")
-			.build();
-		return new StdioClientTransport(stdioParams);
-	}
-
-	@Override
-	protected void onStart() {
-
-	}
-
-	@Override
-	protected void onClose() {
-
+		return new StdioServerTransport(new ObjectMapper());
 	}
 
 }

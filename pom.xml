@@ -98,6 +98,7 @@
 	<modules>
 		<module>mcp</module>
 		<module>spring-ai-mcp</module>
+		<module>spring-ai-mcp-sample</module>
 	</modules>
 
 	<build>

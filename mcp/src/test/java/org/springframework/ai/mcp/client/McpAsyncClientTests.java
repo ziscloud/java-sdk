@@ -14,54 +14,29 @@
  * limitations under the License.
  */
 
-package org.springframework.ai.mcp.client.stdio;
+package org.springframework.ai.mcp.client;
 
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import org.springframework.ai.mcp.client.AbstractMcpSyncClientTests;
-import org.springframework.ai.mcp.client.McpSyncClient;
+import org.springframework.ai.mcp.client.transport.ServerParameters;
+import org.springframework.ai.mcp.client.transport.StdioClientTransport;
 import org.springframework.ai.mcp.spec.McpTransport;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Tests for the {@link McpSyncClient} with {@link StdioClientTransport}.
+ * Tests for the {@link McpAsyncClient} with {@link StdioClientTransport}.
  *
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
 @Timeout(15) // Giving extra time beyond the client timeout
-class McpSyncClientTests extends AbstractMcpSyncClientTests {
+class McpAsyncClientTests extends AbstractMcpAsyncClientTests {
 
 	@Override
 	protected McpTransport createMcpTransport() {
 		ServerParameters stdioParams = ServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-everything", "dir")
 			.build();
-
 		return new StdioClientTransport(stdioParams);
-	}
-
-	@Test
-	void customErrorHandlerShouldReceiveErrors() {
-		AtomicReference<String> receivedError = new AtomicReference<>();
-		((StdioClientTransport) mcpTransport).errorHandler = receivedError::set;
-
-		String errorMessage = "Test error";
-		((StdioClientTransport) mcpTransport).getErrorSink().tryEmitNext(errorMessage);
-
-		assertThat(receivedError.get()).isNotNull().isEqualTo(errorMessage);
-	}
-
-	@Override
-	protected void onStart() {
-	}
-
-	@Override
-	protected void onClose() {
 	}
 
 }

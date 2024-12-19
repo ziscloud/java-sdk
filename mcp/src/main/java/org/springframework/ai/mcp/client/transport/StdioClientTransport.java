@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.ai.mcp.client.stdio;
+package org.springframework.ai.mcp.client.transport;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -78,7 +78,7 @@ public class StdioClientTransport implements McpTransport {
 	private final Sinks.Many<String> errorSink;
 
 	// visible for tests
-	Consumer<String> errorHandler = error -> logger.error("Error received: {}", error);
+	private Consumer<String> errorHandler = error -> logger.error("Error received: {}", error);
 
 	/**
 	 * Creates a new StdioClientTransport with the specified parameters and default
@@ -174,7 +174,7 @@ public class StdioClientTransport implements McpTransport {
 	 * </p>
 	 * @param errorHandler a consumer that processes error messages
 	 */
-	public void setInboundErrorHandler(Consumer<String> errorHandler) {
+	public void setErrorHandler(Consumer<String> errorHandler) {
 		this.errorHandler = errorHandler;
 	}
 

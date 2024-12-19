@@ -18,6 +18,7 @@ package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,11 +26,17 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
+import org.springframework.ai.mcp.spec.McpSchema.ListResourceTemplatesResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListResourcesResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListToolsResult;
+import org.springframework.ai.mcp.spec.McpSchema.ReadResourceResult;
 import org.springframework.ai.mcp.spec.McpSchema.Resource;
+import org.springframework.ai.mcp.spec.McpSchema.Root;
+import org.springframework.ai.mcp.spec.McpSchema.SubscribeRequest;
 import org.springframework.ai.mcp.spec.McpSchema.TextContent;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
+import org.springframework.ai.mcp.spec.McpSchema.UnsubscribeRequest;
 import org.springframework.ai.mcp.spec.McpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +53,7 @@ public abstract class AbstractMcpSyncClientTests {
 
 	private McpSyncClient mcpSyncClient;
 
-	private static final Duration TIMEOUT = Duration.ofSeconds(20);
+	private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
 	private static final String TEST_MESSAGE = "Hello MCP Spring AI!";
 
@@ -64,7 +71,10 @@ public abstract class AbstractMcpSyncClientTests {
 		this.mcpTransport = createMcpTransport();
 
 		assertThatCode(() -> {
-			mcpSyncClient = McpClient.using(mcpTransport).requestTimeout(TIMEOUT).sync();
+			mcpSyncClient = McpClient.using(mcpTransport)
+				.requestTimeout(TIMEOUT)
+				.capabilities(ClientCapabilities.builder().roots(true).build())
+				.sync();
 			mcpSyncClient.initialize();
 		}).doesNotThrowAnyException();
 	}
@@ -142,7 +152,7 @@ public abstract class AbstractMcpSyncClientTests {
 
 	@Test
 	void testRootsListChanged() {
-		assertThatCode(() -> mcpSyncClient.sendRootsListChanged()).doesNotThrowAnyException();
+		assertThatCode(() -> mcpSyncClient.rootsListChangedNotification()).doesNotThrowAnyException();
 	}
 
 	@Test
@@ -163,6 +173,108 @@ public abstract class AbstractMcpSyncClientTests {
 	@Test
 	void testClientSessionState() {
 		assertThat(mcpSyncClient).isNotNull();
+	}
+
+	@Test
+	void testInitializeWithRootsListProviders() {
+		var transport = createMcpTransport();
+
+		var client = McpClient.using(transport)
+			.requestTimeout(TIMEOUT)
+			.roots(new Root("file:///test/path", "test-root"))
+			.sync();
+
+		assertThatCode(() -> {
+			client.initialize();
+			client.close();
+		}).doesNotThrowAnyException();
+	}
+
+	@Test
+	void testAddRoot() {
+		Root newRoot = new Root("file:///new/test/path", "new-test-root");
+		assertThatCode(() -> mcpSyncClient.addRoot(newRoot)).doesNotThrowAnyException();
+	}
+
+	@Test
+	void testAddRootWithNullValue() {
+		assertThatThrownBy(() -> mcpSyncClient.addRoot(null)).hasMessageContaining("Root must not be null");
+	}
+
+	@Test
+	void testRemoveRoot() {
+		Root root = new Root("file:///test/path/to/remove", "root-to-remove");
+		assertThatCode(() -> {
+			mcpSyncClient.addRoot(root);
+			mcpSyncClient.removeRoot(root.uri());
+		}).doesNotThrowAnyException();
+	}
+
+	@Test
+	void testRemoveNonExistentRoot() {
+		assertThatThrownBy(() -> mcpSyncClient.removeRoot("nonexistent-uri"))
+			.hasMessageContaining("Root with uri 'nonexistent-uri' not found");
+	}
+
+	@Test
+	void testReadResource() {
+		ListResourcesResult resources = mcpSyncClient.listResources(null);
+
+		if (!resources.resources().isEmpty()) {
+			Resource firstResource = resources.resources().get(0);
+			ReadResourceResult result = mcpSyncClient.readResource(firstResource);
+
+			assertThat(result).isNotNull();
+			assertThat(result.contents()).isNotNull();
+		}
+	}
+
+	@Test
+	void testListResourceTemplates() {
+		ListResourceTemplatesResult result = mcpSyncClient.listResourceTemplates(null);
+
+		assertThat(result).isNotNull();
+		assertThat(result.resourceTemplates()).isNotNull();
+	}
+
+	// @Test
+	void testResourceSubscription() {
+		ListResourcesResult resources = mcpSyncClient.listResources(null);
+
+		if (!resources.resources().isEmpty()) {
+			Resource firstResource = resources.resources().get(0);
+
+			// Test subscribe
+			assertThatCode(() -> mcpSyncClient.subscribeResource(new SubscribeRequest(firstResource.uri())))
+				.doesNotThrowAnyException();
+
+			// Test unsubscribe
+			assertThatCode(() -> mcpSyncClient.unsubscribeResource(new UnsubscribeRequest(firstResource.uri())))
+				.doesNotThrowAnyException();
+		}
+	}
+
+	@Test
+	void testNotificationHandlers() {
+		AtomicBoolean toolsNotificationReceived = new AtomicBoolean(false);
+		AtomicBoolean resourcesNotificationReceived = new AtomicBoolean(false);
+		AtomicBoolean promptsNotificationReceived = new AtomicBoolean(false);
+
+		var transport = createMcpTransport();
+		var client = McpClient.using(transport)
+			.requestTimeout(TIMEOUT)
+			.toolsChangeConsumer(tools -> toolsNotificationReceived.set(true))
+			.resourcesChangeConsumer(resources -> resourcesNotificationReceived.set(true))
+			.promptsChangeConsumer(prompts -> promptsNotificationReceived.set(true))
+			.sync();
+
+		assertThatCode(() -> {
+			client.initialize();
+			// Trigger notifications
+			client.sendResourcesListChanged();
+			client.promptListChangedNotification();
+			client.close();
+		}).doesNotThrowAnyException();
 	}
 
 }

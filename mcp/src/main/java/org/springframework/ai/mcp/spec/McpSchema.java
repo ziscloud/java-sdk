@@ -191,7 +191,7 @@ public class McpSchema {
 
 		/**
 		 * Provides a standardized way for servers to request LLM
-	 	 * sampling (“completions” or “generations”) from language
+	 	 * sampling ("completions" or "generations") from language
 		 * models via clients. This flow allows clients to maintain
 		 * control over model access, selection, and permissions
 		 * while enabling servers to leverage AI capabilities—with
@@ -201,6 +201,35 @@ public class McpSchema {
 		 */
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)			
 		public record Sampling() {
+		}
+
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		public static class Builder {
+			private Map<String, Object> experimental;
+			private RootCapabilities roots;
+			private Sampling sampling;
+
+			public Builder experimental(Map<String, Object> experimental) {
+				this.experimental = experimental;
+				return this;
+			}
+
+			public Builder roots(Boolean listChanged) {
+				this.roots = new RootCapabilities(listChanged);
+				return this;
+			}
+
+			public Builder sampling() {
+				this.sampling = new Sampling();
+				return this;
+			}
+
+			public ClientCapabilities build() {
+				return new ClientCapabilities(experimental, roots, sampling);
+			}
 		}
 	}// @formatter:on
 
@@ -226,6 +255,48 @@ public class McpSchema {
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
 		public record ToolCapabilities(
 			@JsonProperty("listChanged") Boolean listChanged) {
+		}
+
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		public static class Builder {
+
+			private Map<String, Object> experimental;
+			private Object logging;
+			private PromptCapabilities prompts;
+			private ResourceCapabilities resources;
+			private ToolCapabilities tools;
+
+			public Builder experimental(Map<String, Object> experimental) {
+				this.experimental = experimental;
+				return this;
+			}
+
+			public Builder logging(Object logging) {
+				this.logging = logging;
+				return this;
+			}
+
+			public Builder prompts(Boolean listChanged) {
+				this.prompts = new PromptCapabilities(listChanged);
+				return this;
+			}
+
+			public Builder resources(Boolean subscribe, Boolean listChanged) {
+				this.resources = new ResourceCapabilities(subscribe, listChanged);
+				return this;
+			}
+
+			public Builder tools(Boolean listChanged) {
+				this.tools = new ToolCapabilities(listChanged);
+				return this;
+			}
+
+			public ServerCapabilities build() {
+				return new ServerCapabilities(experimental, logging, prompts, resources, tools);
+			}
 		}
 	} // @formatter:on
 
@@ -304,6 +375,20 @@ public class McpSchema {
 		@JsonProperty("annotations") Annotations annotations) implements Annotated {
 	} // @formatter:on
 
+	/**
+	 * Resource templates allow servers to expose parameterized resources using URI
+	 * templates.
+	 *
+	 * @param uriTemplate A URI template that can be used to generate URIs for this
+	 * resource.
+	 * @param name A human-readable name for this resource. This can be used by clients to
+	 * populate UI elements.
+	 * @param description A description of what this resource represents. This can be used
+	 * by clients to improve the LLM's understanding of available resources. It can be
+	 * thought of like a "hint" to the model.
+	 * @param mimeType The MIME type of this resource, if known.
+	 * @see <a href="https://datatracker.ietf.org/doc/html/rfc6570">RFC 6570</a>
+	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record ResourceTemplate( // @formatter:off
 		@JsonProperty("uriTemplate") String uriTemplate,
@@ -500,7 +585,21 @@ public class McpSchema {
 		@JsonProperty("name") String name,
 		@JsonProperty("description") String description,
 		@JsonProperty("inputSchema") Map<String, Object> inputSchema) {
+	
+		public Tool(String name, String description, String schema) {
+			this(name, description, parseSchema(schema));
+		}
+			
 	} // @formatter:on
+
+	public static Map<String, Object> parseSchema(String schema) {
+		try {
+			return new ObjectMapper().readValue(schema, MAP_TYPE_REF);
+		}
+		catch (IOException e) {
+			throw new IllegalArgumentException("Invalid schema: " + schema, e);
+		}
+	}
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record CallToolRequest(// @formatter:off
@@ -543,15 +642,18 @@ public class McpSchema {
 	}// @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
-	public record CreateMessageResult(Role role, Content content, String model, StopReason stopReason) {
+	public record CreateMessageResult(// @formatter:off
+		@JsonProperty("role") Role role, 
+		@JsonProperty("content") Content content, 
+		@JsonProperty("model") String model, 
+		@JsonProperty("stopReason") StopReason stopReason) {
+		
 		public enum StopReason {
-
-		// @formatter:off
 			@JsonProperty("end_turn") END_TURN,
 			@JsonProperty("stop_sequence") STOP_SEQUENCE,
 			@JsonProperty("max_tokens") MAX_TOKENS
-		} // @formatter:on
-	}
+		} 
+	}// @formatter:on
 
 	// ---------------------------
 	// Model Preferences
@@ -651,6 +753,10 @@ public class McpSchema {
 
 		public String type() {
 			return type;
+		}
+
+		public TextContent(String content) {
+			this(null, null, "text", content);
 		}
 	}
 

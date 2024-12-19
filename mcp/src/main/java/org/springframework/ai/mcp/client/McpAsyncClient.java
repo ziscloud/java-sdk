@@ -20,8 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
@@ -34,8 +35,14 @@ import org.springframework.ai.mcp.spec.DefaultMcpSession.NotificationHandler;
 import org.springframework.ai.mcp.spec.DefaultMcpSession.RequestHandler;
 import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities.RootCapabilities;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities.Sampling;
+import org.springframework.ai.mcp.spec.McpSchema.CreateMessageRequest;
+import org.springframework.ai.mcp.spec.McpSchema.CreateMessageResult;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptRequest;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptResult;
+import org.springframework.ai.mcp.spec.McpSchema.Implementation;
 import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
 import org.springframework.ai.mcp.spec.McpSchema.PaginatedRequest;
 import org.springframework.ai.mcp.spec.McpSchema.Root;
@@ -63,12 +70,37 @@ public class McpAsyncClient {
 	private final DefaultMcpSession mcpSession;
 
 	/**
+	 * Client capabilities.
+	 */
+	private final McpSchema.ClientCapabilities clientCapabilities;
+
+	/**
 	 * Roots define the boundaries of where servers can operate within the filesystem,
 	 * allowing them to understand which directories and files they have access to.
 	 * Servers can request the list of roots from supporting clients and receive
 	 * notifications when that list changes.
 	 */
-	private McpSchema.ClientCapabilities.RootCapabilities rootCapabilities;
+	private final ConcurrentHashMap<String, Root> roots;
+
+	/**
+	 * MCP provides a standardized way for servers to request LLM sampling (“completions”
+	 * or “generations”) from language models via clients. This flow allows clients to
+	 * maintain control over model access, selection, and permissions while enabling
+	 * servers to leverage AI capabilities—with no server API keys necessary. Servers can
+	 * request text or image-based interactions and optionally include context from MCP
+	 * servers in their prompts.
+	 */
+	private Function<CreateMessageRequest, CreateMessageResult> samplingHandler;
+
+	/**
+	 * Client transport implementation.
+	 */
+	private final McpTransport transport;
+
+	/**
+	 * Client implementation information.
+	 */
+	private Implementation clientInfo;
 
 	/**
 	 * Create a new McpAsyncClient with the given transport and session request-response
@@ -80,19 +112,35 @@ public class McpAsyncClient {
 	 * @param rootsListChangedNotification whether the client supports roots/list_changed
 	 * notification.
 	 */
-	public McpAsyncClient(McpTransport transport, Duration requestTimeout,
-			List<Supplier<List<Root>>> rootsListProviders, boolean rootsListChangedNotification,
+	public McpAsyncClient(McpTransport transport, Duration requestTimeout, Implementation clientInfo,
+			ClientCapabilities clientCapabilities, Map<String, Root> roots,
 			List<Consumer<List<McpSchema.Tool>>> toolsChangeConsumers,
 			List<Consumer<List<McpSchema.Resource>>> resourcesChangeConsumers,
-			List<Consumer<List<McpSchema.Prompt>>> promptsChangeConsumers) {
+			List<Consumer<List<McpSchema.Prompt>>> promptsChangeConsumers,
+			Function<CreateMessageRequest, CreateMessageResult> samplingHandler) {
+
+		this.clientInfo = clientInfo;
+
+		this.clientCapabilities = (clientCapabilities != null) ? clientCapabilities
+				: new McpSchema.ClientCapabilities(null, !Utils.isEmpty(roots) ? new RootCapabilities(false) : null,
+						samplingHandler != null ? new Sampling() : null);
+
+		this.transport = transport;
+
+		this.roots = !Utils.isEmpty(roots) ? new ConcurrentHashMap<>(roots) : new ConcurrentHashMap<>();
 
 		// Request Handlers
 		Map<String, RequestHandler> requestHanlers = new HashMap<>();
 
 		// Roots List Request Handler
-		if (rootsListProviders != null && !rootsListProviders.isEmpty()) {
-			requestHanlers.put("roots/list", rootsListRequestHandler(rootsListProviders));
-			this.rootCapabilities = new McpSchema.ClientCapabilities.RootCapabilities(rootsListChangedNotification);
+		if (!Utils.isEmpty(this.roots) && this.clientCapabilities.roots() != null) {
+			requestHanlers.put("roots/list", rootsListRequestHandler());
+		}
+
+		// Sampling Handler
+		if (samplingHandler != null && this.clientCapabilities.sampling() != null) {
+			this.samplingHandler = samplingHandler;
+			requestHanlers.put("sampling/createMessage", samplingCreateMessageHandler());
 		}
 
 		// Notification Handlers
@@ -129,30 +177,75 @@ public class McpAsyncClient {
 
 	}
 
-	private RequestHandler rootsListRequestHandler(List<Supplier<List<Root>>> rootsListProviders) {
-		return new RequestHandler() {
-			@Override
-			public Mono<Object> handle(Object params) {
-				if (rootsListProviders == null || rootsListProviders.isEmpty()) {
-					return Mono.just(new ArrayList<Root>());
-				}
+	public Mono<Void> addRoot(Root root) {
 
-				List<Mono<List<Root>>> monos = rootsListProviders.stream()
-					.map(supplier -> Mono.fromSupplier(supplier).subscribeOn(Schedulers.boundedElastic()))
-					.toList();
+		if (root == null) {
+			return Mono.error(new McpError("Root must not be null"));
+		}
 
-				return Mono.zip(monos, arrays -> {
-					List<Root> combinedList = new ArrayList<>();
-					for (Object array : arrays) {
-						@SuppressWarnings("unchecked")
-						List<Root> roots = (List<Root>) array;
-						combinedList.addAll(roots);
-					}
-					return combinedList;
-				});
+		if (this.clientCapabilities.roots() == null) {
+			return Mono.error(new McpError("Client must be configured with roots capabilities"));
+		}
+
+		if (this.roots.containsKey(root.uri())) {
+			return Mono.error(new McpError("Root with uri '" + root.uri() + "' already exists"));
+		}
+
+		this.roots.put(root.uri(), root);
+
+		logger.info("Added root: {}", root);
+
+		if (this.clientCapabilities.roots().listChanged()) {
+			return this.rootsListChangedNotification();
+		}
+		return Mono.empty();
+	}
+
+	public Mono<Void> removeRoot(String rootUri) {
+
+		if (rootUri == null) {
+			return Mono.error(new McpError("Root uri must not be null"));
+		}
+
+		if (this.clientCapabilities.roots() == null) {
+			return Mono.error(new McpError("Client must be configured with roots capabilities"));
+		}
+
+		Root removed = this.roots.remove(rootUri);
+
+		if (removed != null) {
+			logger.info("Removed Root: {}", rootUri);
+			if (this.clientCapabilities.roots().listChanged()) {
+				return this.rootsListChangedNotification();
 			}
+			return Mono.empty();
+		}
+		return Mono.error(new McpError("Root with uri '" + rootUri + "' not found"));
+	}
+
+	private RequestHandler samplingCreateMessageHandler() {
+		return params -> {
+			McpSchema.CreateMessageRequest request = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.CreateMessageRequest>() {
+					});
+
+			CreateMessageResult response = this.samplingHandler.apply(request);
+
+			return Mono.just(response);
 		};
-	};
+	}
+
+	private RequestHandler rootsListRequestHandler() {
+		return params -> {
+			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.PaginatedRequest>() {
+					});
+
+			List<Root> roots = this.roots.values().stream().toList();
+
+			return Mono.just(roots);
+		};
+	}
 
 	private NotificationHandler toolsChangeNotificationHandler(
 			List<Consumer<List<McpSchema.Tool>>> toolsChangeConsumers) {
@@ -242,8 +335,8 @@ public class McpAsyncClient {
 	public Mono<McpSchema.InitializeResult> initialize() {
 		McpSchema.InitializeRequest initializeRequest = new McpSchema.InitializeRequest(// @formatter:off
 				McpSchema.LATEST_PROTOCOL_VERSION,
-				new McpSchema.ClientCapabilities(null, rootCapabilities, null),
-				new McpSchema.Implementation("mcp-java-client", "0.2.0")); // @formatter:on
+				this.clientCapabilities,
+				this.clientInfo); // @formatter:on
 
 		Mono<McpSchema.InitializeResult> result = this.mcpSession.sendRequest("initialize", initializeRequest,
 				new TypeReference<McpSchema.InitializeResult>() {
@@ -268,15 +361,16 @@ public class McpAsyncClient {
 	/**
 	 * Send a roots/list_changed notification.
 	 */
-	public Mono<Void> sendRootsListChanged() {
+	public Mono<Void> rootsListChangedNotification() {
 		return this.mcpSession.sendNotification("notifications/roots/list_changed");
 	}
 
 	/**
 	 * Send a synchronous ping request.
 	 */
-	public Mono<Void> ping() {
-		return this.mcpSession.sendRequest("ping", null, VOID_TYPE_REFERENCE);
+	public Mono<Object> ping() {
+		return this.mcpSession.sendRequest("ping", null, new TypeReference<Object>() {
+		});
 	}
 
 	// --------------------------

@@ -133,6 +133,7 @@ public class DefaultMcpSession implements McpSession {
 		// create child Observation and emit it together with the message to the consumer
 		this.connection = this.transport.connect(mono -> mono.doOnNext(message -> {
 			if (message instanceof McpSchema.JSONRPCResponse response) {
+				logger.info("Received Response: {}", response);
 				var sink = pendingResponses.remove(response.id());
 				if (sink == null) {
 					logger.warn("Unexpected response for unkown id {}", response.id());
@@ -142,6 +143,7 @@ public class DefaultMcpSession implements McpSession {
 				}
 			}
 			else if (message instanceof McpSchema.JSONRPCRequest request) {
+				logger.info("Received request: {}", request);
 				handleIncomingRequest(request).subscribe(response -> transport.sendMessage(response).subscribe(),
 						error -> {
 							var errorResponse = new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(),
@@ -151,6 +153,7 @@ public class DefaultMcpSession implements McpSession {
 						});
 			}
 			else if (message instanceof McpSchema.JSONRPCNotification notification) {
+				logger.info("Received notification: {}", notification);
 				handleIncomingNotification(notification).subscribe(null,
 						error -> logger.error("Error handling notification: {}", error.getMessage()));
 			}

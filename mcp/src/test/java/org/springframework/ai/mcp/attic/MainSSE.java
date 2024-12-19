@@ -20,7 +20,7 @@ import java.util.Map;
 
 import org.springframework.ai.mcp.client.McpClient;
 import org.springframework.ai.mcp.client.McpSyncClient;
-import org.springframework.ai.mcp.client.sse.SseClientTransport;
+import org.springframework.ai.mcp.client.transport.SseClientTransport;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;

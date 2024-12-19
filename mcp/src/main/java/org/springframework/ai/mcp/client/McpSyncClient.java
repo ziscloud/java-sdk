@@ -17,7 +17,6 @@
 package org.springframework.ai.mcp.client;
 
 import java.time.Duration;
-import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,15 +100,30 @@ public class McpSyncClient implements AutoCloseable {
 	/**
 	 * Send a roots/list_changed notification.
 	 */
-	public void sendRootsListChanged() {
-		this.delegate.sendRootsListChanged().block();
+	public void rootsListChangedNotification() {
+		this.delegate.rootsListChangedNotification().block();
+	}
+
+	/**
+	 * Add a roots dynamically.
+	 */
+	public void addRoot(McpSchema.Root root) {
+		this.delegate.addRoot(root).block();
+	}
+
+	/**
+	 * Remove a root dynamically.
+	 */
+	public void removeRoot(String rootUri) {
+		this.delegate.removeRoot(rootUri).block();
 	}
 
 	/**
 	 * Send a synchronous ping request.
+	 * @return
 	 */
-	public void ping() {
-		this.delegate.ping().block();
+	public Object ping() {
+		return this.delegate.ping().block();
 	}
 
 	// --------------------------

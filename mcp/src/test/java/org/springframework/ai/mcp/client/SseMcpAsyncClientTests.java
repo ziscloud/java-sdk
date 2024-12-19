@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.ai.mcp.client.sse;
+package org.springframework.ai.mcp.client;
 
 import org.junit.jupiter.api.Timeout;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-import org.springframework.ai.mcp.client.AbstractMcpSyncClientTests;
-import org.springframework.ai.mcp.client.McpSyncClient;
+import org.springframework.ai.mcp.client.transport.SseClientTransport;
 import org.springframework.ai.mcp.spec.McpTransport;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * Tests for the {@link McpSyncClient} with {@link SseClientTransport}.
+ * Tests for the {@link McpAsyncClient} with {@link SseClientTransport}.
  *
  * @author Christian Tzolov
  */
 @Timeout(15) // Giving extra time beyond the client timeout
-class SseMcpSyncClientTests extends AbstractMcpSyncClientTests {
+class SseMcpAsyncClientTests extends AbstractMcpAsyncClientTests {
 
 	static String host = "http://localhost:3001";
 
@@ -55,7 +54,7 @@ class SseMcpSyncClientTests extends AbstractMcpSyncClientTests {
 	}
 
 	@Override
-	protected void onClose() {
+	public void onClose() {
 		container.stop();
 	}
 

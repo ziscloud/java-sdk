@@ -40,6 +40,7 @@ import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
 import org.springframework.ai.mcp.spec.McpSchema.PaginatedRequest;
 import org.springframework.ai.mcp.spec.McpSchema.Root;
 import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.util.Utils;
 
 /**
  * The Model Context Protocol (MCP) client implementation that provides asynchronous
@@ -85,29 +86,44 @@ public class McpAsyncClient {
 			List<Consumer<List<McpSchema.Resource>>> resourcesChangeConsumers,
 			List<Consumer<List<McpSchema.Prompt>>> promptsChangeConsumers) {
 
+		// Request Handlers
 		Map<String, RequestHandler> requestHanlers = new HashMap<>();
 
+		// Roots List Request Handler
 		if (rootsListProviders != null && !rootsListProviders.isEmpty()) {
 			requestHanlers.put("roots/list", rootsListRequestHandler(rootsListProviders));
 			this.rootCapabilities = new McpSchema.ClientCapabilities.RootCapabilities(rootsListChangedNotification);
 		}
 
+		// Notification Handlers
 		Map<String, NotificationHandler> notificationHandlers = new HashMap<>();
 
-		if (toolsChangeConsumers != null && !toolsChangeConsumers.isEmpty()) {
-			notificationHandlers.put("notifications/tools/list_changed",
-					toolsChangeNotificationHandler(toolsChangeConsumers));
+		// Tools Change Notification
+		List<Consumer<List<McpSchema.Tool>>> toolsChangeConsumersFinal = new ArrayList<>();
+		toolsChangeConsumersFinal.add((notification) -> logger.info("Tools changed: {}", notification));
+		if (!Utils.isEmpty(toolsChangeConsumers)) {
+			toolsChangeConsumersFinal.addAll(toolsChangeConsumers);
 		}
+		notificationHandlers.put("notifications/tools/list_changed",
+				toolsChangeNotificationHandler(toolsChangeConsumersFinal));
 
-		if (resourcesChangeConsumers != null && !resourcesChangeConsumers.isEmpty()) {
-			notificationHandlers.put("notifications/resources/list_changed",
-					resourcesChangeNotificationHandler(resourcesChangeConsumers));
+		// Resources Change Notification
+		List<Consumer<List<McpSchema.Resource>>> resourcesChangeConsumersFinal = new ArrayList<>();
+		resourcesChangeConsumersFinal.add((notification) -> logger.info("Resources changed: {}", notification));
+		if (!Utils.isEmpty(resourcesChangeConsumers)) {
+			resourcesChangeConsumersFinal.addAll(resourcesChangeConsumers);
 		}
+		notificationHandlers.put("notifications/resources/list_changed",
+				resourcesChangeNotificationHandler(resourcesChangeConsumersFinal));
 
-		if (promptsChangeConsumers != null && !promptsChangeConsumers.isEmpty()) {
-			notificationHandlers.put("notifications/prompts/list_changed",
-					promptsChangeNotificationHandler(promptsChangeConsumers));
+		// Prompts Change Notification
+		List<Consumer<List<McpSchema.Prompt>>> promptsChangeConsumersFinal = new ArrayList<>();
+		promptsChangeConsumersFinal.add((notification) -> logger.info("Prompts changed: {}", notification));
+		if (!Utils.isEmpty(promptsChangeConsumers)) {
+			promptsChangeConsumersFinal.addAll(promptsChangeConsumers);
 		}
+		notificationHandlers.put("notifications/prompts/list_changed",
+				promptsChangeNotificationHandler(promptsChangeConsumersFinal));
 
 		this.mcpSession = new DefaultMcpSession(requestTimeout, transport, requestHanlers, notificationHandlers);
 

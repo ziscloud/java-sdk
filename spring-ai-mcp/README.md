@@ -4,7 +4,7 @@ Spring Integration module for Model Control Protocol (MCP) that provides Spring-
 
 ## Overview
 
-The `spring-ai-mcp-spring` module is part of the [Spring AI MCP](https://github.com/spring-projects-experimental/spring-ai-mcp) project. It provides Spring Framework integration for the Model Control Protocol (MCP), enabling seamless integration of MCP functionality within Spring applications.
+The `spring-ai-mcp` module is part of the [Spring AI MCP](https://github.com/spring-projects-experimental/spring-ai-mcp) project. It provides Spring Framework integration for the Model Control Protocol (MCP), enabling seamless integration of MCP functionality within Spring applications.
 
 ## Features
 
@@ -22,10 +22,6 @@ The `McpFunctionCallback` class is the primary component of this module. It impl
 - Automatic conversion between JSON and Java objects for tool arguments
 - Synchronous tool execution support
 
-## Dependencies
-
-- Spring AI Core (`spring-ai-core`)
-- Spring AI MCP Core (`spring-ai-mcp-core`)
 
 ## Usage
 
@@ -34,7 +30,7 @@ To use this module, add the following dependency to your Maven project:
 ```xml
 <dependency>
     <groupId>org.springframework.experimental</groupId>
-    <artifactId>spring-ai-mcp-spring</artifactId>
+    <artifactId>spring-ai-mcp</artifactId>
     <version>0.2.0-SNAPSHOT</version>
 </dependency>
 ```

@@ -40,10 +40,6 @@ import org.springframework.ai.mcp.util.Assert;
  * </ul>
  *
  * <p>
- * Each client type can be instantiated with default settings or with custom configuration
- * including request timeout and JSON object mapping.
- *
- * <p>
  * Use the builder pattern for flexible client configuration:
  *
  * <pre>{@code

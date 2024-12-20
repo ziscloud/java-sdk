@@ -1,10 +1,10 @@
-# Spring AI MCP
+# Java & Spring MCP
 
 Java SDK for the Model Context Protocol (MCP), providing seamless integration between Java and Spring applications and MCP-compliant AI resources and tools.
 
 ## Overview
 
-Spring AI MCP is an experimental project that provides Java and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
+Experimental project that provides Java and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
 
 <img src="docs/spring-ai-mcp-architecture.jpg" width="600">
 
@@ -12,15 +12,15 @@ Spring AI MCP is an experimental project that provides Java and Spring Framework
 
 The project consists of two main modules:
 
-### [mcp-core](./spring-ai-mcp-core/README.md)
+### [mcp](./mcp/README.md)
 
 The core module provides a Java implementation of the Model Context Protocol specification. It includes:
 - Synchronous and asynchronous client implementations
 - Standard MCP operations support (tool discovery, resource management, prompt handling). Support for request and notificaiotn handling.
 - [Stdio](https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio) and [SSE](https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse) transport implementations. 
-- [Find more](./spring-ai-mcp-core/README.md).
+- [Find more](./mcp/README.md).
 
-### [mcp-spring](./spring-ai-mcp-spring/README.md)
+### [spring-ai-mcp](./spring-ai-mcp/README.md)
 
 The Spring integration module provides Spring-specific functionality:
 - Integration with Spring AI's function calling system
@@ -41,14 +41,14 @@ Add the following dependencies to your Maven project:
 <!-- For core MCP functionality -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
-    <artifactId>spring-ai-mcp-core</artifactId>
+    <artifactId>mcp</artifactId>
     <version>0.2.0-SNAPSHOT</version>
 </dependency>
 
-<!-- For Spring integration -->
+<!-- For Spring AI integration -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
-    <artifactId>spring-ai-mcp-spring</artifactId>
+    <artifactId>spring-ai-mcp</artifactId>
     <version>0.2.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -64,9 +64,9 @@ Explore these MCP examples in the [spring-ai-examples/model-context-protocol](ht
 
 ## Documentation
 
-- [Core Module Documentation](spring-ai-mcp-core/README.md)
-- [Spring Integration Documentation](spring-ai-mcp-spring/README.md)
-- [UML Class Diagrams](spring-ai-mcp-core/docs/spring-ai-mcp-uml-classdiagram.svg)
+- [Core Module Documentation](mcp/README.md)
+- [Spring Integration Documentation](spring-ai-mcp/README.md)
+- [UML Class Diagrams](spring-ai-mcp/docs/spring-ai-mcp-uml-classdiagram.svg)
 
 ## Development
 

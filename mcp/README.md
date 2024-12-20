@@ -8,7 +8,8 @@ This SDK implements the Model Context Protocol, enabling seamless integration wi
 
 ## Features
 
-- Synchronous and Asynchronous client implementations
+- Synchronous and Asynchronous MCP Client implementations
+- Synchronous and Asynchronous MCP Server implementations (WIP: comming with 0.3.0)
 - Standard MCP operations support:
   - Protocol version compatibility negotiation
   - Client-server capability exchange
@@ -32,7 +33,7 @@ Add the following dependency to your Maven project:
 ```xml
 <dependency>
     <groupId>org.springframework.experimental</groupId>
-    <artifactId>spring-ai-mcp-core</artifactId>
+    <artifactId>mcp</artifactId>
     <version>0.2.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -60,10 +61,6 @@ Server-Sent Events (SSE) based transport following the MCP HTTP with SSE transpo
 WebClient.Builder webClientBuilder = WebClient.builder()
     .baseUrl("http://your-mcp-server");
 McpTransport transport = new SseClientTransport(webClientBuilder);
-
-// Or with custom ObjectMapper
-ObjectMapper mapper = new ObjectMapper();
-McpTransport transport = new SseClientTransport(webClientBuilder, mapper);
 ```
 
 The SSE transport provides:
@@ -74,52 +71,14 @@ The SSE transport provides:
 - Graceful shutdown handling
 - Configurable JSON serialization
 
-### Roots List Support
 
-The SDK supports the MCP roots list capability, which allows servers to understand which directories and files they have access to. Clients can provide a list of root directories/files and notify servers when this list changes.
-
-#### Features
-- Define root providers that supply filesystem access boundaries
-- Support for roots list changed notifications
-- Automatic roots list request handling
-
-#### Example with Roots List Configuration
-
-```java
-// Create root providers
-List<Supplier<List<Root>>> rootProviders = List.of(
-    () -> List.of(new Root("file:///workspace/project", "Project Root")),
-    () -> List.of(new Root("file:///workspace/docs", "Documentation"))
-);
-
-// Create async client with roots list support
-McpAsyncClient client = new McpAsyncClient(
-    new StdioClientTransport(params),
-    Duration.ofSeconds(30),
-    rootProviders,  // Configure root providers
-    true           // Enable roots list changed notifications
-);
-
-// Initialize connection
-client.initialize()
-    .doOnSuccess(result -> {
-        // Connection initialized with roots list capability
-        
-        // Notify server when roots list changes
-        return client.sendRootsListChanged();
-    })
-    .subscribe();
-```
-
-### Sync Client Example
+### Sync MCP Client Example
 
 ```java
 // Create and initialize sync client
-ServerParameters params = ServerParameters.builder("npx")
-    .args("-y", "@modelcontextprotocol/server-everything", "dir")
-    .build();
+McpTransport mcpTransport = ...
 
-try (McpSyncClient client = McpClient.sync(new StdioClientTransport(params))) {
+try (McpSyncClient client = McpClient.using(mcpTransport).sync()) {
     // Initialize connection with protocol version and capabilities
     McpSchema.InitializeResult initResult = client.initialize();
 
@@ -145,20 +104,15 @@ try (McpSyncClient client = McpClient.sync(new StdioClientTransport(params))) {
 }
 ```
 
-### Async Client Example with Custom Configuration
+### Async MCP Client Example with Custom Configuration
 
 ```java
-// Create server parameters
-ServerParameters params = ServerParameters.builder("npx")
-    .args("-y", "@modelcontextprotocol/server-everything", "dir")
-    .build();
+McpTransport mcpTransport = ...
 
 // Initialize async client with custom timeout and object mapper
-McpAsyncClient client = McpClient.async(
-    new StdioClientTransport(params),
-    Duration.ofSeconds(30),
-    new ObjectMapper()
-);
+McpAsyncClient client = McpClient.using(mcpTransport)
+    .requestTimeout(Duration.ofSeconds(30))
+    .async();
 
 // Initialize connection and chain operations
 var result = client.initialize()
@@ -261,7 +215,44 @@ The SDK follows a layered architecture with clear separation of concerns:
    - Execution handling with timeout support
    - Result processing with error handling
 
-### Change Notifications
+### Roots List Support
+
+The SDK supports the MCP roots list capability, which allows servers to understand which directories and files they have access to. Clients can provide a list of root directories/files and notify servers when this list changes.
+
+#### Features
+- Define root providers that supply filesystem access boundaries
+- Support for roots list changed notifications
+- Automatic roots list request handling
+
+#### Example with Roots List Configuration
+
+```java
+// Create root providers
+List<Supplier<List<Root>>> rootProviders = List.of(
+    () -> List.of(new Root("file:///workspace/project", "Project Root")),
+    () -> List.of(new Root("file:///workspace/docs", "Documentation"))
+);
+
+// Create async client with roots list support
+McpAsyncClient client = new McpAsyncClient(
+    new StdioClientTransport(params),
+    Duration.ofSeconds(30),
+    rootProviders,  // Configure root providers
+    true           // Enable roots list changed notifications
+);
+
+// Initialize connection
+client.initialize()
+    .doOnSuccess(result -> {
+        // Connection initialized with roots list capability
+        
+        // Notify server when roots list changes
+        return client.sendRootsListChanged();
+    })
+    .subscribe();
+```
+
+### Change Notifications Support
 
 The SDK supports automatic handling of changes through a non-blocking notification system for tools, resources, and prompts:
 

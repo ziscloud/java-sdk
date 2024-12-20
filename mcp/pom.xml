@@ -5,13 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.experimental</groupId>
-		<artifactId>spring-ai-mcp</artifactId>
+		<artifactId>mcp-parent</artifactId>
 		<version>0.2.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>spring-ai-mcp-core</artifactId>
+	<artifactId>mcp</artifactId>
 	<packaging>jar</packaging>
-	<name>Spring AI MCP Core</name>
-	<description>Demo project for Spring Boot</description>
+	<name>Java MCP SDK</name>
+	<description>Core Java implementation of the Model Context Protocol (MCP) specification, providing synchronous and asynchronous clients, server implementations (coming in 0.3.0), with support for tool discovery, resource management, and multiple transport implementations</description>
 	<url>https://github.com/spring-projects-experimental/spring-ai-mcp</url>
 
 	<scm>

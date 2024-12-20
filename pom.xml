@@ -5,18 +5,18 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.springframework.experimental</groupId>
-	<artifactId>spring-ai-mcp</artifactId>
+	<artifactId>mcp-parent</artifactId>
 	<version>0.2.0-SNAPSHOT</version>
 
 	<packaging>pom</packaging>
 	<url>https://github.com/spring-projects-experimental/spring-ai-mcp</url>
 
-	<name>Spring AI MCP</name>
-	<description>Spring AI Integration for MCP</description>
+	<name>Spring AI MCP Parent</name>
+	<description>Java SDK and Spring Framework integration for the Model Context Protocol (MCP), enabling interaction with AI models and tools through a standardized interface</description>
 
 
 	<organization>
-		<name>VMware Inc.</name>
+		<name>Spring Framework</name>
 		<url>https://spring.io</url>
 	</organization>
 
@@ -68,13 +68,13 @@
 
 		<spring-ai.version>1.0.0-M4</spring-ai.version>
 		<assert4j.version>3.26.3</assert4j.version>
-		<junit.version>5.11.3</junit.version>
+		<junit.version>5.10.2</junit.version>
 		<mockito.version>5.11.0</mockito.version>
 		<testcontainers.version>1.20.4</testcontainers.version>
 
 		<slf4j-api.version>2.0.16</slf4j-api.version>
 		<logback.version>1.5.12</logback.version>
-		<jackson.version>2.18.2</jackson.version>
+		<jackson.version>2.17.0</jackson.version>
 		<springframework.version>6.2.1</springframework.version>
 
 		<!-- plugin versions -->
@@ -96,8 +96,8 @@
 	</properties>
 
 	<modules>
-		<module>spring-ai-mcp-core</module>
-		<module>spring-ai-mcp-spring</module>
+		<module>mcp</module>
+		<module>spring-ai-mcp</module>
 	</modules>
 
 	<build>

@@ -5,12 +5,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.experimental</groupId>
-		<artifactId>spring-ai-mcp</artifactId>
+		<artifactId>mcp-parent</artifactId>
 		<version>0.2.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>spring-ai-mcp-spring</artifactId>
-	<name>Spring AI MCP Spring</name>
-	<description>Spring Integration for MCP</description>
+	<artifactId>spring-ai-mcp</artifactId>
+	<name>Spring AI MCP</name>
+	<description>Spring Framework integration for Model Context Protocol (MCP), providing Spring AI function calling capabilities and Spring-friendly abstractions for MCP clients and MCP servers</description>
 	<url>https://github.com/spring-projects-experimental/spring-ai-mcp</url>
 
 	<scm>
@@ -27,7 +27,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.experimental</groupId>
-			<artifactId>spring-ai-mcp-core</artifactId>
+			<artifactId>mcp</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>

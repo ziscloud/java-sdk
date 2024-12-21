@@ -44,7 +44,7 @@ import org.springframework.ai.mcp.util.Assert;
  *
  * <pre>{@code
  * McpClient.using(transport)
- * 		.withRequestTimeout(Duration.ofSeconds(5))
+ * 		.requestTimeout(Duration.ofSeconds(5))
  * 		.sync(); // or .async()
  * }</pre>
  *

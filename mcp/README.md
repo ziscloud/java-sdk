@@ -44,7 +44,7 @@ The SDK follows a layered architecture with clear separation of concerns:
 
 Following class diagram illustrates the layered architecture of the MCP SDK, showing the relationships between core interfaces (McpTransport, McpSession), their implementations, and the client/server components. It highlights how the transport layer connects to sessions, which in turn support both synchronous and asynchronous client/server implementations.
 
-<img src="../docs/spring-ai-mcp-uml-classdiagram.svg" width="600"/>
+<img src="../docs/spring-ai-mcp-uml-classdiagram.svg" width="800"/>
 
 ### Key Interactions
 

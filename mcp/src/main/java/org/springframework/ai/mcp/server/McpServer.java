@@ -156,19 +156,6 @@ public interface McpServer {
 		}
 
 		/**
-		 * Set the server implementation information using name and version.
-		 * @param name The server name
-		 * @param version The server version
-		 * @return This builder instance
-		 */
-		public Builder serverInfo(String name, String version) {
-			Assert.notNull(name, "Server name must not be null");
-			Assert.notNull(version, "Server version must not be null");
-			this.serverInfo = new McpSchema.Implementation(name, version);
-			return this;
-		}
-
-		/**
 		 * Set the server capabilities.
 		 * @param serverCapabilities The server capabilities configuration
 		 * @return This builder instance

@@ -61,27 +61,6 @@ public class McpSyncServer {
 	}
 
 	/**
-	 * Notify clients that the list of available tools has changed.
-	 */
-	public void notifyToolsListChanged() {
-		this.asyncServer.notifyToolsListChanged().block();
-	}
-
-	/**
-	 * Notify clients that the list of available resources has changed.
-	 */
-	public void notifyResourcesListChanged() {
-		this.asyncServer.notifyResourcesListChanged().block();
-	}
-
-	/**
-	 * Notify clients that the list of available prompts has changed.
-	 */
-	public void notifyPromptsListChanged() {
-		this.asyncServer.notifyPromptsListChanged().block();
-	}
-
-	/**
 	 * Add a new resource handler.
 	 * @param resourceHandler The resource handler to add
 	 */
@@ -111,6 +90,27 @@ public class McpSyncServer {
 	 */
 	public void removePrompt(String promptName) {
 		this.asyncServer.removePrompt(promptName).block();
+	}
+
+	/**
+	 * Notify clients that the list of available tools has changed.
+	 */
+	public void notifyToolsListChanged() {
+		this.asyncServer.notifyToolsListChanged().block();
+	}
+
+	/**
+	 * Notify clients that the list of available resources has changed.
+	 */
+	public void notifyResourcesListChanged() {
+		this.asyncServer.notifyResourcesListChanged().block();
+	}
+
+	/**
+	 * Notify clients that the list of available prompts has changed.
+	 */
+	public void notifyPromptsListChanged() {
+		this.asyncServer.notifyPromptsListChanged().block();
 	}
 
 	/**

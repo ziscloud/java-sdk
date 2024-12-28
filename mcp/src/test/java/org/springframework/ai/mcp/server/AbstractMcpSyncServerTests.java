@@ -86,7 +86,7 @@ public abstract class AbstractMcpSyncServerTests {
 	@Test
 	void testAddTool() {
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.sync();
 
@@ -103,7 +103,7 @@ public abstract class AbstractMcpSyncServerTests {
 		Tool duplicateTool = new McpSchema.Tool(TEST_TOOL_NAME, "Duplicate tool", Map.of("input", "string"));
 
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.tool(duplicateTool, args -> new CallToolResult(List.of(), false))
 			.sync();
@@ -121,7 +121,7 @@ public abstract class AbstractMcpSyncServerTests {
 		Tool tool = new McpSchema.Tool(TEST_TOOL_NAME, "Test tool", Map.of("input", "string"));
 
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.tool(tool, args -> new CallToolResult(List.of(), false))
 			.sync();
@@ -134,7 +134,7 @@ public abstract class AbstractMcpSyncServerTests {
 	@Test
 	void testRemoveNonexistentTool() {
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.sync();
 
@@ -146,7 +146,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testNotifyToolsListChanged() {
-		var mcpSyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var mcpSyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		assertThatCode(() -> mcpSyncServer.notifyToolsListChanged()).doesNotThrowAnyException();
 
@@ -155,7 +155,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testNotifyResourcesListChanged() {
-		var mcpSyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var mcpSyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		assertThatCode(() -> mcpSyncServer.notifyResourcesListChanged()).doesNotThrowAnyException();
 
@@ -164,7 +164,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testNotifyPromptsListChanged() {
-		var mcpSyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var mcpSyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		assertThatCode(() -> mcpSyncServer.notifyPromptsListChanged()).doesNotThrowAnyException();
 
@@ -173,14 +173,14 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testGracefulShutdown() {
-		var mcpSyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var mcpSyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		assertThatCode(() -> mcpSyncServer.closeGracefully()).doesNotThrowAnyException();
 	}
 
 	@Test
 	void testImmediateClose() {
-		var mcpSyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var mcpSyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		assertThatCode(() -> mcpSyncServer.close()).doesNotThrowAnyException();
 	}
@@ -188,7 +188,7 @@ public abstract class AbstractMcpSyncServerTests {
 	@Test
 	void testAddResource() {
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().resources(true, false).build())
 			.sync();
 
@@ -205,7 +205,7 @@ public abstract class AbstractMcpSyncServerTests {
 	@Test
 	void testAddResourceWithNullRegistration() {
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().resources(true, false).build())
 			.sync();
 
@@ -218,7 +218,7 @@ public abstract class AbstractMcpSyncServerTests {
 	@Test
 	void testAddPromptWithNullRegistration() {
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().prompts(false).build())
 			.sync();
 
@@ -228,7 +228,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testAddResourceWithoutCapability() {
-		var serverWithoutResources = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var serverWithoutResources = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		Resource resource = new Resource(TEST_RESOURCE_URI, "Test Resource", "text/plain", "Test resource description",
 				null);
@@ -241,7 +241,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testAddPromptWithoutCapability() {
-		var serverWithoutPrompts = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var serverWithoutPrompts = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		Prompt prompt = new Prompt(TEST_PROMPT_NAME, "Test Prompt", List.of());
 		PromptRegistration registration = new PromptRegistration(prompt, req -> new GetPromptResult(
@@ -254,7 +254,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testRemoveResourceWithoutCapability() {
-		var serverWithoutResources = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var serverWithoutResources = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		assertThatThrownBy(() -> serverWithoutResources.removeResource(TEST_RESOURCE_URI)).isInstanceOf(McpError.class)
 			.hasMessage("Server must be configured with resource capabilities");
@@ -262,7 +262,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testRemovePromptWithoutCapability() {
-		var serverWithoutPrompts = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var serverWithoutPrompts = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		assertThatThrownBy(() -> serverWithoutPrompts.removePrompt(TEST_PROMPT_NAME)).isInstanceOf(McpError.class)
 			.hasMessage("Server must be configured with prompt capabilities");
@@ -277,7 +277,7 @@ public abstract class AbstractMcpSyncServerTests {
 				List.of(new PromptMessage(McpSchema.Role.ASSISTANT, new McpSchema.TextContent("Test content")))));
 
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().prompts(true).build())
 			.prompts(registration)
 			.sync();
@@ -292,7 +292,7 @@ public abstract class AbstractMcpSyncServerTests {
 	@Test
 	void testRemoveNonexistentPrompt() {
 		var mcpSyncServer = McpServer.using(createMcpTransport())
-			.serverInfo("test-server", "1.0.0")
+			.info("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().prompts(true).build())
 			.sync();
 
@@ -304,7 +304,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@Test
 	void testGetAsyncServer() {
-		var mcpSyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").sync();
+		var mcpSyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").sync();
 
 		assertThat(mcpSyncServer.getAsyncServer()).isNotNull();
 

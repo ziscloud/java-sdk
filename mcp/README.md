@@ -42,6 +42,10 @@ The SDK follows a layered architecture with clear separation of concerns:
 - **Session Layer (McpSession)**: Manages communication patterns and state using DefaultMcpSession implementation.
 - **Client/Server Layer**: Both use McpSession for sync/async operations, with McpClient handling client-side protocol operations and McpServer managing server-side protocol operations.
 
+Following class diagram illustrates the layered architecture of the MCP SDK, showing the relationships between core interfaces (McpTransport, McpSession), their implementations, and the client/server components. It highlights how the transport layer connects to sessions, which in turn support both synchronous and asynchronous client/server implementations.
+
+<img src="../docs/spring-ai-mcp-uml-classdiagram.svg" width="600"/>
+
 ### Key Interactions
 
 - **Client/Server Initialization**: Transport setup, protocol compatibility check, capability negotiation, and implementation details exchange.
@@ -49,6 +53,7 @@ The SDK follows a layered architecture with clear separation of concerns:
 - **Resource Management**: Resource discovery, URI template-based access, subscription system, and content retrieval.
 - **Prompt System**: Discovery, parameter-based retrieval, change notifications, and content management.
 - **Tool Execution**: Discovery, parameter validation, timeout-aware execution, and result processing.
+
 
 ## Client Usage Examples
 

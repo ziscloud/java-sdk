@@ -365,7 +365,6 @@ class McpAsyncClientResponseHandlerTests {
 		// Create client with sampling capability but null handler
 		McpAsyncClient asyncMcpClient = McpClient.using(transport)
 			.capabilities(ClientCapabilities.builder().sampling().build())
-			.sampling(null) // Null handler
 			.async();
 
 		// Create a mock create message request

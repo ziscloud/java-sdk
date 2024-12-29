@@ -47,6 +47,7 @@ import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
 import org.springframework.ai.mcp.spec.McpSchema.PaginatedRequest;
 import org.springframework.ai.mcp.spec.McpSchema.Root;
 import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.util.Assert;
 import org.springframework.ai.mcp.util.Utils;
 
 /**
@@ -119,6 +120,10 @@ public class McpAsyncClient {
 			List<Consumer<List<McpSchema.Prompt>>> promptsChangeConsumers,
 			Function<CreateMessageRequest, CreateMessageResult> samplingHandler) {
 
+		Assert.notNull(transport, "Transport must not be null");
+		Assert.notNull(requestTimeout, "Request timeout must not be null");
+		Assert.notNull(clientInfo, "Client info must not be null");
+
 		this.clientInfo = clientInfo;
 
 		this.clientCapabilities = (clientCapabilities != null) ? clientCapabilities
@@ -177,133 +182,9 @@ public class McpAsyncClient {
 
 	}
 
-	public Mono<Void> addRoot(Root root) {
-
-		if (root == null) {
-			return Mono.error(new McpError("Root must not be null"));
-		}
-
-		if (this.clientCapabilities.roots() == null) {
-			return Mono.error(new McpError("Client must be configured with roots capabilities"));
-		}
-
-		if (this.roots.containsKey(root.uri())) {
-			return Mono.error(new McpError("Root with uri '" + root.uri() + "' already exists"));
-		}
-
-		this.roots.put(root.uri(), root);
-
-		logger.info("Added root: {}", root);
-
-		if (this.clientCapabilities.roots().listChanged()) {
-			return this.rootsListChangedNotification();
-		}
-		return Mono.empty();
-	}
-
-	public Mono<Void> removeRoot(String rootUri) {
-
-		if (rootUri == null) {
-			return Mono.error(new McpError("Root uri must not be null"));
-		}
-
-		if (this.clientCapabilities.roots() == null) {
-			return Mono.error(new McpError("Client must be configured with roots capabilities"));
-		}
-
-		Root removed = this.roots.remove(rootUri);
-
-		if (removed != null) {
-			logger.info("Removed Root: {}", rootUri);
-			if (this.clientCapabilities.roots().listChanged()) {
-				return this.rootsListChangedNotification();
-			}
-			return Mono.empty();
-		}
-		return Mono.error(new McpError("Root with uri '" + rootUri + "' not found"));
-	}
-
-	private RequestHandler samplingCreateMessageHandler() {
-		return params -> {
-			McpSchema.CreateMessageRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.CreateMessageRequest>() {
-					});
-
-			CreateMessageResult response = this.samplingHandler.apply(request);
-
-			return Mono.just(response);
-		};
-	}
-
-	private RequestHandler rootsListRequestHandler() {
-		return params -> {
-			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.PaginatedRequest>() {
-					});
-
-			List<Root> roots = this.roots.values().stream().toList();
-
-			return Mono.just(roots);
-		};
-	}
-
-	private NotificationHandler toolsChangeNotificationHandler(
-			List<Consumer<List<McpSchema.Tool>>> toolsChangeConsumers) {
-
-		return new NotificationHandler() {
-			@Override
-			public Mono<Void> handle(Object params) {
-				// TODO: add support for cursor/pagination
-				return listTools().flatMap(listToolsResult -> Mono.fromRunnable(() -> {
-					for (Consumer<List<McpSchema.Tool>> toolsChangeConsumer : toolsChangeConsumers) {
-						toolsChangeConsumer.accept(listToolsResult.tools());
-					}
-				}).subscribeOn(Schedulers.boundedElastic())).onErrorResume(error -> {
-					logger.error("Error handling tools list change notification", error);
-					return Mono.empty();
-				}).then(); // Convert to Mono<Void>
-			}
-		};
-	};
-
-	private NotificationHandler resourcesChangeNotificationHandler(
-			List<Consumer<List<McpSchema.Resource>>> resourcesChangeConsumers) {
-
-		return new NotificationHandler() {
-			@Override
-			public Mono<Void> handle(Object params) {
-				// TODO: add support for cursor/pagination
-				return listResources().flatMap(listResourcesResult -> Mono.fromRunnable(() -> {
-					for (Consumer<List<McpSchema.Resource>> resourceChangeConsumer : resourcesChangeConsumers) {
-						resourceChangeConsumer.accept(listResourcesResult.resources());
-					}
-				}).subscribeOn(Schedulers.boundedElastic())).onErrorResume(error -> {
-					logger.error("Error handling resources list change notification", error);
-					return Mono.empty();
-				}).then(); // Convert to Mono<Void>
-			}
-		};
-	};
-
-	private NotificationHandler promptsChangeNotificationHandler(
-			List<Consumer<List<McpSchema.Prompt>>> promptsChangeConsumers) {
-
-		return new NotificationHandler() {
-			@Override
-			public Mono<Void> handle(Object params) {
-				// TODO: add support for cursor/pagination
-				return listPrompts().flatMap(listPromptsResult -> Mono.fromRunnable(() -> {
-					for (Consumer<List<McpSchema.Prompt>> promptChangeConsumer : promptsChangeConsumers) {
-						promptChangeConsumer.accept(listPromptsResult.prompts());
-					}
-				}).subscribeOn(Schedulers.boundedElastic())).onErrorResume(error -> {
-					logger.error("Error handling prompts list change notification", error);
-					return Mono.empty();
-				}).then(); // Convert to Mono<Void>
-			}
-		};
-	};
-
+	// --------------------------
+	// Lifecycle
+	// --------------------------
 	/**
 	 * The initialization phase MUST be the first interaction between client and server.
 	 * During this phase, the client and server:
@@ -358,12 +239,17 @@ public class McpAsyncClient {
 		});
 	}
 
-	/**
-	 * Send a roots/list_changed notification.
-	 */
-	public Mono<Void> rootsListChangedNotification() {
-		return this.mcpSession.sendNotification("notifications/roots/list_changed");
+	public void close() {
+		this.mcpSession.close();
 	}
+
+	public Mono<Void> closeGracefully() {
+		return this.mcpSession.closeGracefully();
+	}
+
+	// --------------------------
+	// Basic Utilites
+	// --------------------------
 
 	/**
 	 * Send a synchronous ping request.
@@ -371,6 +257,90 @@ public class McpAsyncClient {
 	public Mono<Object> ping() {
 		return this.mcpSession.sendRequest("ping", null, new TypeReference<Object>() {
 		});
+	}
+
+	// --------------------------
+	// Roots
+	// --------------------------
+	public Mono<Void> addRoot(Root root) {
+
+		if (root == null) {
+			return Mono.error(new McpError("Root must not be null"));
+		}
+
+		if (this.clientCapabilities.roots() == null) {
+			return Mono.error(new McpError("Client must be configured with roots capabilities"));
+		}
+
+		if (this.roots.containsKey(root.uri())) {
+			return Mono.error(new McpError("Root with uri '" + root.uri() + "' already exists"));
+		}
+
+		this.roots.put(root.uri(), root);
+
+		logger.info("Added root: {}", root);
+
+		if (this.clientCapabilities.roots().listChanged()) {
+			return this.rootsListChangedNotification();
+		}
+		return Mono.empty();
+	}
+
+	public Mono<Void> removeRoot(String rootUri) {
+
+		if (rootUri == null) {
+			return Mono.error(new McpError("Root uri must not be null"));
+		}
+
+		if (this.clientCapabilities.roots() == null) {
+			return Mono.error(new McpError("Client must be configured with roots capabilities"));
+		}
+
+		Root removed = this.roots.remove(rootUri);
+
+		if (removed != null) {
+			logger.info("Removed Root: {}", rootUri);
+			if (this.clientCapabilities.roots().listChanged()) {
+				return this.rootsListChangedNotification();
+			}
+			return Mono.empty();
+		}
+		return Mono.error(new McpError("Root with uri '" + rootUri + "' not found"));
+	}
+
+	/**
+	 * Manually, send a roots/list_changed notification. The addRoot and removeRoot
+	 * methods automatically send the roots/list_changed notification.
+	 */
+	public Mono<Void> rootsListChangedNotification() {
+		return this.mcpSession.sendNotification("notifications/roots/list_changed");
+	}
+
+	private RequestHandler rootsListRequestHandler() {
+		return params -> {
+			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.PaginatedRequest>() {
+					});
+
+			List<Root> roots = this.roots.values().stream().toList();
+
+			return Mono.just(roots);
+		};
+	}
+
+	// --------------------------
+	// Sampling
+	// --------------------------
+	private RequestHandler samplingCreateMessageHandler() {
+		return params -> {
+			McpSchema.CreateMessageRequest request = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.CreateMessageRequest>() {
+					});
+
+			CreateMessageResult response = this.samplingHandler.apply(request);
+
+			return Mono.just(response);
+		};
 	}
 
 	// --------------------------
@@ -383,31 +353,73 @@ public class McpAsyncClient {
 	};
 
 	/**
-	 * Send a tools/call request.
-	 * @param callToolRequest the call tool request.
-	 * @return the call tool result.
+	 * Calls a tool provided by the server. Tools enable servers to expose executable
+	 * functionality that can interact with external systems, perform computations, and
+	 * take actions in the real world.
+	 * @param callToolRequest The request containing: - name: The name of the tool to call
+	 * (must match a tool name from tools/list) - arguments: Arguments that conform to the
+	 * tool's input schema
+	 * @return A Mono that emits the tool execution result containing: - content: List of
+	 * content items (text, images, or embedded resources) representing the tool's output
+	 * - isError: Boolean indicating if the execution failed (true) or succeeded
+	 * (false/absent)
 	 */
 	public Mono<McpSchema.CallToolResult> callTool(McpSchema.CallToolRequest callToolRequest) {
 		return this.mcpSession.sendRequest("tools/call", callToolRequest, CALL_TOOL_RESULT_TYPE_REF);
 	}
 
 	/**
-	 * Send a tools/list request.
-	 * @return the list of tools result.
+	 * Retrieves the list of all tools provided by the server.
+	 * @return A Mono that emits the list of tools result containing: - tools: List of
+	 * available tools, each with a name, description, and input schema - nextCursor:
+	 * Optional cursor for pagination if more tools are available
 	 */
 	public Mono<McpSchema.ListToolsResult> listTools() {
 		return this.listTools(null);
 	}
 
 	/**
-	 * Send a tools/list request.
-	 * @param cursor the cursor
-	 * @return the list of tools result.
+	 * Retrieves a paginated list of tools provided by the server.
+	 * @param cursor Optional pagination cursor from a previous list request
+	 * @return A Mono that emits the list of tools result containing: - tools: List of
+	 * available tools, each with a name, description, and input schema - nextCursor:
+	 * Optional cursor for pagination if more tools are available
 	 */
 	public Mono<McpSchema.ListToolsResult> listTools(String cursor) {
 		return this.mcpSession.sendRequest("tools/list", new McpSchema.PaginatedRequest(cursor),
 				LIST_TOOLS_RESULT_TYPE_REF);
 	}
+
+	/**
+	 * Creates a notification handler for tools/list_changed notifications from the
+	 * server. When the server's available tools change, it sends a notification to inform
+	 * connected clients. This handler automatically fetches the updated tool list and
+	 * distributes it to all registered consumers.
+	 * @param toolsChangeConsumers List of consumers that will be notified when the tools
+	 * list changes. Each consumer receives the complete updated list of tools.
+	 * @return A NotificationHandler that processes tools/list_changed notifications by:
+	 * 1. Fetching the current list of tools from the server 2. Distributing the updated
+	 * list to all registered consumers 3. Handling any errors that occur during this
+	 * process
+	 */
+	private NotificationHandler toolsChangeNotificationHandler(
+			List<Consumer<List<McpSchema.Tool>>> toolsChangeConsumers) {
+
+		return new NotificationHandler() {
+			@Override
+			public Mono<Void> handle(Object params) {
+				// TODO: add support for cursor/pagination
+				return listTools().flatMap(listToolsResult -> Mono.fromRunnable(() -> {
+					for (Consumer<List<McpSchema.Tool>> toolsChangeConsumer : toolsChangeConsumers) {
+						toolsChangeConsumer.accept(listToolsResult.tools());
+					}
+				}).subscribeOn(Schedulers.boundedElastic())).onErrorResume(error -> {
+					logger.error("Error handling tools list change notification", error);
+					return Mono.empty();
+				}).then(); // Convert to Mono<Void>
+			}
+		};
+	};
 
 	// --------------------------
 	// Resources
@@ -512,6 +524,25 @@ public class McpAsyncClient {
 		return this.mcpSession.sendRequest("resources/unsubscribe", unsubscribeRequest, VOID_TYPE_REFERENCE);
 	}
 
+	private NotificationHandler resourcesChangeNotificationHandler(
+			List<Consumer<List<McpSchema.Resource>>> resourcesChangeConsumers) {
+
+		return new NotificationHandler() {
+			@Override
+			public Mono<Void> handle(Object params) {
+				// TODO: add support for cursor/pagination
+				return listResources().flatMap(listResourcesResult -> Mono.fromRunnable(() -> {
+					for (Consumer<List<McpSchema.Resource>> resourceChangeConsumer : resourcesChangeConsumers) {
+						resourceChangeConsumer.accept(listResourcesResult.resources());
+					}
+				}).subscribeOn(Schedulers.boundedElastic())).onErrorResume(error -> {
+					logger.error("Error handling resources list change notification", error);
+					return Mono.empty();
+				}).then(); // Convert to Mono<Void>
+			}
+		};
+	};
+
 	// --------------------------
 	// Prompts
 	// --------------------------
@@ -556,12 +587,23 @@ public class McpAsyncClient {
 		return this.mcpSession.sendNotification("notifications/prompts/list_changed");
 	}
 
-	public void close() {
-		this.mcpSession.close();
-	}
+	private NotificationHandler promptsChangeNotificationHandler(
+			List<Consumer<List<McpSchema.Prompt>>> promptsChangeConsumers) {
 
-	public Mono<Void> closeGracefully() {
-		return this.mcpSession.closeGracefully();
-	}
+		return new NotificationHandler() {
+			@Override
+			public Mono<Void> handle(Object params) {
+				// TODO: add support for cursor/pagination
+				return listPrompts().flatMap(listPromptsResult -> Mono.fromRunnable(() -> {
+					for (Consumer<List<McpSchema.Prompt>> promptChangeConsumer : promptsChangeConsumers) {
+						promptChangeConsumer.accept(listPromptsResult.prompts());
+					}
+				}).subscribeOn(Schedulers.boundedElastic())).onErrorResume(error -> {
+					logger.error("Error handling prompts list change notification", error);
+					return Mono.empty();
+				}).then(); // Convert to Mono<Void>
+			}
+		};
+	};
 
 }

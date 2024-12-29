@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
@@ -225,7 +226,8 @@ public abstract class AbstractMcpAsyncClientTests {
 			.hasMessageContaining("Root with uri 'nonexistent-uri' not found");
 	}
 
-	// @Test
+	@Test
+	@Disabled
 	void testReadResource() {
 		StepVerifier.create(mcpAsyncClient.listResources()).consumeNextWith(resources -> {
 			if (!resources.resources().isEmpty()) {

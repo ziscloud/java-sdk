@@ -93,6 +93,13 @@ public interface McpTransport {
 	 */
 	Mono<Void> sendMessage(JSONRPCMessage message);
 
+	/**
+	 * Unmarshals the given data into an object of the specified type.
+	 * @param <T> the type of the object to unmarshal
+	 * @param data the data to unmarshal
+	 * @param typeRef the type reference for the object to unmarshal
+	 * @return the unmarshalled object
+	 */
 	<T> T unmarshalFrom(Object data, TypeReference<T> typeRef);
 
 }

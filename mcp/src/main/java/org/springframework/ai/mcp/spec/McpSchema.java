@@ -364,6 +364,8 @@ public class McpSchema {
 	 * by clients to improve the LLM's understanding of available resources. It can be
 	 * thought of like a "hint" to the model.
 	 * @param mimeType The MIME type of this resource, if known.
+	 * @param annotations Optional annotations for the client. The client can use
+	 * annotations to inform how objects are used or displayed.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -387,6 +389,8 @@ public class McpSchema {
 	 * by clients to improve the LLM's understanding of available resources. It can be
 	 * thought of like a "hint" to the model.
 	 * @param mimeType The MIME type of this resource, if known.
+	 * @param annotations Optional annotations for the client. The client can use
+	 * annotations to inform how objects are used or displayed.
 	 * @see <a href="https://datatracker.ietf.org/doc/html/rfc6570">RFC 6570</a>
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
@@ -574,12 +578,32 @@ public class McpSchema {
 	// ---------------------------
 	// Tool Interfaces
 	// ---------------------------
+	/**
+	 * The server's response to a tools/list request from the client.
+	 *
+	 * @param tools A list of tools that the server provides.
+	 * @param nextCursor An optional cursor for pagination. If present, indicates there
+	 * are more tools available.
+	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record ListToolsResult( // @formatter:off
 		@JsonProperty("tools") List<Tool> tools,
 		@JsonProperty("nextCursor") String nextCursor) {
 	}// @formatter:on
 
+	/**
+	 * Represents a tool that the server provides. Tools enable servers to expose
+	 * executable functionality to the system. Through these tools, you can interact with
+	 * external systems, perform computations, and take actions in the real world.
+	 *
+	 * @param name A unique identifier for the tool. This name is used when calling the
+	 * tool.
+	 * @param description A human-readable description of what the tool does. This can be
+	 * used by clients to improve the LLM's understanding of available tools.
+	 * @param inputSchema A JSON Schema object that describes the expected structure of
+	 * the arguments when calling this tool. This allows clients to validate tool
+	 * arguments before sending them to the server.
+	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record Tool( // @formatter:off
 		@JsonProperty("name") String name,
@@ -601,12 +625,28 @@ public class McpSchema {
 		}
 	}
 
+	/**
+	 * Used by the client to call a tool provided by the server.
+	 *
+	 * @param name The name of the tool to call. This must match a tool name from
+	 * tools/list.
+	 * @param arguments Arguments to pass to the tool. These must conform to the tool's
+	 * input schema.
+	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record CallToolRequest(// @formatter:off
 		@JsonProperty("name") String name,
 		@JsonProperty("arguments") Map<String, Object> arguments) implements Request {
 	}// @formatter:off
 
+	/**
+	 * The server's response to a tools/call request from the client.
+	 *
+	 * @param content A list of content items representing the tool's output. Each item can be text, an image,
+	 *                or an embedded resource.
+	 * @param isError If true, indicates that the tool execution failed and the content contains error information.
+	 *                If false or absent, indicates successful execution.
+	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record CallToolResult( // @formatter:off
 		@JsonProperty("content") List<Content> content,
@@ -643,16 +683,16 @@ public class McpSchema {
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record CreateMessageResult(// @formatter:off
-		@JsonProperty("role") Role role, 
-		@JsonProperty("content") Content content, 
-		@JsonProperty("model") String model, 
+		@JsonProperty("role") Role role,
+		@JsonProperty("content") Content content,
+		@JsonProperty("model") String model,
 		@JsonProperty("stopReason") StopReason stopReason) {
 		
 		public enum StopReason {
 			@JsonProperty("end_turn") END_TURN,
 			@JsonProperty("stop_sequence") STOP_SEQUENCE,
 			@JsonProperty("max_tokens") MAX_TOKENS
-		} 
+		}
 	}// @formatter:on
 
 	// ---------------------------

@@ -108,16 +108,19 @@ public interface McpClient {
 		}
 
 		public Builder capabilities(ClientCapabilities capabilities) {
+			Assert.notNull(capabilities, "Capabilities must not be null");
 			this.capabilities = capabilities;
 			return this;
 		}
 
 		public Builder clientInfo(Implementation clientInfo) {
+			Assert.notNull(clientInfo, "Client info must not be null");
 			this.clientInfo = clientInfo;
 			return this;
 		}
 
 		public Builder roots(List<Root> roots) {
+			Assert.notNull(roots, "Roots must not be null");
 			for (Root root : roots) {
 				this.roots.put(root.uri(), root);
 			}
@@ -125,6 +128,7 @@ public interface McpClient {
 		}
 
 		public Builder roots(Root... roots) {
+			Assert.notNull(roots, "Roots must not be null");
 			for (Root root : roots) {
 				this.roots.put(root.uri(), root);
 			}
@@ -132,21 +136,25 @@ public interface McpClient {
 		}
 
 		public Builder sampling(Function<CreateMessageRequest, CreateMessageResult> samplingHandler) {
+			Assert.notNull(samplingHandler, "Sampling handler must not be null");
 			this.samplingHandler = samplingHandler;
 			return this;
 		}
 
 		public Builder toolsChangeConsumer(Consumer<List<McpSchema.Tool>> toolsChangeConsumer) {
+			Assert.notNull(toolsChangeConsumer, "Tools change consumer must not be null");
 			this.toolsChangeConsumers.add(toolsChangeConsumer);
 			return this;
 		}
 
 		public Builder resourcesChangeConsumer(Consumer<List<McpSchema.Resource>> resourcesChangeConsumer) {
+			Assert.notNull(resourcesChangeConsumer, "Resources change consumer must not be null");
 			this.resourcesChangeConsumers.add(resourcesChangeConsumer);
 			return this;
 		}
 
 		public Builder promptsChangeConsumer(Consumer<List<McpSchema.Prompt>> promptsChangeConsumer) {
+			Assert.notNull(promptsChangeConsumer, "Prompts change consumer must not be null");
 			this.promptsChangeConsumers.add(promptsChangeConsumer);
 			return this;
 		}

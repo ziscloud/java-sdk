@@ -130,26 +130,36 @@ public class McpSyncClient implements AutoCloseable {
 	// Tools
 	// --------------------------
 	/**
-	 * Send a tools/call request.
-	 * @param callToolRequest the call tool request.
-	 * @return the call tool result.
+	 * Calls a tool provided by the server. Tools enable servers to expose executable
+	 * functionality that can interact with external systems, perform computations, and
+	 * take actions in the real world.
+	 * @param callToolRequest The request containing: - name: The name of the tool to call
+	 * (must match a tool name from tools/list) - arguments: Arguments that conform to the
+	 * tool's input schema
+	 * @return The tool execution result containing: - content: List of content items
+	 * (text, images, or embedded resources) representing the tool's output - isError:
+	 * Boolean indicating if the execution failed (true) or succeeded (false/absent)
 	 */
 	public McpSchema.CallToolResult callTool(McpSchema.CallToolRequest callToolRequest) {
 		return this.delegate.callTool(callToolRequest).block();
 	}
 
 	/**
-	 * Send a tools/list request.
-	 * @return the list of tools result.
+	 * Retrieves the list of all tools provided by the server.
+	 * @return The list of tools result containing: - tools: List of available tools, each
+	 * with a name, description, and input schema - nextCursor: Optional cursor for
+	 * pagination if more tools are available
 	 */
 	public McpSchema.ListToolsResult listTools() {
 		return this.delegate.listTools().block();
 	}
 
 	/**
-	 * Send a tools/list request.
-	 * @param cursor the cursor
-	 * @return the list of tools result.
+	 * Retrieves a paginated list of tools provided by the server.
+	 * @param cursor Optional pagination cursor from a previous list request
+	 * @return The list of tools result containing: - tools: List of available tools, each
+	 * with a name, description, and input schema - nextCursor: Optional cursor for
+	 * pagination if more tools are available
 	 */
 	public McpSchema.ListToolsResult listTools(String cursor) {
 		return this.delegate.listTools(cursor).block();

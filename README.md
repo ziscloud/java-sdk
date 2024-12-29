@@ -42,14 +42,14 @@ Add the following dependencies to your Maven project:
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>mcp</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
 </dependency>
 
 <!-- For Spring AI integration -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>spring-ai-mcp</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -85,7 +85,7 @@ mvn test
 ## Project Information
 
 - **Group ID**: org.springframework.experimental
-- **Version**: 0.3.0-SNAPSHOT
+- **Version**: 0.4.0-SNAPSHOT
 - **Java Version**: 17
 - **Spring AI Version**: 1.0.0-M4
 

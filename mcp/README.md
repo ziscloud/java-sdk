@@ -26,7 +26,7 @@ Add the following dependency to your Maven project:
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>mcp</artifactId>
-    <version>0.3.0-SNAPSHOT</version>
+    <version>0.4.0-SNAPSHOT</version>
 </dependency>
 ```
 

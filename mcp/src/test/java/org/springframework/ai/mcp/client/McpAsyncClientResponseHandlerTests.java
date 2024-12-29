@@ -49,11 +49,11 @@ class McpAsyncClientResponseHandlerTests {
 
 		private final AtomicInteger inboundMessageCount = new AtomicInteger(0);
 
-		private Sinks.Many<McpSchema.JSONRPCMessage> outgoing = Sinks.many().multicast().onBackpressureBuffer();
+		private final Sinks.Many<McpSchema.JSONRPCMessage> outgoing = Sinks.many().multicast().onBackpressureBuffer();
 
-		private Sinks.Many<McpSchema.JSONRPCMessage> inbound = Sinks.many().unicast().onBackpressureBuffer();
+		private final Sinks.Many<McpSchema.JSONRPCMessage> inbound = Sinks.many().unicast().onBackpressureBuffer();
 
-		private Flux<McpSchema.JSONRPCMessage> outboundView = outgoing.asFlux().cache(1);
+		private final Flux<McpSchema.JSONRPCMessage> outboundView = outgoing.asFlux().cache(1);
 
 		public void simulateIncomingMessage(McpSchema.JSONRPCMessage message) {
 			if (inbound.tryEmitNext(message).isFailure()) {
@@ -82,17 +82,29 @@ class McpAsyncClientResponseHandlerTests {
 			return outboundView.blockFirst();
 		}
 
+		private volatile boolean connected = false;
+
 		@Override
 		public Mono<Void> connect(Function<Mono<McpSchema.JSONRPCMessage>, Mono<McpSchema.JSONRPCMessage>> handler) {
+			if (connected) {
+				return Mono.error(new IllegalStateException("Already connected"));
+			}
+			connected = true;
 			return inbound.asFlux()
 				.publishOn(Schedulers.boundedElastic())
 				.flatMap(message -> Mono.just(message).transform(handler))
+				.doFinally(signal -> connected = false)
 				.then();
 		}
 
 		@Override
 		public Mono<Void> closeGracefully() {
-			return Mono.empty();
+			return Mono.defer(() -> {
+				connected = false;
+				outgoing.tryEmitComplete();
+				inbound.tryEmitComplete();
+				return Mono.empty();
+			});
 		}
 
 		@Override

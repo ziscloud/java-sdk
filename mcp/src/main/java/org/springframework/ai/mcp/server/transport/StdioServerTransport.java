@@ -176,9 +176,7 @@ public class StdioServerTransport implements McpTransport {
 				}
 			}
 			finally {
-				if (!isClosing) {
-					isClosing = true;
-				}
+				isClosing = true;
 				inboundSink.tryEmitComplete();
 			}
 		});
@@ -218,9 +216,7 @@ public class StdioServerTransport implements McpTransport {
 				}
 			})
 			.doOnComplete(() -> {
-				if (!isClosing) {
-					isClosing = true;
-				}
+				isClosing = true;
 				outboundSink.tryEmitComplete();
 			})
 			.doOnError(e -> {
@@ -240,29 +236,35 @@ public class StdioServerTransport implements McpTransport {
 		return Mono.fromRunnable(() -> {
 			isClosing = true;
 			logger.debug("Initiating graceful shutdown");
-			// }).then(Mono.delay(Duration.ofMillis(100))).then(Mono.fromRunnable(() -> {
-		}).then(Mono.fromRunnable(() -> {
-			try {
-				// inboundSink.tryEmitComplete();
-				// outboundSink.tryEmitComplete();
+		})
+			// .then(Mono.defer(() -> {
+			// inboundSink.tryEmitComplete();
+			// outboundSink.tryEmitComplete();
+			// return Mono.delay(Duration.ofMillis(100));
+			// }))
 
-				inboundScheduler.dispose();
-				outboundScheduler.dispose();
+			.then(Mono.fromRunnable(() -> {
+				try {
 
-				// Wait for schedulers to terminate
-				if (!inboundScheduler.isDisposed()) {
-					inboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
+					inboundScheduler.dispose();
+					outboundScheduler.dispose();
+
+					// Wait for schedulers to terminate
+					if (!inboundScheduler.isDisposed()) {
+						inboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
+					}
+					if (!outboundScheduler.isDisposed()) {
+						outboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
+					}
+
+					logger.info("Graceful shutdown completed");
 				}
-				if (!outboundScheduler.isDisposed()) {
-					outboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
+				catch (Exception e) {
+					logger.error("Error during graceful shutdown", e);
 				}
-
-				logger.info("Graceful shutdown completed");
-			}
-			catch (Exception e) {
-				logger.error("Error during graceful shutdown", e);
-			}
-		})).then().subscribeOn(Schedulers.boundedElastic());
+			}))
+			.then()
+			.subscribeOn(Schedulers.boundedElastic());
 	}
 
 	@Override

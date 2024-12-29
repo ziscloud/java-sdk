@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -76,6 +77,8 @@ public class StdioClientTransport implements McpTransport {
 	private final ServerParameters params;
 
 	private final Sinks.Many<String> errorSink;
+
+	private volatile boolean isClosing = false;
 
 	// visible for tests
 	private Consumer<String> errorHandler = error -> logger.error("Error received: {}", error);
@@ -200,19 +203,32 @@ public class StdioClientTransport implements McpTransport {
 			try (BufferedReader processErrorReader = new BufferedReader(
 					new InputStreamReader(process.getErrorStream()))) {
 				String line;
-				while ((line = processErrorReader.readLine()) != null) {
+				while (!isClosing && (line = processErrorReader.readLine()) != null) {
 					try {
 						logger.error("Received error line: {}", line);
-						// TODO: handle errors, etc.
-						this.errorSink.tryEmitNext(line);
+						if (!this.errorSink.tryEmitNext(line).isSuccess()) {
+							if (!isClosing) {
+								logger.error("Failed to emit error message");
+							}
+							break;
+						}
 					}
 					catch (Exception e) {
-						throw new RuntimeException(e);
+						if (!isClosing) {
+							logger.error("Error processing error message", e);
+						}
+						break;
 					}
 				}
 			}
 			catch (IOException e) {
-				throw new RuntimeException(e);
+				if (!isClosing) {
+					logger.error("Error reading from error stream", e);
+				}
+			}
+			finally {
+				isClosing = true;
+				errorSink.tryEmitComplete();
 			}
 		});
 	}
@@ -254,21 +270,32 @@ public class StdioClientTransport implements McpTransport {
 		this.inboundScheduler.schedule(() -> {
 			try (BufferedReader processReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 				String line;
-				while ((line = processReader.readLine()) != null) {
+				while (!isClosing && (line = processReader.readLine()) != null) {
 					try {
 						JSONRPCMessage message = McpSchema.deserializeJsonRpcMessage(this.objectMapper, line);
 						if (!this.inboundSink.tryEmitNext(message).isSuccess()) {
-							// TODO: Back off, reschedule, give up?
-							throw new RuntimeException("Failed to enqueue message");
+							if (!isClosing) {
+								logger.error("Failed to enqueue inbound message");
+							}
+							break;
 						}
 					}
 					catch (Exception e) {
-						throw new RuntimeException(e);
+						if (!isClosing) {
+							logger.error("Error processing inbound message", e);
+						}
+						break;
 					}
 				}
 			}
 			catch (IOException e) {
-				throw new RuntimeException(e);
+				if (!isClosing) {
+					logger.error("Error reading from input stream", e);
+				}
+			}
+			finally {
+				isClosing = true;
+				inboundSink.tryEmitComplete();
 			}
 		});
 	}
@@ -284,7 +311,7 @@ public class StdioClientTransport implements McpTransport {
 			// want to ensure that the actual writing happens on a dedicated thread
 			.publishOn(outboundScheduler)
 			.handle((message, s) -> {
-				if (message != null) {
+				if (message != null && !isClosing) {
 					try {
 						String jsonMessage = objectMapper.writeValueAsString(message);
 						// Escape any embedded newlines in the JSON message as per spec:
@@ -293,9 +320,12 @@ public class StdioClientTransport implements McpTransport {
 						// embedded newlines.
 						jsonMessage = jsonMessage.replace("\r\n", "\\n").replace("\n", "\\n").replace("\r", "\\n");
 
-						this.process.getOutputStream().write(jsonMessage.getBytes(StandardCharsets.UTF_8));
-						this.process.getOutputStream().write("\n".getBytes(StandardCharsets.UTF_8));
-						this.process.getOutputStream().flush();
+						var os = this.process.getOutputStream();
+						synchronized (os) {
+							os.write(jsonMessage.getBytes(StandardCharsets.UTF_8));
+							os.write("\n".getBytes(StandardCharsets.UTF_8));
+							os.flush();
+						}
 						s.next(message);
 					}
 					catch (IOException e) {
@@ -306,7 +336,16 @@ public class StdioClientTransport implements McpTransport {
 	}
 
 	protected void handleOutbound(Function<Flux<JSONRPCMessage>, Flux<JSONRPCMessage>> outboundConsumer) {
-		outboundConsumer.apply(outboundSink.asFlux()).subscribe();
+		outboundConsumer.apply(outboundSink.asFlux()).doOnComplete(() -> {
+			isClosing = true;
+			outboundSink.tryEmitComplete();
+		}).doOnError(e -> {
+			if (!isClosing) {
+				logger.error("Error in outbound processing", e);
+				isClosing = true;
+				outboundSink.tryEmitComplete();
+			}
+		}).subscribe();
 	}
 
 	/**
@@ -317,7 +356,18 @@ public class StdioClientTransport implements McpTransport {
 	 */
 	@Override
 	public Mono<Void> closeGracefully() {
-		return Mono.fromFuture(() -> {
+		return Mono.fromRunnable(() -> {
+			isClosing = true;
+			logger.debug("Initiating graceful shutdown");
+		}).then(Mono.defer(() -> {
+			// First complete all sinks to stop accepting new messages
+			inboundSink.tryEmitComplete();
+			outboundSink.tryEmitComplete();
+			errorSink.tryEmitComplete();
+
+			// Give a short time for any pending messages to be processed
+			return Mono.delay(Duration.ofMillis(100));
+		})).then(Mono.fromFuture(() -> {
 			logger.info("Sending TERM to process");
 			if (this.process != null) {
 				this.process.destroy();
@@ -326,16 +376,23 @@ public class StdioClientTransport implements McpTransport {
 			else {
 				return CompletableFuture.failedFuture(new RuntimeException("Process not started"));
 			}
-		}).doOnNext(process -> {
+		})).doOnNext(process -> {
 			if (process.exitValue() != 0) {
 				logger.warn("Process terminated with code " + process.exitValue());
 			}
 		}).then(Mono.fromRunnable(() -> {
-			// The Threads are blocked on readLine so disposeGracefully would not
-			// interrupt them, therefore we issue an async hard dispose.
-			inboundScheduler.dispose();
-			errorScheduler.dispose();
-			outboundScheduler.dispose();
+			try {
+				// The Threads are blocked on readLine so disposeGracefully would not
+				// interrupt them, therefore we issue an async hard dispose.
+				inboundScheduler.dispose();
+				errorScheduler.dispose();
+				outboundScheduler.dispose();
+
+				logger.info("Graceful shutdown completed");
+			}
+			catch (Exception e) {
+				logger.error("Error during graceful shutdown", e);
+			}
 		})).then().subscribeOn(Schedulers.boundedElastic());
 	}
 

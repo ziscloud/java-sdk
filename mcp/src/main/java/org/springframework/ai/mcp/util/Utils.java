@@ -24,10 +24,12 @@ import reactor.util.annotation.Nullable;
 import org.springframework.lang.Contract;
 
 /**
+ * Miscellaneous utility methods.
+ * 
  * @author Christian Tzolov
  */
 
-public class Utils {
+public final class Utils {
 
 	/**
 	 * Check whether the given {@code String} contains actual <em>text</em>.

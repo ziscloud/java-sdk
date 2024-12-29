@@ -84,8 +84,8 @@ public class McpAsyncClient {
 	private final ConcurrentHashMap<String, Root> roots;
 
 	/**
-	 * MCP provides a standardized way for servers to request LLM sampling (“completions”
-	 * or “generations”) from language models via clients. This flow allows clients to
+	 * MCP provides a standardized way for servers to request LLM sampling ("completions"
+	 * or "generations") from language models via clients. This flow allows clients to
 	 * maintain control over model access, selection, and permissions while enabling
 	 * servers to leverage AI capabilities—with no server API keys necessary. Servers can
 	 * request text or image-based interactions and optionally include context from MCP
@@ -108,10 +108,13 @@ public class McpAsyncClient {
 	 * timeout.
 	 * @param transport the transport to use.
 	 * @param requestTimeout the session request-response timeout.
-	 * @param rootsListProviders the list of suppliers that provide the list of roots
-	 * backing the roots list request.
-	 * @param rootsListChangedNotification whether the client supports roots/list_changed
-	 * notification.
+	 * @param clientInfo the client implementation information.
+	 * @param clientCapabilities the client capabilities.
+	 * @param roots the roots.
+	 * @param toolsChangeConsumers the tools change consumers.
+	 * @param resourcesChangeConsumers the resources change consumers.
+	 * @param promptsChangeConsumers the prompts change consumers.
+	 * @param samplingHandler the sampling handler.
 	 */
 	public McpAsyncClient(McpTransport transport, Duration requestTimeout, Implementation clientInfo,
 			ClientCapabilities clientCapabilities, Map<String, Root> roots,
@@ -215,9 +218,9 @@ public class McpAsyncClient {
 	 */
 	public Mono<McpSchema.InitializeResult> initialize() {
 		McpSchema.InitializeRequest initializeRequest = new McpSchema.InitializeRequest(// @formatter:off
-				McpSchema.LATEST_PROTOCOL_VERSION,
-				this.clientCapabilities,
-				this.clientInfo); // @formatter:on
+                McpSchema.LATEST_PROTOCOL_VERSION,
+                this.clientCapabilities,
+                this.clientInfo); // @formatter:on
 
 		Mono<McpSchema.InitializeResult> result = this.mcpSession.sendRequest("initialize", initializeRequest,
 				new TypeReference<McpSchema.InitializeResult>() {
@@ -239,10 +242,17 @@ public class McpAsyncClient {
 		});
 	}
 
+	/**
+	 * Closes the client connection immediately.
+	 */
 	public void close() {
 		this.mcpSession.close();
 	}
 
+	/**
+	 * Gracefully closes the client connection.
+	 * @return A Mono that completes when the connection is closed
+	 */
 	public Mono<Void> closeGracefully() {
 		return this.mcpSession.closeGracefully();
 	}
@@ -252,7 +262,8 @@ public class McpAsyncClient {
 	// --------------------------
 
 	/**
-	 * Send a synchronous ping request.
+	 * Sends a ping request to the server.
+	 * @return A Mono that completes with the server's ping response
 	 */
 	public Mono<Object> ping() {
 		return this.mcpSession.sendRequest("ping", null, new TypeReference<Object>() {
@@ -262,6 +273,11 @@ public class McpAsyncClient {
 	// --------------------------
 	// Roots
 	// --------------------------
+	/**
+	 * Adds a new root to the client's root list.
+	 * @param root The root to add
+	 * @return A Mono that completes when the root is added and notifications are sent
+	 */
 	public Mono<Void> addRoot(Root root) {
 
 		if (root == null) {
@@ -286,6 +302,11 @@ public class McpAsyncClient {
 		return Mono.empty();
 	}
 
+	/**
+	 * Removes a root from the client's root list.
+	 * @param rootUri The URI of the root to remove
+	 * @return A Mono that completes when the root is removed and notifications are sent
+	 */
 	public Mono<Void> removeRoot(String rootUri) {
 
 		if (rootUri == null) {
@@ -309,8 +330,9 @@ public class McpAsyncClient {
 	}
 
 	/**
-	 * Manually, send a roots/list_changed notification. The addRoot and removeRoot
+	 * Manually sends a roots/list_changed notification. The addRoot and removeRoot
 	 * methods automatically send the roots/list_changed notification.
+	 * @return A Mono that completes when the notification is sent
 	 */
 	public Mono<Void> rootsListChangedNotification() {
 		return this.mcpSession.sendNotification("notifications/roots/list_changed");
@@ -436,7 +458,7 @@ public class McpAsyncClient {
 
 	/**
 	 * Send a resources/list request.
-	 * @return the list of resources result.
+	 * @return A Mono that completes with the list of resources result
 	 */
 	public Mono<McpSchema.ListResourcesResult> listResources() {
 		return this.listResources(null);
@@ -444,8 +466,8 @@ public class McpAsyncClient {
 
 	/**
 	 * Send a resources/list request.
-	 * @param cursor the cursor
-	 * @return the list of resources result.
+	 * @param cursor the cursor for pagination
+	 * @return A Mono that completes with the list of resources result
 	 */
 	public Mono<McpSchema.ListResourcesResult> listResources(String cursor) {
 		return this.mcpSession.sendRequest("resources/list", new McpSchema.PaginatedRequest(cursor),
@@ -455,7 +477,7 @@ public class McpAsyncClient {
 	/**
 	 * Send a resources/read request.
 	 * @param resource the resource to read
-	 * @return the resource content.
+	 * @return A Mono that completes with the resource content
 	 */
 	public Mono<McpSchema.ReadResourceResult> readResource(McpSchema.Resource resource) {
 		return this.readResource(new McpSchema.ReadResourceRequest(resource.uri()));
@@ -463,8 +485,8 @@ public class McpAsyncClient {
 
 	/**
 	 * Send a resources/read request.
-	 * @param readResourceRequest the read resource request.
-	 * @return the resource content.
+	 * @param readResourceRequest the read resource request
+	 * @return A Mono that completes with the resource content
 	 */
 	public Mono<McpSchema.ReadResourceResult> readResource(McpSchema.ReadResourceRequest readResourceRequest) {
 		return this.mcpSession.sendRequest("resources/read", readResourceRequest, READ_RESOURCE_RESULT_TYPE_REF);
@@ -475,7 +497,7 @@ public class McpAsyncClient {
 	 * templates. Arguments may be auto-completed through the completion API.
 	 *
 	 * Request a list of resource templates the server has.
-	 * @return the list of resource templates result.
+	 * @return A Mono that completes with the list of resource templates result
 	 */
 	public Mono<McpSchema.ListResourceTemplatesResult> listResourceTemplates() {
 		return this.listResourceTemplates(null);
@@ -486,8 +508,8 @@ public class McpAsyncClient {
 	 * templates. Arguments may be auto-completed through the completion API.
 	 *
 	 * Request a list of resource templates the server has.
-	 * @param cursor the cursor
-	 * @return the list of resource templates result.
+	 * @param cursor the cursor for pagination
+	 * @return A Mono that completes with the list of resource templates result
 	 */
 	public Mono<McpSchema.ListResourceTemplatesResult> listResourceTemplates(String cursor) {
 		return this.mcpSession.sendRequest("resources/templates/list", new McpSchema.PaginatedRequest(cursor),
@@ -496,7 +518,8 @@ public class McpAsyncClient {
 
 	/**
 	 * List Changed Notification. When the list of available resources changes, servers
-	 * that declared the listChanged capability SHOULD send a notification:
+	 * that declared the listChanged capability SHOULD send a notification.
+	 * @return A Mono that completes when the notification is sent
 	 */
 	public Mono<Void> sendResourcesListChanged() {
 		return this.mcpSession.sendNotification("notifications/resources/list_changed");
@@ -509,7 +532,8 @@ public class McpAsyncClient {
 	 *
 	 * Send a resources/subscribe request.
 	 * @param subscribeRequest the subscribe request contains the uri of the resource to
-	 * subscribe to.
+	 * subscribe to
+	 * @return A Mono that completes when the subscription is complete
 	 */
 	public Mono<Void> subscribeResource(McpSchema.SubscribeRequest subscribeRequest) {
 		return this.mcpSession.sendRequest("resources/subscribe", subscribeRequest, VOID_TYPE_REFERENCE);
@@ -518,7 +542,8 @@ public class McpAsyncClient {
 	/**
 	 * Send a resources/unsubscribe request.
 	 * @param unsubscribeRequest the unsubscribe request contains the uri of the resource
-	 * to unsubscribe from.
+	 * to unsubscribe from
+	 * @return A Mono that completes when the unsubscription is complete
 	 */
 	public Mono<Void> unsubscribeResource(McpSchema.UnsubscribeRequest unsubscribeRequest) {
 		return this.mcpSession.sendRequest("resources/unsubscribe", unsubscribeRequest, VOID_TYPE_REFERENCE);
@@ -554,7 +579,7 @@ public class McpAsyncClient {
 
 	/**
 	 * List all available prompts.
-	 * @return the list of prompts result.
+	 * @return A Mono that completes with the list of prompts result
 	 */
 	public Mono<ListPromptsResult> listPrompts() {
 		return this.listPrompts(null);
@@ -562,8 +587,8 @@ public class McpAsyncClient {
 
 	/**
 	 * List all available prompts.
-	 * @param cursor the cursor
-	 * @return the list of prompts result.
+	 * @param cursor the cursor for pagination
+	 * @return A Mono that completes with the list of prompts result
 	 */
 	public Mono<ListPromptsResult> listPrompts(String cursor) {
 		return this.mcpSession.sendRequest("prompts/list", new PaginatedRequest(cursor), LIST_PROMPTS_RESULT_TYPE_REF);
@@ -571,8 +596,8 @@ public class McpAsyncClient {
 
 	/**
 	 * Get a prompt by its id.
-	 * @param getPromptRequest the get prompt request.
-	 * @return the get prompt result.
+	 * @param getPromptRequest the get prompt request
+	 * @return A Mono that completes with the get prompt result
 	 */
 	public Mono<GetPromptResult> getPrompt(GetPromptRequest getPromptRequest) {
 		return this.mcpSession.sendRequest("prompts/get", getPromptRequest, GET_PROMPT_RESULT_TYPE_REF);
@@ -582,6 +607,7 @@ public class McpAsyncClient {
 	 * (Server) An optional notification from the server to the client, informing it that
 	 * the list of prompts it offers has changed. This may be issued by servers without
 	 * any previous subscription from the client.
+	 * @return A Mono that completes when the notification is sent
 	 */
 	public Mono<Void> promptListChangedNotification() {
 		return this.mcpSession.sendNotification("notifications/prompts/list_changed");

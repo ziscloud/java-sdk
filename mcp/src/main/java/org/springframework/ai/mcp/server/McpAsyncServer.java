@@ -61,10 +61,13 @@ public class McpAsyncServer {
 
 	/**
 	 * Create a new McpAsyncServer with the given transport and capabilities.
-	 * @param transport The transport to use for communication
-	 * @param tools List of tool registrations
-	 * @param resources Map of resource registrations
-	 * @param prompts Map of prompt registrations
+	 * @param mcpTransport The transport layer implementation for MCP communication
+	 * @param serverInfo The server implementation details
+	 * @param serverCapabilities The server capabilities
+	 * @param tools The list of tool registrations
+	 * @param resources The map of resource registrations
+	 * @param resourceTemplates The list of resource templates
+	 * @param prompts The map of prompt registrations
 	 */
 	public McpAsyncServer(McpTransport mcpTransport, McpSchema.Implementation serverInfo,
 			McpSchema.ServerCapabilities serverCapabilities, List<ToolRegistration> tools,
@@ -407,28 +410,32 @@ public class McpAsyncServer {
 	}
 
 	/**
-	 * Notify clients that the list of available tools has changed.
+	 * Notifies clients that the list of available tools has changed.
+	 * @return A Mono that completes when all clients have been notified
 	 */
 	public Mono<Void> notifyToolsListChanged() {
 		return this.mcpSession.sendNotification("notifications/tools/list_changed", null);
 	}
 
 	/**
-	 * Notify clients that the list of available resources has changed.
+	 * Notifies clients that the list of available resources has changed.
+	 * @return A Mono that completes when all clients have been notified
 	 */
 	public Mono<Void> notifyResourcesListChanged() {
 		return this.mcpSession.sendNotification("notifications/resources/list_changed", null);
 	}
 
 	/**
-	 * Notify clients that the list of available prompts has changed.
+	 * Notifies clients that the list of available prompts has changed.
+	 * @return A Mono that completes when all clients have been notified
 	 */
 	public Mono<Void> notifyPromptsListChanged() {
 		return this.mcpSession.sendNotification("notifications/prompts/list_changed", null);
 	}
 
 	/**
-	 * Close the server gracefully.
+	 * Gracefully closes the server, allowing any in-progress operations to complete.
+	 * @return A Mono that completes when the server has been closed
 	 */
 	public Mono<Void> closeGracefully() {
 		return this.mcpSession.closeGracefully();

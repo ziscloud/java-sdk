@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Based on the <a href="http://www.jsonrpc.org/specification">JSON-RPC 2.0
- * specification<a/> and the <a href=
+ * specification</a> and the <a href=
  * "https://github.com/modelcontextprotocol/specification/blob/main/schema/schema.ts">Model
  * Context Protocol Schema</a>.
  *
@@ -47,16 +47,34 @@ public class McpSchema {
 	// ---------------------------
 	// JSON-RPC Error Codes
 	// ---------------------------
+	/**
+	 * Standard error codes used in MCP JSON-RPC responses.
+	 */
 	public final class ErrorCodes {
 
+		/**
+		 * Invalid JSON was received by the server.
+		 */
 		public static final int PARSE_ERROR = -32700;
 
+		/**
+		 * The JSON sent is not a valid Request object.
+		 */
 		public static final int INVALID_REQUEST = -32600;
 
+		/**
+		 * The method does not exist / is not available.
+		 */
 		public static final int METHOD_NOT_FOUND = -32601;
 
+		/**
+		 * Invalid method parameter(s).
+		 */
 		public static final int INVALID_PARAMS = -32602;
 
+		/**
+		 * Internal JSON-RPC error.
+		 */
 		public static final int INTERNAL_ERROR = -32603;
 
 	}
@@ -340,6 +358,9 @@ public class McpSchema {
 	}
 
 	/**
+	 * Optional annotations for the client. The client can use annotations to inform how
+	 * objects are used or displayed.
+	 *
 	 * @param audience Describes who the intended customer of this object or data is. It
 	 * can include multiple entries to indicate content useful for multiple audiences
 	 * (e.g., `["user", "assistant"]`).
@@ -544,6 +565,10 @@ public class McpSchema {
 
 	/**
 	 * The server's response to a prompts/list request from the client.
+	 *
+	 * @param prompts A list of prompts that the server provides.
+	 * @param nextCursor An optional cursor for pagination. If present, indicates there
+	 * are more prompts available.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record ListPromptsResult( // @formatter:off
@@ -856,6 +881,9 @@ public class McpSchema {
 	 * The client's response to a roots/list request from the server. This result contains
 	 * an array of Root objects, each representing a root directory or file that the
 	 * server can operate on.
+	 *
+	 * @param roots An array of Root objects, each representing a root directory or file
+	 * that the server can operate on.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record ListRootsResult( // @formatter:off

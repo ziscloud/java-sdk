@@ -19,10 +19,15 @@ package org.springframework.ai.mcp.util;
 import reactor.util.annotation.Nullable;
 
 /**
+ * Assertion utility class that assists in validating arguments.
+ * 
  * @author Christian Tzolov
  */
 
-public class Assert {
+/**
+ * Utility class providing assertion methods for parameter validation.
+ */
+public final class Assert {
 
 	/**
 	 * Assert that an object is not {@code null}.

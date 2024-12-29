@@ -28,6 +28,8 @@ import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
 import org.springframework.ai.mcp.util.Assert;
 
 /**
+ * A synchronous client for the Model Context Protocol (MCP).
+ * 
  * @author Dariusz Jędrzejczyk
  * @author Christian Tzolov
  */

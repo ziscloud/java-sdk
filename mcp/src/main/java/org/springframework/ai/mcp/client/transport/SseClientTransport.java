@@ -60,8 +60,8 @@ import org.springframework.web.reactive.function.client.WebClient;
  * <ol>
  * <li>The client establishes an SSE connection to the server's /sse endpoint</li>
  * <li>The server sends an 'endpoint' event containing the URI for sending messages</li>
- *
- * <p>
+ * </ol>
+ * 
  * This implementation handles automatic reconnection for transient failures and provides
  * graceful shutdown capabilities. It uses {@link WebClient} for HTTP communications and
  * supports JSON serialization/deserialization of messages.

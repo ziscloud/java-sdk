@@ -392,7 +392,7 @@ public interface McpServer {
 		public Builder resources(List<ResourceRegistration> resourceRegsitrations) {
 			Assert.notNull(resourceRegsitrations, "Resource handlers list must not be null");
 			for (ResourceRegistration resource : resourceRegsitrations) {
-				this.resources.put(resource.resource().name(), resource);
+				this.resources.put(resource.resource().uri(), resource);
 			}
 			return this;
 		}
@@ -417,7 +417,7 @@ public interface McpServer {
 		public Builder resources(ResourceRegistration... resourceRegistrations) {
 			Assert.notNull(resourceRegistrations, "Resource handlers list must not be null");
 			for (ResourceRegistration resource : resourceRegistrations) {
-				this.resources.put(resource.resource().name(), resource);
+				this.resources.put(resource.resource().uri(), resource);
 			}
 			return this;
 		}

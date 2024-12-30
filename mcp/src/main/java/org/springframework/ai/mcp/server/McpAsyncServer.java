@@ -129,6 +129,52 @@ public class McpAsyncServer {
 				notificationHandlers);
 	}
 
+	// ---------------------------------------
+	// Lifecycle Management
+	// ---------------------------------------
+	private DefaultMcpSession.RequestHandler initializeRequestHandler() {
+		return params -> {
+			McpSchema.InitializeRequest initializeRequest = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.InitializeRequest>() {
+					});
+
+			logger.info("Client initialize request - Protocol: {}, Capabilities: {}, Info: {}",
+					initializeRequest.protocolVersion(), initializeRequest.capabilities(),
+					initializeRequest.clientInfo());
+
+			if (!McpSchema.LATEST_PROTOCOL_VERSION.equals(initializeRequest.protocolVersion())) {
+				return Mono
+					.<Object>error(new McpError(
+							"Unsupported protocol version from client: " + initializeRequest.protocolVersion()))
+					.publishOn(Schedulers.boundedElastic());
+			}
+
+			return Mono
+				.<Object>just(new McpSchema.InitializeResult(McpSchema.LATEST_PROTOCOL_VERSION, this.serverCapabilities,
+						this.serverInfo, null))
+				.publishOn(Schedulers.boundedElastic());
+		};
+	}
+
+	/**
+	 * Gracefully closes the server, allowing any in-progress operations to complete.
+	 * @return A Mono that completes when the server has been closed
+	 */
+	public Mono<Void> closeGracefully() {
+		return this.mcpSession.closeGracefully();
+	}
+
+	/**
+	 * Close the server immediately.
+	 */
+	public void close() {
+		this.mcpSession.close();
+	}
+
+	// ---------------------------------------
+	// Tool Management
+	// ---------------------------------------
+
 	/**
 	 * Add a new tool registration at runtime.
 	 * @param toolRegistration The tool registration to add
@@ -186,6 +232,53 @@ public class McpAsyncServer {
 	}
 
 	/**
+	 * Notifies clients that the list of available tools has changed.
+	 * @return A Mono that completes when all clients have been notified
+	 */
+	public Mono<Void> notifyToolsListChanged() {
+		return this.mcpSession.sendNotification("notifications/tools/list_changed", null);
+	}
+
+	private DefaultMcpSession.RequestHandler toolsListRequestHandler() {
+		return params -> {
+			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.PaginatedRequest>() {
+					});
+
+			List<Tool> tools = this.tools.stream().map(toolRegistration -> {
+				return toolRegistration.tool();
+			}).toList();
+
+			logger.info("Client tools list request - Cursor: {}", request.cursor());
+			return Mono.just(new McpSchema.ListToolsResult(tools, null));
+		};
+	}
+
+	private DefaultMcpSession.RequestHandler toolsCallRequestHandler() {
+		return params -> {
+			McpSchema.CallToolRequest callToolRequest = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.CallToolRequest>() {
+					});
+
+			Optional<ToolRegistration> toolRegistration = this.tools.stream()
+				.filter(tr -> callToolRequest.name().equals(tr.tool().name()))
+				.findAny();
+
+			if (toolRegistration.isEmpty()) {
+				return Mono.<Object>error(new McpError("Tool not found: " + callToolRequest.name()));
+			}
+
+			CallToolResult callResponse = toolRegistration.get().call().apply(callToolRequest.arguments());
+
+			return Mono.just(callResponse);
+		};
+	}
+
+	// ---------------------------------------
+	// Resource Management
+	// ---------------------------------------
+
+	/**
 	 * Add a new resource handler at runtime.
 	 * @param resourceHandler The resource handler to add
 	 * @return Mono that completes when clients have been notified of the change
@@ -237,6 +330,43 @@ public class McpAsyncServer {
 	}
 
 	/**
+	 * Notifies clients that the list of available resources has changed.
+	 * @return A Mono that completes when all clients have been notified
+	 */
+	public Mono<Void> notifyResourcesListChanged() {
+		return this.mcpSession.sendNotification("notifications/resources/list_changed", null);
+	}
+
+	private DefaultMcpSession.RequestHandler resourcesListRequestHandler() {
+		return params -> {
+			var resourceList = this.resources.values().stream().map(ResourceRegistration::resource).toList();
+			return Mono.just(new McpSchema.ListResourcesResult(resourceList, null));
+		};
+	}
+
+	private DefaultMcpSession.RequestHandler resourceTemplateListRequestHandler() {
+		return params -> Mono.just(new McpSchema.ListResourceTemplatesResult(this.resourceTemplates, null));
+
+	}
+
+	private DefaultMcpSession.RequestHandler resourcesReadRequestHandler() {
+		return params -> {
+			McpSchema.ReadResourceRequest resourceRequest = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.ReadResourceRequest>() {
+					});
+			var resourceUri = resourceRequest.uri();
+			if (this.resources.containsKey(resourceUri)) {
+				return Mono.just(this.resources.get(resourceUri).readHandler().apply(resourceRequest));
+			}
+			return Mono.error(new McpError("Resource not found: " + resourceUri));
+		};
+	}
+
+	// ---------------------------------------
+	// Prompt Management
+	// ---------------------------------------
+
+	/**
 	 * Add a new prompt handler at runtime.
 	 * @param promptRegistration The prompt handler to add
 	 * @return Mono that completes when clients have been notified of the change
@@ -255,7 +385,11 @@ public class McpAsyncServer {
 		}
 
 		this.prompts.put(promptRegistration.propmpt().name(), promptRegistration);
+
 		logger.info("Added prompt handler: {}", promptRegistration.propmpt().name());
+
+		// Servers that declared the listChanged capability SHOULD send a notification,
+		// when the list of available prompts changes
 		if (this.serverCapabilities.prompts().listChanged()) {
 			return notifyPromptsListChanged();
 		}
@@ -276,8 +410,11 @@ public class McpAsyncServer {
 		}
 
 		PromptRegistration removed = this.prompts.remove(promptName);
+
 		if (removed != null) {
 			logger.info("Removed prompt handler: {}", promptName);
+			// Servers that declared the listChanged capability SHOULD send a
+			// notification, when the list of available prompts changes
 			if (this.serverCapabilities.prompts().listChanged()) {
 				return this.notifyPromptsListChanged();
 			}
@@ -286,100 +423,12 @@ public class McpAsyncServer {
 		return Mono.error(new McpError("Prompt with name '" + promptName + "' not found"));
 	}
 
-	// ---------------------------------------
-	// Request Handlers
-	// ---------------------------------------
-	private DefaultMcpSession.RequestHandler initializeRequestHandler() {
-		return params -> {
-			McpSchema.InitializeRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.InitializeRequest>() {
-					});
-
-			logger.info("Client initialize request - Protocol: {}, Capabilities: {}, Info: {}",
-					request.protocolVersion(), request.capabilities(), request.clientInfo());
-
-			if (!McpSchema.LATEST_PROTOCOL_VERSION.equals(request.protocolVersion())) {
-				return Mono
-					.<Object>error(
-							new McpError("Unsupported protocol version from client: " + request.protocolVersion()))
-					.publishOn(Schedulers.boundedElastic());
-			}
-
-			return Mono
-				.<Object>just(new McpSchema.InitializeResult(McpSchema.LATEST_PROTOCOL_VERSION, this.serverCapabilities,
-						this.serverInfo, null))
-				.publishOn(Schedulers.boundedElastic());
-		};
-	}
-
-	private DefaultMcpSession.RequestHandler toolsListRequestHandler() {
-		return params -> {
-			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.PaginatedRequest>() {
-					});
-
-			List<Tool> tools = this.tools.stream().map(toolRegistration -> {
-				return toolRegistration.tool();
-			}).toList();
-
-			logger.info("Client tools list request - Cursor: {}", request.cursor());
-			return Mono.just(new McpSchema.ListToolsResult(tools, null));
-		};
-	}
-
-	private DefaultMcpSession.RequestHandler toolsCallRequestHandler() {
-		return params -> {
-			McpSchema.CallToolRequest callToolRequest = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.CallToolRequest>() {
-					});
-
-			Optional<ToolRegistration> toolRegistration = this.tools.stream()
-				.filter(tr -> callToolRequest.name().equals(tr.tool().name()))
-				.findAny();
-
-			if (toolRegistration.isEmpty()) {
-				return Mono.<Object>error(new McpError("Tool not found: " + callToolRequest.name()));
-			}
-
-			CallToolResult callResponse = toolRegistration.get().call().apply(callToolRequest.arguments());
-
-			return Mono.just(callResponse);
-		};
-	}
-
-	private DefaultMcpSession.RequestHandler resourcesListRequestHandler() {
-		return params -> {
-			// McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
-			// new TypeReference<McpSchema.PaginatedRequest>() {
-			// });
-
-			var resourceList = this.resources.values().stream().map(ResourceRegistration::resource).toList();
-
-			return Mono.just(new McpSchema.ListResourcesResult(resourceList, null));
-		};
-	}
-
-	private DefaultMcpSession.RequestHandler resourceTemplateListRequestHandler() {
-		return params -> {
-			// McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
-			// new TypeReference<McpSchema.PaginatedRequest>() {
-			// });
-
-			return Mono.just(new McpSchema.ListResourceTemplatesResult(this.resourceTemplates, null));
-		};
-	}
-
-	private DefaultMcpSession.RequestHandler resourcesReadRequestHandler() {
-		return params -> {
-			McpSchema.ReadResourceRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.ReadResourceRequest>() {
-					});
-			var resourceUri = request.uri();
-			if (this.resources.containsKey(resourceUri)) {
-				return Mono.just(this.resources.get(resourceUri).readHandler().apply(request));
-			}
-			return Mono.error(new McpError("Resource not found: " + resourceUri));
-		};
+	/**
+	 * Notifies clients that the list of available prompts has changed.
+	 * @return A Mono that completes when all clients have been notified
+	 */
+	public Mono<Void> notifyPromptsListChanged() {
+		return this.mcpSession.sendNotification("notifications/prompts/list_changed", null);
 	}
 
 	private DefaultMcpSession.RequestHandler promptsListRequestHandler() {
@@ -396,56 +445,17 @@ public class McpAsyncServer {
 
 	private DefaultMcpSession.RequestHandler promptsGetRequestHandler() {
 		return params -> {
-			McpSchema.GetPromptRequest request = transport.unmarshalFrom(params,
+			McpSchema.GetPromptRequest promptRequest = transport.unmarshalFrom(params,
 					new TypeReference<McpSchema.GetPromptRequest>() {
 					});
 
 			// Implement prompt retrieval logic here
-			if (this.prompts.containsKey(request.name())) {
-				return Mono.just(this.prompts.get(request.name()).promptHandler().apply(request));
+			if (this.prompts.containsKey(promptRequest.name())) {
+				return Mono.just(this.prompts.get(promptRequest.name()).promptHandler().apply(promptRequest));
 			}
 
-			return Mono.error(new McpError("Prompt not found: " + request.name()));
+			return Mono.error(new McpError("Prompt not found: " + promptRequest.name()));
 		};
-	}
-
-	/**
-	 * Notifies clients that the list of available tools has changed.
-	 * @return A Mono that completes when all clients have been notified
-	 */
-	public Mono<Void> notifyToolsListChanged() {
-		return this.mcpSession.sendNotification("notifications/tools/list_changed", null);
-	}
-
-	/**
-	 * Notifies clients that the list of available resources has changed.
-	 * @return A Mono that completes when all clients have been notified
-	 */
-	public Mono<Void> notifyResourcesListChanged() {
-		return this.mcpSession.sendNotification("notifications/resources/list_changed", null);
-	}
-
-	/**
-	 * Notifies clients that the list of available prompts has changed.
-	 * @return A Mono that completes when all clients have been notified
-	 */
-	public Mono<Void> notifyPromptsListChanged() {
-		return this.mcpSession.sendNotification("notifications/prompts/list_changed", null);
-	}
-
-	/**
-	 * Gracefully closes the server, allowing any in-progress operations to complete.
-	 * @return A Mono that completes when the server has been closed
-	 */
-	public Mono<Void> closeGracefully() {
-		return this.mcpSession.closeGracefully();
-	}
-
-	/**
-	 * Close the server immediately.
-	 */
-	public void close() {
-		this.mcpSession.close();
 	}
 
 }

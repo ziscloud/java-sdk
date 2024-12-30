@@ -19,9 +19,9 @@ import org.springframework.ai.mcp.client.transport.ServerParameters;
 import org.springframework.ai.mcp.client.transport.StdioClientTransport;
 
 /**
- * @author Christian Tzolov
+ * With stdio transport, the MCP server is automatically started by the client. But you
+ * have to build the server jar first: <pre>./mvnw clean install -DskipTests</pre>
  */
-
 public class ClientStdio {
 
 	public static void main(String[] args) {

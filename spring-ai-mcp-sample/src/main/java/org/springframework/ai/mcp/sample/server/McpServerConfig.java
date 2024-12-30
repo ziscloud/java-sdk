@@ -27,18 +27,21 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 @Configuration
 public class McpServerConfig {
 
+	// STDIO transport
 	@Bean
 	@ConditionalOnProperty(prefix = "transport", name = "mode", havingValue = "stdio")
 	public StdioServerTransport stdioServerTransport() {
 		return new StdioServerTransport();
 	}
 
+	// SSE transport
 	@Bean
 	@ConditionalOnProperty(prefix = "transport", name = "mode", havingValue = "sse")
 	public SseServerTransport sseServerTransport() {
 		return new SseServerTransport(new ObjectMapper(), "/mcp/message");
 	}
 
+	// Router function for SSE transport used by Spring WebFlux to start an HTTP server.
 	@Bean
 	@ConditionalOnProperty(prefix = "transport", name = "mode", havingValue = "sse")
 	public RouterFunction<?> mcpRouterFunction(SseServerTransport transport) {
@@ -59,13 +62,13 @@ public class McpServerConfig {
 		return McpServer.using(transport)
 			.info("MCP Demo Server", "1.0.0")
 			.capabilities(capabilities)
-			.tools(List.of(weatherTool(), calculatorTool()))
-			.resources(Map.of("system://info", systemInfoResource()))
-			.prompts(List.of(greetingPrompt()))
+			.resources(systemInfoResourceRegistration())
+			.prompts(greetingPromptRegistration())
+			.tools(weatherToolRegistration(), calculatorToolRegistration())
 			.async();
 	} // @formatter:on
 
-	private static ResourceRegistration systemInfoResource() {
+	private static ResourceRegistration systemInfoResourceRegistration() {
 
 		// Create a resource registration for system information
 		var systemInfoResource = new McpSchema.Resource( // @formatter:off
@@ -98,7 +101,26 @@ public class McpServerConfig {
 		return resourceRegistration;
 	}
 
-	private static ToolRegistration weatherTool() {
+	private static PromptRegistration greetingPromptRegistration() {
+
+		var prompt = new McpSchema.Prompt("greeting", "A friendly greeting prompt",
+				List.of(new McpSchema.PromptArgument("name", "The name to greet", true)));
+
+		return new PromptRegistration(prompt, getPromptRequest -> {
+
+			String nameArgument = (String) getPromptRequest.arguments().get("name");
+			if (nameArgument == null) {
+				nameArgument = "friend";
+			}
+
+			var userMessage = new PromptMessage(Role.USER,
+					new TextContent("Hello " + nameArgument + "! How can I assist you today?"));
+
+			return new GetPromptResult("A personalized greeting message", List.of(userMessage));
+		});
+	}
+
+	private static ToolRegistration weatherToolRegistration() {
 		return new ToolRegistration(
 				new McpSchema.Tool("weather", "Weather forecast tool by location", Map.of("city", "String")),
 				(arguments) -> {
@@ -108,7 +130,7 @@ public class McpServerConfig {
 				});
 	}
 
-	private static ToolRegistration calculatorTool() {
+	private static ToolRegistration calculatorToolRegistration() {
 		return new ToolRegistration(new McpSchema.Tool("calculator",
 				"Performs basic arithmetic operations (add, subtract, multiply, divide)", """
 						{
@@ -162,26 +184,6 @@ public class McpServerConfig {
 					return new McpSchema.CallToolResult(
 							java.util.List.of(new McpSchema.TextContent(String.valueOf(result))), false);
 				});
-	}
-
-	private static PromptRegistration greetingPrompt() {
-		var nameArg = new McpSchema.PromptArgument("name", "The name to greet", true // required
-																						// parameter
-		);
-
-		var prompt = new McpSchema.Prompt("greeting", "A friendly greeting prompt", List.of(nameArg));
-
-		return new PromptRegistration(prompt, request -> {
-			String name = (String) request.arguments().get("name");
-			if (name == null) {
-				name = "friend";
-			}
-
-			var assistantMessage = new PromptMessage(Role.ASSISTANT,
-					new TextContent("Hello " + name + "! How can I assist you today?"));
-
-			return new GetPromptResult("A personalized greeting message", List.of(assistantMessage));
-		});
 	}
 
 }

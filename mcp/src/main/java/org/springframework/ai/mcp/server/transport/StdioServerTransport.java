@@ -153,31 +153,23 @@ public class StdioServerTransport implements McpTransport {
 						try {
 							JSONRPCMessage message = McpSchema.deserializeJsonRpcMessage(this.objectMapper, line);
 							if (!this.inboundSink.tryEmitNext(message).isSuccess()) {
-								if (!isClosing) {
-									logger.error("Failed to enqueue message");
-								}
+								logIfNotClosing("Failed to enqueue message");
 								break;
 							}
 						}
 						catch (Exception e) {
-							if (!isClosing) {
-								logger.error("Error processing inbound message", e);
-							}
+							logIfNotClosing("Error processing inbound message", e);
 							break;
 						}
 					}
 					catch (IOException e) {
-						if (!isClosing) {
-							logger.error("Error reading from stdin", e);
-						}
+						logIfNotClosing("Error reading from stdin", e);
 						break;
 					}
 				}
 			}
 			catch (Exception e) {
-				if (!isClosing) {
-					logger.error("Error in inbound processing", e);
-				}
+				logIfNotClosing("Error in inbound processing", e);
 			}
 			finally {
 				isClosing = true;
@@ -254,7 +246,6 @@ public class StdioServerTransport implements McpTransport {
 				// Dispose schedulers with longer timeout
 				inboundScheduler.dispose();
 				outboundScheduler.dispose();
-
 				logger.info("Graceful shutdown completed");
 			}
 			catch (Exception e) {
@@ -266,6 +257,18 @@ public class StdioServerTransport implements McpTransport {
 	@Override
 	public <T> T unmarshalFrom(Object data, TypeReference<T> typeRef) {
 		return this.objectMapper.convertValue(data, typeRef);
+	}
+
+	private void logIfNotClosing(String message, Exception e) {
+		if (!this.isClosing) {
+			logger.error(message, e);
+		}
+	}
+
+	private void logIfNotClosing(String message) {
+		if (!this.isClosing) {
+			logger.error(message);
+		}
 	}
 
 }

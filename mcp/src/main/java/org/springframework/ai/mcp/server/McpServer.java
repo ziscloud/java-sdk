@@ -33,8 +33,9 @@ import org.springframework.ai.mcp.util.Assert;
  * Factory class for creating Model Context Protocol (MCP) servers. MCP servers expose
  * tools, resources, and prompts to AI models through a standardized interface.
  *
- * <p>This class serves as the main entry point for implementing the server-side of
- * the MCP specification. The server's responsibilities include:
+ * <p>
+ * This class serves as the main entry point for implementing the server-side of the MCP
+ * specification. The server's responsibilities include:
  * <ul>
  * <li>Exposing tools that models can invoke to perform actions
  * <li>Providing access to resources that give models context
@@ -43,14 +44,15 @@ import org.springframework.ai.mcp.util.Assert;
  * <li>Implementing capability negotiation
  * </ul>
  *
- * <p>The class provides factory methods to create either:
+ * <p>
+ * The class provides factory methods to create either:
  * <ul>
  * <li>{@link McpAsyncServer} for non-blocking operations with CompletableFuture responses
  * <li>{@link McpSyncServer} for blocking operations with direct responses
  * </ul>
  *
- * <p>Example of creating a basic server:
- * <pre>{@code
+ * <p>
+ * Example of creating a basic server: <pre>{@code
  * McpServer.using(transport)
  *     .info("my-server", "1.0.0")
  *     .tool(new Tool("calculator", "Performs calculations", schema),
@@ -58,8 +60,8 @@ import org.springframework.ai.mcp.util.Assert;
  *     .sync(); // or .async()
  * }</pre>
  *
- * <p>Example with comprehensive configuration:
- * <pre>{@code
+ * <p>
+ * Example with comprehensive configuration: <pre>{@code
  * McpServer.using(transport)
  *     .info("advanced-server", "2.0.0")
  *     .capabilities(new ServerCapabilities(...))
@@ -94,8 +96,8 @@ import org.springframework.ai.mcp.util.Assert;
 public interface McpServer {
 
 	/**
-	 * Registration of a tool with its handler function. Tools are the primary way for
-	 * MCP servers to expose functionality to AI models. Each tool represents a specific
+	 * Registration of a tool with its handler function. Tools are the primary way for MCP
+	 * servers to expose functionality to AI models. Each tool represents a specific
 	 * capability, such as:
 	 * <ul>
 	 * <li>Performing calculations
@@ -105,8 +107,8 @@ public interface McpServer {
 	 * <li>Executing system commands
 	 * </ul>
 	 *
-	 * <p>Example tool registration:
-	 * <pre>{@code
+	 * <p>
+	 * Example tool registration: <pre>{@code
 	 * new ToolRegistration(
 	 *     new Tool(
 	 *         "calculator",
@@ -123,15 +125,15 @@ public interface McpServer {
 	 * }</pre>
 	 *
 	 * @param tool The tool definition including name, description, and parameter schema
-	 * @param call The function that implements the tool's logic, receiving arguments
-	 *             and returning results
+	 * @param call The function that implements the tool's logic, receiving arguments and
+	 * returning results
 	 */
 	public static record ToolRegistration(Tool tool, Function<Map<String, Object>, CallToolResult> call) {
 	}
 
 	/**
-	 * Registration of a resource with its handler function. Resources provide context
-	 * to AI models by exposing data such as:
+	 * Registration of a resource with its handler function. Resources provide context to
+	 * AI models by exposing data such as:
 	 * <ul>
 	 * <li>File contents
 	 * <li>Database records
@@ -140,8 +142,8 @@ public interface McpServer {
 	 * <li>Application state
 	 * </ul>
 	 *
-	 * <p>Example resource registration:
-	 * <pre>{@code
+	 * <p>
+	 * Example resource registration: <pre>{@code
 	 * new ResourceRegistration(
 	 *     new Resource("docs", "Documentation files", "text/markdown"),
 	 *     request -> {
@@ -169,8 +171,8 @@ public interface McpServer {
 	 * <li>Instruction templating
 	 * </ul>
 	 *
-	 * <p>Example prompt registration:
-	 * <pre>{@code
+	 * <p>
+	 * Example prompt registration: <pre>{@code
 	 * new PromptRegistration(
 	 *     new Prompt("analyze", "Code analysis template"),
 	 *     request -> {
@@ -184,7 +186,7 @@ public interface McpServer {
 	 *
 	 * @param prompt The prompt definition including name and description
 	 * @param promptHandler The function that processes prompt requests and returns
-	 *                     formatted templates
+	 * formatted templates
 	 */
 	public static record PromptRegistration(McpSchema.Prompt propmpt,
 			Function<McpSchema.GetPromptRequest, McpSchema.GetPromptResult> promptHandler) {
@@ -248,9 +250,8 @@ public interface McpServer {
 		 * Sets the server implementation information that will be shared with clients
 		 * during connection initialization. This helps with version compatibility,
 		 * debugging, and server identification.
-		 *
 		 * @param serverInfo The server implementation details including name and version.
-		 *                   Must not be null.
+		 * Must not be null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if serverInfo is null
 		 */
@@ -261,9 +262,8 @@ public interface McpServer {
 		}
 
 		/**
-		 * Sets the server implementation information using name and version strings.
-		 * This is a convenience method alternative to {@link #info(McpSchema.Implementation)}.
-		 *
+		 * Sets the server implementation information using name and version strings. This
+		 * is a convenience method alternative to {@link #info(McpSchema.Implementation)}.
 		 * @param name The server name. Must not be null or empty.
 		 * @param version The server version. Must not be null or empty.
 		 * @return This builder instance for method chaining
@@ -288,8 +288,8 @@ public interface McpServer {
 		 * <li>Streaming responses
 		 * <li>Batch operations
 		 * </ul>
-		 *
-		 * @param serverCapabilities The server capabilities configuration. Must not be null.
+		 * @param serverCapabilities The server capabilities configuration. Must not be
+		 * null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if serverCapabilities is null
 		 */
@@ -299,20 +299,19 @@ public interface McpServer {
 		}
 
 		/**
-		 * Adds a single tool with its implementation handler to the server. This is
-		 * a convenience method for registering individual tools without creating a
+		 * Adds a single tool with its implementation handler to the server. This is a
+		 * convenience method for registering individual tools without creating a
 		 * {@link ToolRegistration} explicitly.
 		 *
-		 * <p>Example usage:
-		 * <pre>{@code
+		 * <p>
+		 * Example usage: <pre>{@code
 		 * .tool(
 		 *     new Tool("calculator", "Performs calculations", schema),
 		 *     args -> new CallToolResult("Result: " + calculate(args))
 		 * )
 		 * }</pre>
-		 *
-		 * @param tool The tool definition including name, description, and schema.
-		 *             Must not be null.
+		 * @param tool The tool definition including name, description, and schema. Must
+		 * not be null.
 		 * @param handler The function that implements the tool's logic. Must not be null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if tool or handler is null
@@ -327,12 +326,11 @@ public interface McpServer {
 		}
 
 		/**
-		 * Adds multiple tools with their handlers to the server using a List.
-		 * This method is useful when tools are dynamically generated or loaded
-		 * from a configuration source.
-		 *
-		 * @param toolRegistrations The list of tool registrations to add.
-		 *                          Must not be null.
+		 * Adds multiple tools with their handlers to the server using a List. This method
+		 * is useful when tools are dynamically generated or loaded from a configuration
+		 * source.
+		 * @param toolRegistrations The list of tool registrations to add. Must not be
+		 * null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if toolRegistrations is null
 		 * @see #tools(ToolRegistration...)
@@ -344,18 +342,17 @@ public interface McpServer {
 		}
 
 		/**
-		 * Adds multiple tools with their handlers to the server using varargs.
-		 * This method provides a convenient way to register multiple tools inline.
+		 * Adds multiple tools with their handlers to the server using varargs. This
+		 * method provides a convenient way to register multiple tools inline.
 		 *
-		 * <p>Example usage:
-		 * <pre>{@code
+		 * <p>
+		 * Example usage: <pre>{@code
 		 * .tools(
 		 *     new ToolRegistration(calculatorTool, calculatorHandler),
 		 *     new ToolRegistration(weatherTool, weatherHandler),
 		 *     new ToolRegistration(fileManagerTool, fileManagerHandler)
 		 * )
 		 * }</pre>
-		 *
 		 * @param toolRegistrations The tool registrations to add. Must not be null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if toolRegistrations is null
@@ -369,12 +366,11 @@ public interface McpServer {
 		}
 
 		/**
-		 * Registers multiple resources with their handlers using a Map.
-		 * This method is useful when resources are dynamically generated
-		 * or loaded from a configuration source.
-		 *
-		 * @param resourceRegsitrations Map of resource name to registration.
-		 *                              Must not be null.
+		 * Registers multiple resources with their handlers using a Map. This method is
+		 * useful when resources are dynamically generated or loaded from a configuration
+		 * source.
+		 * @param resourceRegsitrations Map of resource name to registration. Must not be
+		 * null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if resourceRegsitrations is null
 		 * @see #resources(ResourceRegistration...)
@@ -386,12 +382,9 @@ public interface McpServer {
 		}
 
 		/**
-		 * Registers multiple resources with their handlers using a List.
-		 * This method is useful when resources need to be added in bulk
-		 * from a collection.
-		 *
-		 * @param resourceRegsitrations List of resource registrations.
-		 *                              Must not be null.
+		 * Registers multiple resources with their handlers using a List. This method is
+		 * useful when resources need to be added in bulk from a collection.
+		 * @param resourceRegsitrations List of resource registrations. Must not be null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if resourceRegsitrations is null
 		 * @see #resources(ResourceRegistration...)
@@ -405,21 +398,19 @@ public interface McpServer {
 		}
 
 		/**
-		 * Registers multiple resources with their handlers using varargs.
-		 * This method provides a convenient way to register multiple
-		 * resources inline.
+		 * Registers multiple resources with their handlers using varargs. This method
+		 * provides a convenient way to register multiple resources inline.
 		 *
-		 * <p>Example usage:
-		 * <pre>{@code
+		 * <p>
+		 * Example usage: <pre>{@code
 		 * .resources(
 		 *     new ResourceRegistration(fileResource, fileHandler),
 		 *     new ResourceRegistration(dbResource, dbHandler),
 		 *     new ResourceRegistration(apiResource, apiHandler)
 		 * )
 		 * }</pre>
-		 *
-		 * @param resourceRegistrations The resource registrations to add.
-		 *                             Must not be null.
+		 * @param resourceRegistrations The resource registrations to add. Must not be
+		 * null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if resourceRegistrations is null
 		 */
@@ -432,20 +423,18 @@ public interface McpServer {
 		}
 
 		/**
-		 * Sets the resource templates that define patterns for dynamic resource
-		 * access. Templates use URI patterns with placeholders that can be
-		 * filled at runtime.
+		 * Sets the resource templates that define patterns for dynamic resource access.
+		 * Templates use URI patterns with placeholders that can be filled at runtime.
 		 *
-		 * <p>Example usage:
-		 * <pre>{@code
+		 * <p>
+		 * Example usage: <pre>{@code
 		 * .resourceTemplates(
 		 *     new ResourceTemplate("file://{path}", "Access files by path"),
 		 *     new ResourceTemplate("db://{table}/{id}", "Access database records")
 		 * )
 		 * }</pre>
-		 *
-		 * @param resourceTemplates List of resource templates. If null, clears
-		 *                         existing templates.
+		 * @param resourceTemplates List of resource templates. If null, clears existing
+		 * templates.
 		 * @return This builder instance for method chaining
 		 * @see #resourceTemplates(ResourceTemplate...)
 		 */
@@ -455,9 +444,8 @@ public interface McpServer {
 		}
 
 		/**
-		 * Sets the resource templates using varargs for convenience.
-		 * This is an alternative to {@link #resourceTemplates(List)}.
-		 *
+		 * Sets the resource templates using varargs for convenience. This is an
+		 * alternative to {@link #resourceTemplates(List)}.
 		 * @param resourceTemplates The resource templates to set.
 		 * @return This builder instance for method chaining
 		 * @see #resourceTemplates(List)
@@ -470,12 +458,12 @@ public interface McpServer {
 		}
 
 		/**
-		 * Registers multiple prompts with their handlers using a Map.
-		 * This method is useful when prompts are dynamically generated
-		 * or loaded from a configuration source.
+		 * Registers multiple prompts with their handlers using a Map. This method is
+		 * useful when prompts are dynamically generated or loaded from a configuration
+		 * source.
 		 *
-		 * <p>Example usage:
-		 * <pre>{@code
+		 * <p>
+		 * Example usage: <pre>{@code
 		 * Map<String, PromptRegistration> prompts = new HashMap<>();
 		 * prompts.put("analysis", new PromptRegistration(
 		 *     new Prompt("analysis", "Code analysis template"),
@@ -483,7 +471,6 @@ public interface McpServer {
 		 * ));
 		 * .prompts(prompts)
 		 * }</pre>
-		 *
 		 * @param prompts Map of prompt name to registration. Must not be null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if prompts is null
@@ -494,10 +481,8 @@ public interface McpServer {
 		}
 
 		/**
-		 * Registers multiple prompts with their handlers using a List.
-		 * This method is useful when prompts need to be added in bulk
-		 * from a collection.
-		 *
+		 * Registers multiple prompts with their handlers using a List. This method is
+		 * useful when prompts need to be added in bulk from a collection.
 		 * @param prompts List of prompt registrations. Must not be null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if prompts is null
@@ -511,19 +496,17 @@ public interface McpServer {
 		}
 
 		/**
-		 * Registers multiple prompts with their handlers using varargs.
-		 * This method provides a convenient way to register multiple
-		 * prompts inline.
+		 * Registers multiple prompts with their handlers using varargs. This method
+		 * provides a convenient way to register multiple prompts inline.
 		 *
-		 * <p>Example usage:
-		 * <pre>{@code
+		 * <p>
+		 * Example usage: <pre>{@code
 		 * .prompts(
 		 *     new PromptRegistration(analysisPrompt, analysisHandler),
 		 *     new PromptRegistration(summaryPrompt, summaryHandler),
 		 *     new PromptRegistration(reviewPrompt, reviewHandler)
 		 * )
 		 * }</pre>
-		 *
 		 * @param prompts The prompt registrations to add. Must not be null.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if prompts is null
@@ -536,13 +519,12 @@ public interface McpServer {
 		}
 
 		/**
-		 * Builds a synchronous MCP server that provides blocking operations.
-		 * Synchronous servers process each request to completion before handling
-		 * the next one, making them simpler to implement but potentially less
-		 * performant for concurrent operations.
-		 *
-		 * @return A new instance of {@link McpSyncServer} configured with this
-		 *         builder's settings
+		 * Builds a synchronous MCP server that provides blocking operations. Synchronous
+		 * servers process each request to completion before handling the next one, making
+		 * them simpler to implement but potentially less performant for concurrent
+		 * operations.
+		 * @return A new instance of {@link McpSyncServer} configured with this builder's
+		 * settings
 		 */
 		public McpSyncServer sync() {
 			return new McpSyncServer(async());
@@ -551,11 +533,10 @@ public interface McpServer {
 		/**
 		 * Builds an asynchronous MCP server that provides non-blocking operations.
 		 * Asynchronous servers can handle multiple requests concurrently using
-		 * CompletableFuture, making them more efficient for high-concurrency
-		 * scenarios but more complex to implement.
-		 *
-		 * @return A new instance of {@link McpAsyncServer} configured with this
-		 *         builder's settings
+		 * CompletableFuture, making them more efficient for high-concurrency scenarios
+		 * but more complex to implement.
+		 * @return A new instance of {@link McpAsyncServer} configured with this builder's
+		 * settings
 		 */
 		public McpAsyncServer async() {
 			if (serverInfo == null) {

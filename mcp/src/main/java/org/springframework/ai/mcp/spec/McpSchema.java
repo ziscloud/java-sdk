@@ -45,6 +45,57 @@ public class McpSchema {
 	public static final String JSONRPC_VERSION = "2.0";
 
 	// ---------------------------
+	// Method Names
+	// ---------------------------
+
+	// Lifecycle Methods
+	public static final String METHOD_INITIALIZE = "initialize";
+
+	public static final String METHOD_NOTIFICATION_INITIALIZED = "notifications/initialized";
+
+	public static final String METHOD_PING = "ping";
+
+	// Tool Methods
+	public static final String METHOD_TOOLS_LIST = "tools/list";
+
+	public static final String METHOD_TOOLS_CALL = "tools/call";
+
+	public static final String METHOD_NOTIFICATION_TOOLS_LIST_CHANGED = "notifications/tools/list_changed";
+
+	// Resources Methods
+	public static final String METHOD_RESOURCES_LIST = "resources/list";
+
+	public static final String METHOD_RESOURCES_READ = "resources/read";
+
+	public static final String METHOD_NOTIFICATION_RESOURCES_LIST_CHANGED = "notifications/resources/list_changed";
+
+	public static final String METHOD_RESOURCES_TEMPLATES_LIST = "resources/templates/list";
+
+	public static final String METHOD_RESOURCES_SUBSCRIBE = "resources/subscribe";
+
+	public static final String METHOD_RESOURCES_UNSUBSCRIBE = "resources/unsubscribe";
+
+	// Prompt Methods
+	public static final String METHOD_PROMPT_LIST = "prompts/list";
+
+	public static final String METHOD_PROMPT_GET = "prompts/get";
+
+	public static final String METHOD_NOTIFICATION_PROMPTS_LIST_CHANGED = "notifications/prompts/list_changed";
+
+	// Logging Methods
+	public static final String METHOD_LOGGING_SET_LEVEL = "logging/setLevel";
+
+	public static final String METHOD_NOTIFICATION_MESSAGE = "notifications/message";
+
+	// Roots Methods
+	public static final String METHOD_ROOTS_LIST = "roots/list";
+
+	public static final String METHOD_NOTIFICATION_ROOTS_LIST_CHANGED = "notifications/roots/list_changed";
+
+	// Sampling Methods
+	public static final String METHOD_SAMPLING_CREATE_MESSAGE = "sampling/createMessage";
+
+	// ---------------------------
 	// JSON-RPC Error Codes
 	// ---------------------------
 	/**
@@ -254,11 +305,16 @@ public class McpSchema {
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	public record ServerCapabilities( // @formatter:off
 		@JsonProperty("experimental") Map<String, Object> experimental,
-		@JsonProperty("logging") Object logging,
+		@JsonProperty("logging") LoggingCapabilities logging,
 		@JsonProperty("prompts") PromptCapabilities prompts,
 		@JsonProperty("resources") ResourceCapabilities resources,
 		@JsonProperty("tools") ToolCapabilities tools) {
-		
+
+			
+		@JsonInclude(JsonInclude.Include.NON_ABSENT)
+		public record LoggingCapabilities() {
+		}
+	
 		@JsonInclude(JsonInclude.Include.NON_ABSENT)
 		public record PromptCapabilities(
 			@JsonProperty("listChanged") Boolean listChanged) {
@@ -282,7 +338,7 @@ public class McpSchema {
 		public static class Builder {
 
 			private Map<String, Object> experimental;
-			private Object logging;
+			private LoggingCapabilities logging = new LoggingCapabilities();
 			private PromptCapabilities prompts;
 			private ResourceCapabilities resources;
 			private ToolCapabilities tools;
@@ -292,8 +348,8 @@ public class McpSchema {
 				return this;
 			}
 
-			public Builder logging(Object logging) {
-				this.logging = logging;
+			public Builder logging() {
+				this.logging = new LoggingCapabilities();
 				return this;
 			}
 
@@ -330,19 +386,6 @@ public class McpSchema {
 		@JsonProperty("user") USER,
 		@JsonProperty("assistant") ASSISTANT
 	}// @formatter:on
-
-	public enum LoggingLevel {// @formatter:off
-
-		@JsonProperty("debug") DEBUG,
-		@JsonProperty("info") INFO,
-		@JsonProperty("notice") NOTICE,
-		@JsonProperty("warning") WARNING,
-		@JsonProperty("error") ERROR,
-		@JsonProperty("critical") CRITICAL,
-		@JsonProperty("alert") ALERT,
-		@JsonProperty("emergency") EMERGENCY
-
-	} // @formatter:on
 
 	// ---------------------------
 	// Resource Interfaces
@@ -752,11 +795,72 @@ public class McpSchema {
 		@JsonProperty("total") Double total) {
 	}// @formatter:on
 
+	/**
+	 * The Model Context Protocol (MCP) provides a standardized way for servers to send
+	 * structured log messages to clients. Clients can control logging verbosity by
+	 * setting minimum log levels, with servers sending notifications containing severity
+	 * levels, optional logger names, and arbitrary JSON-serializable data.
+	 *
+	 * @param level The severity levels. The mimimum log level is set by the client.
+	 * @param logger The logger that generated the message.
+	 * @param data JSON-serializable logging data.
+	 */
 	public record LoggingMessageNotification(// @formatter:off
 		@JsonProperty("level") LoggingLevel level,
 		@JsonProperty("logger") String logger,
-		@JsonProperty("data") Object data) {
+		@JsonProperty("data") String data) {
+
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		public static class Builder {
+			private LoggingLevel level = LoggingLevel.INFO;
+			private String logger = "server";
+			private String data;
+
+			public Builder level(LoggingLevel level) {
+				this.level = level;
+				return this;
+			}
+
+			public Builder logger(String logger) {
+				this.logger = logger;
+				return this;
+			}
+
+			public Builder data(String data) {
+				this.data = data;
+				return this;
+			}
+
+			public LoggingMessageNotification build() {
+				return new LoggingMessageNotification(level, logger, data);
+			}
+		}
 	}// @formatter:on
+
+	public enum LoggingLevel {// @formatter:off
+		@JsonProperty("debug") DEBUG(0),
+		@JsonProperty("info") INFO(1),
+		@JsonProperty("notice") NOTICE(2),
+		@JsonProperty("warning") WARNING(3),
+		@JsonProperty("error") ERROR(4),
+		@JsonProperty("critical") CRITICAL(5),
+		@JsonProperty("alert") ALERT(6),
+		@JsonProperty("emergency") EMERGENCY(7);
+
+		private final int level;
+
+		LoggingLevel(int level) {
+			this.level = level;
+		}
+
+		public int level() {
+			return level;
+		}
+
+	} // @formatter:on
 
 	// ---------------------------
 	// Autocomplete

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024-2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.ai.mcp.server;
 
 import java.time.Duration;
@@ -22,6 +38,8 @@ import org.springframework.ai.mcp.spec.DefaultMcpSession.NotificationHandler;
 import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
+import org.springframework.ai.mcp.spec.McpSchema.LoggingLevel;
+import org.springframework.ai.mcp.spec.McpSchema.LoggingMessageNotification;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
 import org.springframework.ai.mcp.spec.McpTransport;
 import org.springframework.ai.mcp.util.Utils;
@@ -59,6 +77,9 @@ public class McpAsyncServer {
 
 	private final ConcurrentHashMap<String, PromptRegistration> prompts;
 
+	private LoggingLevel minLoggingLevel = LoggingLevel.DEBUG;
+
+	// TODO: Add support for roots list changed notification
 	/**
 	 * Create a new McpAsyncServer with the given transport and capabilities.
 	 * @param mcpTransport The transport layer implementation for MCP communication
@@ -83,7 +104,8 @@ public class McpAsyncServer {
 
 		this.serverCapabilities = (serverCapabilities != null) ? serverCapabilities : new McpSchema.ServerCapabilities(
 				null, // experimental
-				null, // logging
+				new McpSchema.ServerCapabilities.LoggingCapabilities(), // Enable logging
+																		// by default
 				!Utils.isEmpty(this.prompts) ? new McpSchema.ServerCapabilities.PromptCapabilities(false) : null,
 				!Utils.isEmpty(this.resources) ? new McpSchema.ServerCapabilities.ResourceCapabilities(false, false)
 						: null,
@@ -92,37 +114,42 @@ public class McpAsyncServer {
 		Map<String, DefaultMcpSession.RequestHandler> requestHandlers = new HashMap<>();
 
 		// Initialize request handlers for standard MCP methods
-		requestHandlers.put("initialize", initializeRequestHandler());
+		requestHandlers.put(McpSchema.METHOD_INITIALIZE, initializeRequestHandler());
 
 		// Ping MUST respond with an empty data, but not NULL response.
-		requestHandlers.put("ping", (params) -> Mono.<Object>just(""));
+		requestHandlers.put(McpSchema.METHOD_PING, (params) -> Mono.<Object>just(""));
 
 		// Add tools API handlers if the tool capability is enabled
 		if (this.serverCapabilities.tools() != null) {
-			requestHandlers.put("tools/list", toolsListRequestHandler());
-			requestHandlers.put("tools/call", toolsCallRequestHandler());
+			requestHandlers.put(McpSchema.METHOD_TOOLS_LIST, toolsListRequestHandler());
+			requestHandlers.put(McpSchema.METHOD_TOOLS_CALL, toolsCallRequestHandler());
 		}
 
 		// Add resources API handlers if provided
 		if (!Utils.isEmpty(this.resources)) {
-			requestHandlers.put("resources/list", resourcesListRequestHandler());
-			requestHandlers.put("resources/read", resourcesReadRequestHandler());
+			requestHandlers.put(McpSchema.METHOD_RESOURCES_LIST, resourcesListRequestHandler());
+			requestHandlers.put(McpSchema.METHOD_RESOURCES_READ, resourcesReadRequestHandler());
 		}
 
 		// Add resource templates API handlers if provided.
 		if (!Utils.isEmpty(this.resourceTemplates)) {
-			requestHandlers.put("resources/templates/list", resourceTemplateListRequestHandler());
+			requestHandlers.put(McpSchema.METHOD_RESOURCES_TEMPLATES_LIST, resourceTemplateListRequestHandler());
 		}
 
 		// Add prompts API handlers if provider exists
 		if (!Utils.isEmpty(this.prompts)) {
-			requestHandlers.put("prompts/list", promptsListRequestHandler());
-			requestHandlers.put("prompts/get", promptsGetRequestHandler());
+			requestHandlers.put(McpSchema.METHOD_PROMPT_LIST, promptsListRequestHandler());
+			requestHandlers.put(McpSchema.METHOD_PROMPT_GET, promptsGetRequestHandler());
+		}
+
+		// Add logging API handlers if the logging capability is enabled
+		if (this.serverCapabilities.logging() != null) {
+			requestHandlers.put(McpSchema.METHOD_LOGGING_SET_LEVEL, setLoggerRequestHandler());
 		}
 
 		Map<String, NotificationHandler> notificationHandlers = new HashMap<>();
 
-		notificationHandlers.put("notifications/initialized", (params) -> Mono.empty());
+		notificationHandlers.put(McpSchema.METHOD_NOTIFICATION_INITIALIZED, (params) -> Mono.empty());
 
 		this.transport = mcpTransport;
 		this.mcpSession = new DefaultMcpSession(Duration.ofSeconds(10), mcpTransport, requestHandlers,
@@ -236,20 +263,16 @@ public class McpAsyncServer {
 	 * @return A Mono that completes when all clients have been notified
 	 */
 	public Mono<Void> notifyToolsListChanged() {
-		return this.mcpSession.sendNotification("notifications/tools/list_changed", null);
+		return this.mcpSession.sendNotification(McpSchema.METHOD_NOTIFICATION_TOOLS_LIST_CHANGED, null);
 	}
 
 	private DefaultMcpSession.RequestHandler toolsListRequestHandler() {
 		return params -> {
-			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.PaginatedRequest>() {
-					});
 
 			List<Tool> tools = this.tools.stream().map(toolRegistration -> {
 				return toolRegistration.tool();
 			}).toList();
 
-			logger.info("Client tools list request - Cursor: {}", request.cursor());
 			return Mono.just(new McpSchema.ListToolsResult(tools, null));
 		};
 	}
@@ -334,7 +357,7 @@ public class McpAsyncServer {
 	 * @return A Mono that completes when all clients have been notified
 	 */
 	public Mono<Void> notifyResourcesListChanged() {
-		return this.mcpSession.sendNotification("notifications/resources/list_changed", null);
+		return this.mcpSession.sendNotification(McpSchema.METHOD_NOTIFICATION_RESOURCES_LIST_CHANGED, null);
 	}
 
 	private DefaultMcpSession.RequestHandler resourcesListRequestHandler() {
@@ -428,14 +451,15 @@ public class McpAsyncServer {
 	 * @return A Mono that completes when all clients have been notified
 	 */
 	public Mono<Void> notifyPromptsListChanged() {
-		return this.mcpSession.sendNotification("notifications/prompts/list_changed", null);
+		return this.mcpSession.sendNotification(McpSchema.METHOD_NOTIFICATION_PROMPTS_LIST_CHANGED, null);
 	}
 
 	private DefaultMcpSession.RequestHandler promptsListRequestHandler() {
 		return params -> {
-			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.PaginatedRequest>() {
-					});
+			// TODO: Implement pagination
+			// McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
+			// new TypeReference<McpSchema.PaginatedRequest>() {
+			// });
 
 			var promptList = this.prompts.values().stream().map(PromptRegistration::propmpt).toList();
 
@@ -455,6 +479,50 @@ public class McpAsyncServer {
 			}
 
 			return Mono.error(new McpError("Prompt not found: " + promptRequest.name()));
+		};
+	}
+
+	// ---------------------------------------
+	// Logging Management
+	// ---------------------------------------
+
+	/**
+	 * Send a logging message notification to all connected clients. Messages below the
+	 * current minimum logging level will be filtered out.
+	 * @param loggingMessageNotification The logging message to send
+	 * @return A Mono that completes when the notification has been sent
+	 */
+	public Mono<Void> loggingNotification(LoggingMessageNotification loggingMessageNotification) {
+
+		if (loggingMessageNotification == null) {
+			return Mono.error(new McpError("Logging message must not be null"));
+		}
+
+		Map<String, Object> params = this.transport.unmarshalFrom(loggingMessageNotification,
+				new TypeReference<Map<String, Object>>() {
+				});
+
+		if (loggingMessageNotification.level().level() < minLoggingLevel.level()) {
+			return Mono.empty();
+		}
+
+		return this.mcpSession.sendNotification(McpSchema.METHOD_NOTIFICATION_MESSAGE, params);
+	}
+
+	/**
+	 * Handles requests to set the minimum logging level. Messages below this level will
+	 * not be sent.
+	 * @return A handler that processes logging level change requests
+	 */
+	private DefaultMcpSession.RequestHandler setLoggerRequestHandler() {
+		return params -> {
+			McpSchema.LoggingLevel setLoggerRequest = transport.unmarshalFrom(params,
+					new TypeReference<McpSchema.LoggingLevel>() {
+					});
+
+			this.minLoggingLevel = setLoggerRequest;
+
+			return Mono.empty();
 		};
 	}
 

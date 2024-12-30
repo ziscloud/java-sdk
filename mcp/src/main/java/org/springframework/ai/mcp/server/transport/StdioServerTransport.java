@@ -252,7 +252,7 @@ public class StdioServerTransport implements McpTransport {
 			// First complete the sinks to stop processing
 			inboundSink.tryEmitComplete();
 			outboundSink.tryEmitComplete();
-			return Mono.delay(Duration.ofMillis(100));
+			return Mono.delay(Duration.ofMillis(200));
 		})).then(Mono.fromRunnable(() -> {
 			try {
 				// Dispose schedulers first

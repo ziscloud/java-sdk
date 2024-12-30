@@ -16,8 +16,6 @@
 
 package org.springframework.ai.mcp.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.ai.mcp.server.transport.StdioServerTransport;
 import org.springframework.ai.mcp.spec.McpTransport;
 
@@ -30,7 +28,7 @@ class StdioMcpAsyncServerTests extends AbstractMcpAsyncServerTests {
 
 	@Override
 	protected McpTransport createMcpTransport() {
-		return new StdioServerTransport(new ObjectMapper());
+		return new StdioServerTransport();
 	}
 
 }

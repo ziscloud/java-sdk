@@ -77,7 +77,7 @@ public class StdioServerTransport implements McpTransport {
 	 * Creates a new StdioServerTransport with a default ObjectMapper and System streams.
 	 */
 	public StdioServerTransport() {
-		this(new ObjectMapper(), System.in, System.out);
+		this(new ObjectMapper());
 	}
 
 	/**
@@ -86,26 +86,15 @@ public class StdioServerTransport implements McpTransport {
 	 * @param objectMapper The ObjectMapper to use for JSON serialization/deserialization
 	 */
 	public StdioServerTransport(ObjectMapper objectMapper) {
-		this(objectMapper, System.in, System.out);
-	}
 
-	/**
-	 * Creates a new StdioServerTransport with the specified ObjectMapper and streams.
-	 * @param objectMapper The ObjectMapper to use for JSON serialization/deserialization
-	 * @param inputStream The input stream to read from
-	 * @param outputStream The output stream to write to
-	 */
-	public StdioServerTransport(ObjectMapper objectMapper, InputStream inputStream, OutputStream outputStream) {
 		Assert.notNull(objectMapper, "The ObjectMapper can not be null");
-		Assert.notNull(inputStream, "The InputStream can not be null");
-		Assert.notNull(outputStream, "The OutputStream can not be null");
 
 		this.inboundSink = Sinks.many().unicast().onBackpressureBuffer();
 		this.outboundSink = Sinks.many().unicast().onBackpressureBuffer();
 
 		this.objectMapper = objectMapper;
-		this.inputStream = inputStream;
-		this.outputStream = outputStream;
+		this.inputStream = System.in;
+		this.outputStream = System.out;
 
 		// Use bounded schedulers for better resource management
 		this.inboundScheduler = Schedulers.newBoundedElastic(1, 1, "inbound");
@@ -248,50 +237,31 @@ public class StdioServerTransport implements McpTransport {
 		return Mono.fromRunnable(() -> {
 			isClosing = true;
 			logger.debug("Initiating graceful shutdown");
-		})
-			// .then(Mono.defer(() -> {
-			// // First complete the sinks to stop processing
-			// inboundSink.tryEmitComplete();
-			// outboundSink.tryEmitComplete();
-			// return Mono.delay(Duration.ofMillis(100));
-			// }))
-			.then(Mono.fromRunnable(() -> {
-				try {
-					// Dispose schedulers first
-					inboundScheduler.dispose();
-					outboundScheduler.dispose();
+		}).then(Mono.defer(() -> {
+			// First complete the sinks to stop processing
+			inboundSink.tryEmitComplete();
+			outboundSink.tryEmitComplete();
+			return Mono.delay(Duration.ofMillis(100));
+		})).then(Mono.fromRunnable(() -> {
+			try {
+				// Dispose schedulers first
+				inboundScheduler.dispose();
+				outboundScheduler.dispose();
 
-					// Wait for schedulers to terminate
-					if (!inboundScheduler.isDisposed()) {
-						inboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
-					}
-					if (!outboundScheduler.isDisposed()) {
-						outboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
-					}
-
-					// Only after schedulers are disposed, close the streams
-					try {
-						if (inputStream != System.in) {
-							inputStream.close();
-						}
-						if (outputStream != System.out) {
-							outputStream.flush();
-							outputStream.close();
-						}
-					}
-					catch (IOException e) {
-						// Log but don't throw since we're shutting down
-						logger.debug("Error closing streams during shutdown", e);
-					}
-
-					logger.info("Graceful shutdown completed");
+				// Wait for schedulers to terminate
+				if (!inboundScheduler.isDisposed()) {
+					inboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
 				}
-				catch (Exception e) {
-					logger.error("Error during graceful shutdown", e);
+				if (!outboundScheduler.isDisposed()) {
+					outboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
 				}
-			}))
-			.then()
-			.subscribeOn(Schedulers.boundedElastic());
+
+				logger.info("Graceful shutdown completed");
+			}
+			catch (Exception e) {
+				logger.error("Error during graceful shutdown", e);
+			}
+		})).then().subscribeOn(Schedulers.boundedElastic());
 	}
 
 	@Override

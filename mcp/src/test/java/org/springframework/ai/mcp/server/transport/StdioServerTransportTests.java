@@ -92,7 +92,7 @@ class StdioServerTransportTests {
 		testIn = new ByteArrayInputStream((jsonMessage + "\n").getBytes(StandardCharsets.UTF_8));
 
 		// Create transport with test streams
-		transport = new StdioServerTransport(objectMapper, testIn, testOutPrintStream);
+		transport = new StdioServerTransport(objectMapper);
 
 		// Parse expected message
 		McpSchema.JSONRPCRequest expected = objectMapper.readValue(jsonMessage, McpSchema.JSONRPCRequest.class);
@@ -109,9 +109,9 @@ class StdioServerTransportTests {
 	@Disabled
 	void shouldHandleOutgoingMessages() throws Exception {
 		// Create transport with test streams
-		transport = new StdioServerTransport(objectMapper, new BlockingInputStream(), testOutPrintStream);
-		// transport = new StdioServerTransport(objectMapper, new ByteArrayInputStream(new
-		// byte[0]), testOutPrintStream);
+		transport = new StdioServerTransport(objectMapper);
+		// transport = new StdioServerTransport(objectMapper, new BlockingInputStream(),
+		// testOutPrintStream);
 
 		// Create test messages
 		JSONRPCRequest initMessage = new JSONRPCRequest(McpSchema.JSONRPC_VERSION, "init", "init-id",
@@ -137,7 +137,7 @@ class StdioServerTransportTests {
 	@Test
 	void shouldWaitForProcessorsBeforeSendingMessage() {
 		// Create transport with test streams
-		transport = new StdioServerTransport(objectMapper, new ByteArrayInputStream(new byte[0]), testOutPrintStream);
+		transport = new StdioServerTransport(objectMapper);
 
 		// Create test message
 		JSONRPCRequest testMessage = new JSONRPCRequest(McpSchema.JSONRPC_VERSION, "test", "test-id",
@@ -154,7 +154,7 @@ class StdioServerTransportTests {
 	@Test
 	void shouldCloseGracefully() {
 		// Create transport with test streams
-		transport = new StdioServerTransport(objectMapper, new ByteArrayInputStream(new byte[0]), testOutPrintStream);
+		transport = new StdioServerTransport(objectMapper);
 
 		// Create test message
 		JSONRPCRequest initMessage = new JSONRPCRequest(McpSchema.JSONRPC_VERSION, "init", "init-id",

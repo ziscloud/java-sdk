@@ -16,11 +16,6 @@
 
 package org.springframework.ai.mcp.server;
 
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.ai.mcp.server.transport.StdioServerTransport;
 import org.springframework.ai.mcp.spec.McpTransport;
 
@@ -31,53 +26,9 @@ import org.springframework.ai.mcp.spec.McpTransport;
  */
 class StdioMcpSyncServerTests extends AbstractMcpSyncServerTests {
 
-	private PipedInputStream testInput;
-
-	private PipedOutputStream testOutput;
-
-	private PipedOutputStream writeToInput;
-
-	private PipedInputStream readFromOutput;
-
 	@Override
 	protected McpTransport createMcpTransport() {
-		try {
-			testInput = new PipedInputStream();
-			writeToInput = new PipedOutputStream(testInput);
-			testOutput = new PipedOutputStream();
-			readFromOutput = new PipedInputStream(testOutput);
-			return new StdioServerTransport(new ObjectMapper(), testInput, testOutput);
-		}
-		catch (Exception e) {
-			throw new RuntimeException("Failed to initialize test streams", e);
-		}
-	}
-
-	@Override
-	protected void onStart() {
-		// No special setup needed for stdio transport
-	}
-
-	@Override
-	protected void onClose() {
-		try {
-			if (testInput != null) {
-				testInput.close();
-			}
-			if (testOutput != null) {
-				testOutput.close();
-			}
-			if (writeToInput != null) {
-				writeToInput.close();
-			}
-			if (readFromOutput != null) {
-				readFromOutput.close();
-			}
-		}
-		catch (Exception e) {
-			// Log but don't throw since this is cleanup
-			e.printStackTrace();
-		}
+		return new StdioServerTransport();
 	}
 
 }

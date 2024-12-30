@@ -16,6 +16,8 @@
 
 package org.springframework.ai.mcp.server;
 
+import org.junit.jupiter.api.Timeout;
+
 import org.springframework.ai.mcp.server.transport.StdioServerTransport;
 import org.springframework.ai.mcp.spec.McpTransport;
 
@@ -24,6 +26,7 @@ import org.springframework.ai.mcp.spec.McpTransport;
  *
  * @author Christian Tzolov
  */
+@Timeout(15) // Giving extra time beyond the client timeout
 class StdioMcpAsyncServerTests extends AbstractMcpAsyncServerTests {
 
 	@Override

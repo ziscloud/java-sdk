@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -97,8 +98,8 @@ public class StdioServerTransport implements McpTransport {
 		this.outputStream = System.out;
 
 		// Use bounded schedulers for better resource management
-		this.inboundScheduler = Schedulers.newBoundedElastic(1, 1, "inbound");
-		this.outboundScheduler = Schedulers.newBoundedElastic(1, 1, "outbound");
+		this.inboundScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(), "inbound");
+		this.outboundScheduler = Schedulers.fromExecutorService(Executors.newSingleThreadExecutor(), "outbound");
 	}
 
 	@Override
@@ -139,38 +140,43 @@ public class StdioServerTransport implements McpTransport {
 	private void startInboundProcessing() {
 		this.inboundScheduler.schedule(() -> {
 			inboundReady.tryEmitValue(null);
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-				String line;
-				while (!isClosing && (line = reader.readLine()) != null) {
+			BufferedReader reader = null;
+			try {
+				reader = new BufferedReader(new InputStreamReader(inputStream));
+				while (!isClosing) {
 					try {
-						JSONRPCMessage message = McpSchema.deserializeJsonRpcMessage(this.objectMapper, line);
-						if (!this.inboundSink.tryEmitNext(message).isSuccess()) {
+						String line = reader.readLine();
+						if (line == null || isClosing) {
+							break;
+						}
+
+						try {
+							JSONRPCMessage message = McpSchema.deserializeJsonRpcMessage(this.objectMapper, line);
+							if (!this.inboundSink.tryEmitNext(message).isSuccess()) {
+								if (!isClosing) {
+									logger.error("Failed to enqueue message");
+								}
+								break;
+							}
+						}
+						catch (Exception e) {
 							if (!isClosing) {
-								logger.error("Failed to enqueue message");
+								logger.error("Error processing inbound message", e);
 							}
 							break;
 						}
 					}
-					catch (Exception e) {
+					catch (IOException e) {
 						if (!isClosing) {
-							logger.error("Error processing inbound message", e);
+							logger.error("Error reading from stdin", e);
 						}
 						break;
 					}
 				}
 			}
-			catch (IOException e) {
-				// Check isClosing before the error occurs to properly categorize it
-				boolean wasClosing = isClosing;
-				isClosing = true;
-				if (!wasClosing && e.getMessage().equals("Pipe closed")) {
-					logger.debug("Stream closed during shutdown", e);
-				}
-				else if (!wasClosing) {
-					logger.error("Error reading from stdin", e);
-				}
-				else {
-					logger.debug("Stream error during shutdown", e);
+			catch (Exception e) {
+				if (!isClosing) {
+					logger.error("Error in inbound processing", e);
 				}
 			}
 			finally {
@@ -234,6 +240,7 @@ public class StdioServerTransport implements McpTransport {
 
 	@Override
 	public Mono<Void> closeGracefully() {
+
 		return Mono.fromRunnable(() -> {
 			isClosing = true;
 			logger.debug("Initiating graceful shutdown");
@@ -244,17 +251,9 @@ public class StdioServerTransport implements McpTransport {
 			return Mono.delay(Duration.ofMillis(100));
 		})).then(Mono.fromRunnable(() -> {
 			try {
-				// Dispose schedulers first
+				// Dispose schedulers with longer timeout
 				inboundScheduler.dispose();
 				outboundScheduler.dispose();
-
-				// Wait for schedulers to terminate
-				if (!inboundScheduler.isDisposed()) {
-					inboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
-				}
-				if (!outboundScheduler.isDisposed()) {
-					outboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
-				}
 
 				logger.info("Graceful shutdown completed");
 			}

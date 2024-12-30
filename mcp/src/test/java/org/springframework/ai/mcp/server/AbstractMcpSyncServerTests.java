@@ -66,6 +66,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	@BeforeEach
 	void setUp() {
+		// onStart();
 	}
 
 	@AfterEach

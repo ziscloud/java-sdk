@@ -16,7 +16,6 @@
 
 package org.springframework.ai.mcp.server.transport;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -50,8 +49,6 @@ class StdioServerTransportTests {
 	private final PrintStream originalErr = System.err;
 
 	private ByteArrayOutputStream testOut;
-
-	private ByteArrayInputStream testIn;
 
 	private ByteArrayOutputStream testErr;
 
@@ -89,7 +86,6 @@ class StdioServerTransportTests {
 	void shouldHandleIncomingMessages() throws Exception {
 		// Prepare test input
 		String jsonMessage = "{\"jsonrpc\":\"2.0\",\"method\":\"test\",\"params\":{},\"id\":1}";
-		testIn = new ByteArrayInputStream((jsonMessage + "\n").getBytes(StandardCharsets.UTF_8));
 
 		// Create transport with test streams
 		transport = new StdioServerTransport(objectMapper);

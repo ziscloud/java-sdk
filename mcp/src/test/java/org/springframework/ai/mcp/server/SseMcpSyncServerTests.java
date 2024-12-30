@@ -17,6 +17,8 @@
 package org.springframework.ai.mcp.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Timeout;
+
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
 import org.springframework.web.reactive.function.server.RouterFunctions;
@@ -31,6 +33,7 @@ import org.springframework.ai.mcp.spec.McpTransport;
  *
  * @author Christian Tzolov
  */
+@Timeout(15) // Giving extra time beyond the client timeout
 class SseMcpSyncServerTests extends AbstractMcpSyncServerTests {
 
 	private static final int PORT = 8182;

@@ -349,9 +349,9 @@ public class McpAsyncServer {
 
 	private DefaultMcpSession.RequestHandler resourcesListRequestHandler() {
 		return params -> {
-			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.PaginatedRequest>() {
-					});
+			// McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
+			// new TypeReference<McpSchema.PaginatedRequest>() {
+			// });
 
 			var resourceList = this.resources.values().stream().map(ResourceRegistration::resource).toList();
 
@@ -361,9 +361,9 @@ public class McpAsyncServer {
 
 	private DefaultMcpSession.RequestHandler resourceTemplateListRequestHandler() {
 		return params -> {
-			McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.PaginatedRequest>() {
-					});
+			// McpSchema.PaginatedRequest request = transport.unmarshalFrom(params,
+			// new TypeReference<McpSchema.PaginatedRequest>() {
+			// });
 
 			return Mono.just(new McpSchema.ListResourceTemplatesResult(this.resourceTemplates, null));
 		};

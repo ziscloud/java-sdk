@@ -248,46 +248,50 @@ public class StdioServerTransport implements McpTransport {
 		return Mono.fromRunnable(() -> {
 			isClosing = true;
 			logger.debug("Initiating graceful shutdown");
-		}).then(Mono.defer(() -> {
-			// First complete the sinks to stop processing
-			inboundSink.tryEmitComplete();
-			outboundSink.tryEmitComplete();
-			return Mono.delay(Duration.ofMillis(200));
-		})).then(Mono.fromRunnable(() -> {
-			try {
-				// Dispose schedulers first
-				inboundScheduler.dispose();
-				outboundScheduler.dispose();
-
-				// Wait for schedulers to terminate
-				if (!inboundScheduler.isDisposed()) {
-					inboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
-				}
-				if (!outboundScheduler.isDisposed()) {
-					outboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
-				}
-
-				// Only after schedulers are disposed, close the streams
+		})
+			// .then(Mono.defer(() -> {
+			// // First complete the sinks to stop processing
+			// inboundSink.tryEmitComplete();
+			// outboundSink.tryEmitComplete();
+			// return Mono.delay(Duration.ofMillis(100));
+			// }))
+			.then(Mono.fromRunnable(() -> {
 				try {
-					if (inputStream != System.in) {
-						inputStream.close();
-					}
-					if (outputStream != System.out) {
-						outputStream.flush();
-						outputStream.close();
-					}
-				}
-				catch (IOException e) {
-					// Log but don't throw since we're shutting down
-					logger.debug("Error closing streams during shutdown", e);
-				}
+					// Dispose schedulers first
+					inboundScheduler.dispose();
+					outboundScheduler.dispose();
 
-				logger.info("Graceful shutdown completed");
-			}
-			catch (Exception e) {
-				logger.error("Error during graceful shutdown", e);
-			}
-		})).then().subscribeOn(Schedulers.boundedElastic());
+					// Wait for schedulers to terminate
+					if (!inboundScheduler.isDisposed()) {
+						inboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
+					}
+					if (!outboundScheduler.isDisposed()) {
+						outboundScheduler.disposeGracefully().block(Duration.ofSeconds(5));
+					}
+
+					// Only after schedulers are disposed, close the streams
+					try {
+						if (inputStream != System.in) {
+							inputStream.close();
+						}
+						if (outputStream != System.out) {
+							outputStream.flush();
+							outputStream.close();
+						}
+					}
+					catch (IOException e) {
+						// Log but don't throw since we're shutting down
+						logger.debug("Error closing streams during shutdown", e);
+					}
+
+					logger.info("Graceful shutdown completed");
+				}
+				catch (Exception e) {
+					logger.error("Error during graceful shutdown", e);
+				}
+			}))
+			.then()
+			.subscribeOn(Schedulers.boundedElastic());
 	}
 
 	@Override

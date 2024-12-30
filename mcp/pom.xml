@@ -11,7 +11,7 @@
 	<artifactId>mcp</artifactId>
 	<packaging>jar</packaging>
 	<name>Java MCP SDK</name>
-	<description>Core Java implementation of the Model Context Protocol (MCP) specification, providing synchronous and asynchronous clients, server implementations (coming in 0.3.0), with support for tool discovery, resource management, and multiple transport implementations</description>
+	<description>Java SDK implementation of the Model Context Protocol, enabling seamless integration with language models and AI tools</description>
 	<url>https://github.com/spring-projects-experimental/spring-ai-mcp</url>
 
 	<scm>

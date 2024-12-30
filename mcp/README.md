@@ -1,6 +1,6 @@
-# Spring AI MCP SDK
+# Java MCP SDK
 
-This SDK implements the Model Context Protocol, enabling seamless integration with language models and AI tools.
+Java SDK implementation of the Model Context Protocol, enabling seamless integration with language models and AI tools.
 
 ## Features
 

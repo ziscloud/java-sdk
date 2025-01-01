@@ -38,6 +38,7 @@ import org.springframework.ai.mcp.spec.DefaultMcpSession.NotificationHandler;
 import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingLevel;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingMessageNotification;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
@@ -65,6 +66,10 @@ public class McpAsyncServer {
 	private final McpSchema.ServerCapabilities serverCapabilities;
 
 	private final McpSchema.Implementation serverInfo;
+
+	private McpSchema.ClientCapabilities clientCapabilities;
+
+	private McpSchema.Implementation clientInfo;
 
 	/**
 	 * Thread-safe list of tool handlers that can be modified at runtime.
@@ -165,6 +170,9 @@ public class McpAsyncServer {
 					new TypeReference<McpSchema.InitializeRequest>() {
 					});
 
+			this.clientCapabilities = initializeRequest.capabilities();
+			this.clientInfo = initializeRequest.clientInfo();
+
 			logger.info("Client initialize request - Protocol: {}, Capabilities: {}, Info: {}",
 					initializeRequest.protocolVersion(), initializeRequest.capabilities(),
 					initializeRequest.clientInfo());
@@ -181,6 +189,38 @@ public class McpAsyncServer {
 						this.serverInfo, null))
 				.publishOn(Schedulers.boundedElastic());
 		};
+	}
+
+	/**
+	 * Get the server capabilities that define the supported features and functionality.
+	 * @return The server capabilities
+	 */
+	public McpSchema.ServerCapabilities getServerCapabilities() {
+		return this.serverCapabilities;
+	}
+
+	/**
+	 * Get the server implementation information.
+	 * @return The server implementation details
+	 */
+	public McpSchema.Implementation getServerInfo() {
+		return this.serverInfo;
+	}
+
+	/**
+	 * Get the client capabilities that define the supported features and functionality.
+	 * @return The client capabilities
+	 */
+	public ClientCapabilities getClientCapabilities() {
+		return this.clientCapabilities;
+	}
+
+	/**
+	 * Get the client implementation information.
+	 * @return The client implementation details
+	 */
+	public McpSchema.Implementation getClientInfo() {
+		return this.clientInfo;
 	}
 
 	/**

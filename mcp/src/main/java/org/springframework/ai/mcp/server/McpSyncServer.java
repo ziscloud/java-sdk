@@ -16,11 +16,11 @@
 
 package org.springframework.ai.mcp.server;
 
-import reactor.core.publisher.Mono;
-
 import org.springframework.ai.mcp.server.McpServer.PromptRegistration;
 import org.springframework.ai.mcp.server.McpServer.ResourceRegistration;
 import org.springframework.ai.mcp.server.McpServer.ToolRegistration;
+import org.springframework.ai.mcp.spec.McpSchema;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingMessageNotification;
 import org.springframework.ai.mcp.util.Assert;
 
@@ -122,6 +122,38 @@ public class McpSyncServer {
 	 */
 	public void loggingNotification(LoggingMessageNotification loggingMessageNotification) {
 		this.asyncServer.loggingNotification(loggingMessageNotification).block();
+	}
+
+	/**
+	 * Get the server capabilities that define the supported features and functionality.
+	 * @return The server capabilities
+	 */
+	public McpSchema.ServerCapabilities getServerCapabilities() {
+		return this.asyncServer.getServerCapabilities();
+	}
+
+	/**
+	 * Get the server implementation information.
+	 * @return The server implementation details
+	 */
+	public McpSchema.Implementation getServerInfo() {
+		return this.asyncServer.getServerInfo();
+	}
+
+	/**
+	 * Get the client capabilities that define the supported features and functionality.
+	 * @return The client capabilities
+	 */
+	public ClientCapabilities getClientCapabilities() {
+		return this.asyncServer.getClientCapabilities();
+	}
+
+	/**
+	 * Get the client implementation information.
+	 * @return The client implementation details
+	 */
+	public McpSchema.Implementation getClientInfo() {
+		return this.asyncServer.getClientInfo();
 	}
 
 	/**

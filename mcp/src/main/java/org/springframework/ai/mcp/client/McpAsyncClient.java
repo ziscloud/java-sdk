@@ -78,6 +78,21 @@ public class McpAsyncClient {
 	private final McpSchema.ClientCapabilities clientCapabilities;
 
 	/**
+	 * Client implementation information.
+	 */
+	private final McpSchema.Implementation clientInfo;
+
+	/**
+	 * Server capabilities.
+	 */
+	private McpSchema.ServerCapabilities serverCapabilities;
+
+	/**
+	 * Server implementation information.
+	 */
+	private McpSchema.Implementation serverInfo;
+
+	/**
 	 * Roots define the boundaries of where servers can operate within the filesystem,
 	 * allowing them to understand which directories and files they have access to.
 	 * Servers can request the list of roots from supporting clients and receive
@@ -99,11 +114,6 @@ public class McpAsyncClient {
 	 * Client transport implementation.
 	 */
 	private final McpTransport transport;
-
-	/**
-	 * Client implementation information.
-	 */
-	private Implementation clientInfo;
 
 	/**
 	 * Create a new McpAsyncClient with the given transport and session request-response
@@ -241,6 +251,9 @@ public class McpAsyncClient {
 
 		return result.flatMap(initializeResult -> {
 
+			this.serverCapabilities = initializeResult.capabilities();
+			this.serverInfo = initializeResult.serverInfo();
+
 			logger.info("Server response with Protocol: {}, Capabilities: {}, Info: {} and Instructions {}",
 					initializeResult.protocolVersion(), initializeResult.capabilities(), initializeResult.serverInfo(),
 					initializeResult.instructions());
@@ -254,6 +267,38 @@ public class McpAsyncClient {
 					.thenReturn(initializeResult);
 			}
 		});
+	}
+
+	/**
+	 * Get the server capabilities that define the supported features and functionality.
+	 * @return The server capabilities
+	 */
+	public McpSchema.ServerCapabilities getServerCapabilities() {
+		return this.serverCapabilities;
+	}
+
+	/**
+	 * Get the server implementation information.
+	 * @return The server implementation details
+	 */
+	public McpSchema.Implementation getServerInfo() {
+		return this.serverInfo;
+	}
+
+	/**
+	 * Get the client capabilities that define the supported features and functionality.
+	 * @return The client capabilities
+	 */
+	public ClientCapabilities getClientCapabilities() {
+		return this.clientCapabilities;
+	}
+
+	/**
+	 * Get the client implementation information.
+	 * @return The client implementation details
+	 */
+	public McpSchema.Implementation getClientInfo() {
+		return this.clientInfo;
 	}
 
 	/**

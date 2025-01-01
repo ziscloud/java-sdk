@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.ai.mcp.spec.McpSchema;
+import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptRequest;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptResult;
 import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
@@ -47,6 +48,38 @@ public class McpSyncClient implements AutoCloseable {
 	public McpSyncClient(McpAsyncClient delegate) {
 		Assert.notNull(delegate, "The delegate can not be null");
 		this.delegate = delegate;
+	}
+
+	/**
+	 * Get the server capabilities that define the supported features and functionality.
+	 * @return The server capabilities
+	 */
+	public McpSchema.ServerCapabilities getServerCapabilities() {
+		return this.delegate.getServerCapabilities();
+	}
+
+	/**
+	 * Get the server implementation information.
+	 * @return The server implementation details
+	 */
+	public McpSchema.Implementation getServerInfo() {
+		return this.delegate.getServerInfo();
+	}
+
+	/**
+	 * Get the client capabilities that define the supported features and functionality.
+	 * @return The client capabilities
+	 */
+	public ClientCapabilities getClientCapabilities() {
+		return this.delegate.getClientCapabilities();
+	}
+
+	/**
+	 * Get the client implementation information.
+	 * @return The client implementation details
+	 */
+	public McpSchema.Implementation getClientInfo() {
+		return this.delegate.getClientInfo();
 	}
 
 	@Override

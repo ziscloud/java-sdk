@@ -12,16 +12,15 @@ image::spring-ai-mcp-architecture.jpg[Spring AI MCP Architecture,600]
 
 The project consists of two main modules:
 
-=== mcp
+=== xref:mcp.adoc[MCP Java SDK]
 
 Java implementation of the Model Context Protocol specification. It includes:
 
 * Synchronous and asynchronous link:https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/README.md#client-usage-examples[MCP Client] and link:https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/README.md#server-usage-examples[MCP Server] implementations
 * Standard MCP operations support (tool discovery, resource management, prompt handling, structured logging). Support for request and notification handling.
 * link:https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio[Stdio] and link:https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse[SSE] transport implementations.
-* link:./mcp/README.md[Find more].
 
-=== spring-ai-mcp
+=== xref:spring-mcp.adoc[Spring AI MCP]
 
 The Spring integration module provides Spring-specific functionality:
 
@@ -29,16 +28,15 @@ The Spring integration module provides Spring-specific functionality:
 * Spring-friendly abstractions for MCP clients
 * Auto-configurations (WIP)
 
-== Requirements
-
-* Java 17 or later
-* Maven 3.6 or later
-* Spring AI 1.0.0-M4 or later
 
 == Installation
 
 Add the following dependencies to your Maven project:
 
+[tabs]
+======
+Maven::
++
 [source,xml]
 ----
 <!-- For core MCP functionality -->
@@ -47,7 +45,10 @@ Add the following dependencies to your Maven project:
     <artifactId>mcp</artifactId>
     <version>0.4.0-SNAPSHOT</version>
 </dependency>
-
+----
++
+[source,xml]
+----
 <!-- For Spring AI integration -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
@@ -55,8 +56,42 @@ Add the following dependencies to your Maven project:
     <version>0.4.0-SNAPSHOT</version>
 </dependency>
 ----
++
+This is a milestone release. It is not available on Maven Central. Add this repository to your POM:
++
+[source,xml]
+----
+<repositories>
+  <repository>
+    <id>spring-milestones</id>
+    <name>Spring Milestones</name>
+    <url>https://repo.spring.io/libs-milestone-local</url>
+    <snapshots>
+      <enabled>false</enabled>
+    </snapshots>
+  </repository>
+</repositories>
+----
 
-== Example Demos
+Gradle::
++
+[source,groovy]
+----
+dependencies {
+    implementation 'org.springframework.experimental:mcp'
+}
+----
+Or for Spring AI integration:
++
+[source,groovy]
+----
+dependencies {
+    implementation 'org.springframework.experimental:spring-ai-mcp'
+}
+----
+======
+
+== Examples
 
 Explore these MCP examples in the link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol[spring-ai-examples/model-context-protocol] repository:
 
@@ -87,32 +122,6 @@ mvn clean install
 ----
 mvn test
 ----
-
-== Project Information
-
-* *Group ID*: org.springframework.experimental
-* *Version*: 0.4.0-SNAPSHOT
-* *Java Version*: 17
-* *Spring AI Version*: 1.0.0-M4
-
-== Contributing
-
-This is an experimental Spring project. Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Submit a Pull Request
-
-== Team
-
-* Christian Tzolov
-* Dariusz Jędrzejczyk
-
-== Links
-
-* link:https://github.com/spring-projects-experimental/spring-ai-mcp[GitHub Repository]
-* link:https://github.com/spring-projects-experimental/spring-ai-mcp/issues[Issue Tracker]
-* link:https://github.com/spring-projects-experimental/spring-ai-mcp/actions[CI/CD]
 
 == License
 

@@ -39,16 +39,3 @@ To use this module, add the following dependency to your Maven project:
     <version>0.4.0-SNAPSHOT</version>
 </dependency>
 ----
-
-== License
-
-This project is licensed under the https://www.apache.org/licenses/LICENSE-2.0[Apache License 2.0].
-
-== Links
-
-* https://github.com/spring-projects-experimental/spring-ai-mcp[GitHub Repository]
-* https://github.com/spring-projects-experimental/spring-ai-mcp/issues[Issue Tracker]
-
-== Contributing
-
-This is an experimental Spring project. Contributions are welcome! Please refer to the main project's contribution guidelines.

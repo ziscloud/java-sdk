@@ -43,7 +43,7 @@ public class DemoServer {
 		SseServerTransport transport = new SseServerTransport(new ObjectMapper(), "/mcp/message");
 
 		var mcpServer = McpServer.using(transport)
-			.info("Weather Forecast", "1.0.0")
+			.serverInfo("Weather Forecast", "1.0.0")
 			.tool(new McpSchema.Tool("weather", "Weather forecast tool by location", Map.of("city", "String")),
 					(arguments) -> {
 						String city = (String) arguments.get("city");

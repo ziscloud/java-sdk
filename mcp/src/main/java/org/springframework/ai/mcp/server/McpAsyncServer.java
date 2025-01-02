@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
 import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
+import org.springframework.ai.mcp.spec.McpSchema.ListRootsResult;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingLevel;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingMessageNotification;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
@@ -84,7 +86,6 @@ public class McpAsyncServer {
 
 	private LoggingLevel minLoggingLevel = LoggingLevel.DEBUG;
 
-	// TODO: Add support for roots list changed notification
 	/**
 	 * Create a new McpAsyncServer with the given transport and capabilities.
 	 * @param mcpTransport The transport layer implementation for MCP communication
@@ -94,11 +95,13 @@ public class McpAsyncServer {
 	 * @param resources The map of resource registrations
 	 * @param resourceTemplates The list of resource templates
 	 * @param prompts The map of prompt registrations
+	 * @param rootsChangeConsumers The list of consumers that will be notified when the
+	 * roots list changes
 	 */
 	public McpAsyncServer(McpTransport mcpTransport, McpSchema.Implementation serverInfo,
 			McpSchema.ServerCapabilities serverCapabilities, List<ToolRegistration> tools,
 			Map<String, ResourceRegistration> resources, List<McpSchema.ResourceTemplate> resourceTemplates,
-			Map<String, PromptRegistration> prompts) {
+			Map<String, PromptRegistration> prompts, List<Consumer<List<McpSchema.Root>>> rootsChangeConsumers) {
 
 		this.serverInfo = serverInfo;
 		this.tools = new CopyOnWriteArrayList<>(tools != null ? tools : List.of());
@@ -155,6 +158,13 @@ public class McpAsyncServer {
 		Map<String, NotificationHandler> notificationHandlers = new HashMap<>();
 
 		notificationHandlers.put(McpSchema.METHOD_NOTIFICATION_INITIALIZED, (params) -> Mono.empty());
+
+		if (Utils.isEmpty(rootsChangeConsumers)) {
+			rootsChangeConsumers = List.of((roots) -> logger
+				.warn("Roots list changed notification, but no consumers provided. Roots list changed: {}", roots));
+		}
+		notificationHandlers.put(McpSchema.METHOD_NOTIFICATION_ROOTS_LIST_CHANGED,
+				rootsListChnagedNotificationHandler(rootsChangeConsumers));
 
 		this.transport = mcpTransport;
 		this.mcpSession = new DefaultMcpSession(Duration.ofSeconds(10), mcpTransport, requestHandlers,
@@ -237,6 +247,33 @@ public class McpAsyncServer {
 	public void close() {
 		this.mcpSession.close();
 	}
+
+	private static TypeReference<McpSchema.ListRootsResult> LIST_ROOTS_RESULT_TYPE_REF = new TypeReference<>() {
+	};
+
+	private NotificationHandler rootsListChnagedNotificationHandler(
+			List<Consumer<List<McpSchema.Root>>> rootsChangeConsumers) {
+
+		if (this.clientCapabilities != null && this.clientCapabilities.roots() != null) {
+
+			Mono<ListRootsResult> updatedRootsList = this.mcpSession.sendRequest(McpSchema.METHOD_ROOTS_LIST, null,
+					LIST_ROOTS_RESULT_TYPE_REF);
+
+			return params -> updatedRootsList // @formatter:off
+				.flatMap(listRootsResult -> 
+					Mono.fromRunnable(() -> 
+						rootsChangeConsumers.stream().forEach(consumer -> consumer.accept(listRootsResult.roots())))
+					.subscribeOn(Schedulers.boundedElastic())) // TODO: Check if this is needed
+				.onErrorResume(error -> {
+					logger.error("Error handling roots list change notification", error);
+					return Mono.empty();
+				})
+				.then(); // Convert to Mono<Void>
+				// @formatter:on
+		}
+
+		return params -> Mono.empty();
+	};
 
 	// ---------------------------------------
 	// Tool Management

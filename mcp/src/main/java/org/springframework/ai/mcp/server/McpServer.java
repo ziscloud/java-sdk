@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.springframework.ai.mcp.spec.McpSchema;
@@ -206,9 +207,12 @@ public interface McpServer {
 	 */
 	public static class Builder {
 
+		private final static McpSchema.Implementation DEFAULT_SERVER_INFO = new McpSchema.Implementation("mcp-server",
+				"1.0.0");
+
 		private final McpTransport transport;
 
-		private McpSchema.Implementation serverInfo;
+		private McpSchema.Implementation serverInfo = DEFAULT_SERVER_INFO;
 
 		private McpSchema.ServerCapabilities serverCapabilities;
 
@@ -241,6 +245,8 @@ public interface McpServer {
 		 */
 		private Map<String, PromptRegistration> prompts = new HashMap<>();
 
+		private List<Consumer<List<McpSchema.Root>>> rootsChangeConsumers = new ArrayList<>();
+
 		private Builder(McpTransport transport) {
 			Assert.notNull(transport, "Transport must not be null");
 			this.transport = transport;
@@ -255,7 +261,7 @@ public interface McpServer {
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if serverInfo is null
 		 */
-		public Builder info(McpSchema.Implementation serverInfo) {
+		public Builder serverInfo(McpSchema.Implementation serverInfo) {
 			Assert.notNull(serverInfo, "Server info must not be null");
 			this.serverInfo = serverInfo;
 			return this;
@@ -263,14 +269,15 @@ public interface McpServer {
 
 		/**
 		 * Sets the server implementation information using name and version strings. This
-		 * is a convenience method alternative to {@link #info(McpSchema.Implementation)}.
+		 * is a convenience method alternative to
+		 * {@link #serverInfo(McpSchema.Implementation)}.
 		 * @param name The server name. Must not be null or empty.
 		 * @param version The server version. Must not be null or empty.
 		 * @return This builder instance for method chaining
 		 * @throws IllegalArgumentException if name or version is null or empty
-		 * @see #info(McpSchema.Implementation)
+		 * @see #serverInfo(McpSchema.Implementation)
 		 */
-		public Builder info(String name, String version) {
+		public Builder serverInfo(String name, String version) {
 			Assert.hasText(name, "Name must not be null or empty");
 			Assert.hasText(version, "Version must not be null or empty");
 			this.serverInfo = new McpSchema.Implementation(name, version);
@@ -519,6 +526,49 @@ public interface McpServer {
 		}
 
 		/**
+		 * Registers a consumer that will be notified when the list of roots changes. This
+		 * is useful for updating resource availability dynamically, such as when new
+		 * files are added or removed.
+		 * @param consumer The consumer to register. Must not be null.
+		 * @return This builder instance for method chaining
+		 * @throws IllegalArgumentException if consumer is null
+		 */
+		public Builder rootsChangeConsumer(Consumer<List<McpSchema.Root>> consumer) {
+			Assert.notNull(consumer, "Consumer must not be null");
+			this.rootsChangeConsumers.add(consumer);
+			return this;
+		}
+
+		/**
+		 * Registers multiple consumers that will be notified when the list of roots
+		 * changes. This method is useful when multiple consumers need to be registered at
+		 * once.
+		 * @param consumers The list of consumers to register. Must not be null.
+		 * @return This builder instance for method chaining
+		 * @throws IllegalArgumentException if consumers is null
+		 */
+		public Builder rootsChangeConsumers(List<Consumer<List<McpSchema.Root>>> consumers) {
+			Assert.notNull(consumers, "Consumers list must not be null");
+			this.rootsChangeConsumers.addAll(consumers);
+			return this;
+		}
+
+		/**
+		 * Registers multiple consumers that will be notified when the list of roots
+		 * changes using varargs. This method provides a convenient way to register
+		 * multiple consumers inline.
+		 * @param consumers The consumers to register. Must not be null.
+		 * @return This builder instance for method chaining
+		 * @throws IllegalArgumentException if consumers is null
+		 */
+		public Builder rootsChangeConsumers(Consumer<List<McpSchema.Root>>... consumers) {
+			for (Consumer<List<McpSchema.Root>> consumer : consumers) {
+				this.rootsChangeConsumers.add(consumer);
+			}
+			return this;
+		}
+
+		/**
 		 * Builds a synchronous MCP server that provides blocking operations. Synchronous
 		 * servers process each request to completion before handling the next one, making
 		 * them simpler to implement but potentially less performant for concurrent
@@ -539,12 +589,9 @@ public interface McpServer {
 		 * settings
 		 */
 		public McpAsyncServer async() {
-			if (serverInfo == null) {
-				serverInfo = new McpSchema.Implementation("mcp-server", "1.0.0");
-			}
 
 			return new McpAsyncServer(transport, serverInfo, serverCapabilities, tools, resources, resourceTemplates,
-					prompts);
+					prompts, rootsChangeConsumers);
 		}
 
 	}

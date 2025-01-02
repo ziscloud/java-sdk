@@ -67,7 +67,7 @@ public class McpServerConfig {
 
 		// Create the server with both tool and resource capabilities
 		var server = McpServer.using(transport)
-			.info("MCP Demo Server", "1.0.0")
+			.serverInfo("MCP Demo Server", "1.0.0")
 			.capabilities(capabilities)
 			.resources(systemInfoResourceRegistration())
 			.prompts(greetingPromptRegistration())

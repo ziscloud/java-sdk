@@ -84,21 +84,21 @@ public abstract class AbstractMcpAsyncServerTests {
 		assertThatThrownBy(() -> McpServer.using(null)).isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("Transport must not be null");
 
-		assertThatThrownBy(() -> McpServer.using(createMcpTransport()).info((McpSchema.Implementation) null))
+		assertThatThrownBy(() -> McpServer.using(createMcpTransport()).serverInfo((McpSchema.Implementation) null))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessage("Server info must not be null");
 	}
 
 	@Test
 	void testGracefulShutdown() {
-		var mcpAsyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").async();
+		var mcpAsyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").async();
 
 		StepVerifier.create(mcpAsyncServer.closeGracefully()).verifyComplete();
 	}
 
 	@Test
 	void testImmediateClose() {
-		var mcpAsyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").async();
+		var mcpAsyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").async();
 
 		assertThatCode(() -> mcpAsyncServer.close()).doesNotThrowAnyException();
 	}
@@ -111,7 +111,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	void testAddTool() {
 		Tool newTool = new McpSchema.Tool("new-tool", "New test tool", Map.of("input", "string"));
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.async();
 
@@ -127,7 +127,7 @@ public abstract class AbstractMcpAsyncServerTests {
 		Tool duplicateTool = new McpSchema.Tool(TEST_TOOL_NAME, "Duplicate tool", Map.of("input", "string"));
 
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.tool(duplicateTool, args -> new CallToolResult(List.of(), false))
 			.async();
@@ -148,7 +148,7 @@ public abstract class AbstractMcpAsyncServerTests {
 		Tool too = new McpSchema.Tool(TEST_TOOL_NAME, "Duplicate tool", Map.of("input", "string"));
 
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.tool(too, args -> new CallToolResult(List.of(), false))
 			.async();
@@ -161,7 +161,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	@Test
 	void testRemoveNonexistentTool() {
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.async();
 
@@ -177,7 +177,7 @@ public abstract class AbstractMcpAsyncServerTests {
 		Tool too = new McpSchema.Tool(TEST_TOOL_NAME, "Duplicate tool", Map.of("input", "string"));
 
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().tools(true).build())
 			.tool(too, args -> new CallToolResult(List.of(), false))
 			.async();
@@ -193,7 +193,7 @@ public abstract class AbstractMcpAsyncServerTests {
 
 	@Test
 	void testNotifyResourcesListChanged() {
-		var mcpAsyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").async();
+		var mcpAsyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").async();
 
 		StepVerifier.create(mcpAsyncServer.notifyResourcesListChanged()).verifyComplete();
 
@@ -203,7 +203,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	@Test
 	void testAddResource() {
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().resources(true, false).build())
 			.async();
 
@@ -220,7 +220,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	@Test
 	void testAddResourceWithNullRegistration() {
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().resources(true, false).build())
 			.async();
 
@@ -235,7 +235,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	void testAddResourceWithoutCapability() {
 		// Create a server without resource capabilities
 		McpAsyncServer serverWithoutResources = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.async();
 
 		Resource resource = new Resource(TEST_RESOURCE_URI, "Test Resource", "text/plain", "Test resource description",
@@ -253,7 +253,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	void testRemoveResourceWithoutCapability() {
 		// Create a server without resource capabilities
 		McpAsyncServer serverWithoutResources = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.async();
 
 		StepVerifier.create(serverWithoutResources.removeResource(TEST_RESOURCE_URI)).verifyErrorSatisfies(error -> {
@@ -268,7 +268,7 @@ public abstract class AbstractMcpAsyncServerTests {
 
 	@Test
 	void testNotifyPromptsListChanged() {
-		var mcpAsyncServer = McpServer.using(createMcpTransport()).info("test-server", "1.0.0").async();
+		var mcpAsyncServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").async();
 
 		StepVerifier.create(mcpAsyncServer.notifyPromptsListChanged()).verifyComplete();
 
@@ -278,7 +278,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	@Test
 	void testAddPromptWithNullRegistration() {
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().prompts(false).build())
 			.async();
 
@@ -291,7 +291,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	void testAddPromptWithoutCapability() {
 		// Create a server without prompt capabilities
 		McpAsyncServer serverWithoutPrompts = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.async();
 
 		Prompt prompt = new Prompt(TEST_PROMPT_NAME, "Test Prompt", List.of());
@@ -309,7 +309,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	void testRemovePromptWithoutCapability() {
 		// Create a server without prompt capabilities
 		McpAsyncServer serverWithoutPrompts = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.async();
 
 		StepVerifier.create(serverWithoutPrompts.removePrompt(TEST_PROMPT_NAME)).verifyErrorSatisfies(error -> {
@@ -328,7 +328,7 @@ public abstract class AbstractMcpAsyncServerTests {
 				List.of(new PromptMessage(McpSchema.Role.ASSISTANT, new McpSchema.TextContent("Test content")))));
 
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().prompts(true).build())
 			.prompts(registration)
 			.async();
@@ -341,7 +341,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	@Test
 	void testRemoveNonexistentPrompt() {
 		var mcpAsyncServer2 = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().prompts(true).build())
 			.async();
 
@@ -355,13 +355,77 @@ public abstract class AbstractMcpAsyncServerTests {
 	}
 
 	// ---------------------------------------
+	// Roots Tests
+	// ---------------------------------------
+
+	@Test
+	void testRootsChangeConsumers() {
+		// Test with single consumer
+		var rootsReceived = new McpSchema.Root[1];
+		var consumerCalled = new boolean[1];
+
+		var singleConsumerServer = McpServer.using(createMcpTransport())
+			.serverInfo("test-server", "1.0.0")
+			.rootsChangeConsumers(List.of(roots -> {
+				consumerCalled[0] = true;
+				if (!roots.isEmpty()) {
+					rootsReceived[0] = roots.get(0);
+				}
+			}))
+			.async();
+
+		assertThat(singleConsumerServer).isNotNull();
+		assertThatCode(() -> singleConsumerServer.closeGracefully().block(Duration.ofSeconds(10)))
+			.doesNotThrowAnyException();
+		onClose();
+
+		// Test with multiple consumers
+		var consumer1Called = new boolean[1];
+		var consumer2Called = new boolean[1];
+		var rootsContent = new List[1];
+
+		var multipleConsumersServer = McpServer.using(createMcpTransport())
+			.serverInfo("test-server", "1.0.0")
+			.rootsChangeConsumers(List.of(roots -> {
+				consumer1Called[0] = true;
+				rootsContent[0] = roots;
+			}, roots -> consumer2Called[0] = true))
+			.async();
+
+		assertThat(multipleConsumersServer).isNotNull();
+		assertThatCode(() -> multipleConsumersServer.closeGracefully().block(Duration.ofSeconds(10)))
+			.doesNotThrowAnyException();
+		onClose();
+
+		// Test error handling
+		var errorHandlingServer = McpServer.using(createMcpTransport())
+			.serverInfo("test-server", "1.0.0")
+			.rootsChangeConsumers(List.of(roots -> {
+				throw new RuntimeException("Test error");
+			}))
+			.async();
+
+		assertThat(errorHandlingServer).isNotNull();
+		assertThatCode(() -> errorHandlingServer.closeGracefully().block(Duration.ofSeconds(10)))
+			.doesNotThrowAnyException();
+		onClose();
+
+		// Test without consumers
+		var noConsumersServer = McpServer.using(createMcpTransport()).serverInfo("test-server", "1.0.0").async();
+
+		assertThat(noConsumersServer).isNotNull();
+		assertThatCode(() -> noConsumersServer.closeGracefully().block(Duration.ofSeconds(10)))
+			.doesNotThrowAnyException();
+	}
+
+	// ---------------------------------------
 	// Logging Tests
 	// ---------------------------------------
 
 	@Test
 	void testLoggingLevels() {
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().logging().build())
 			.async();
 
@@ -380,7 +444,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	@Test
 	void testLoggingWithoutCapability() {
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().build()) // No logging capability
 			.async();
 
@@ -396,7 +460,7 @@ public abstract class AbstractMcpAsyncServerTests {
 	@Test
 	void testLoggingWithNullNotification() {
 		var mcpAsyncServer = McpServer.using(createMcpTransport())
-			.info("test-server", "1.0.0")
+			.serverInfo("test-server", "1.0.0")
 			.capabilities(ServerCapabilities.builder().logging().build())
 			.async();
 

@@ -1,0 +1,119 @@
+= Java & Spring MCP
+
+Java SDK for the Model Context Protocol (MCP), providing seamless integration between Java and Spring applications and MCP-compliant AI resources and tools.
+
+== Overview
+
+Provides Java and Spring Framework integration for the link:https://modelcontextprotocol.org/docs/concepts/architecture[Model Context Protocol]. It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
+
+image::spring-ai-mcp-architecture.jpg[Spring AI MCP Architecture,600]
+
+== Modules
+
+The project consists of two main modules:
+
+=== mcp
+
+Java implementation of the Model Context Protocol specification. It includes:
+
+* Synchronous and asynchronous link:https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/README.md#client-usage-examples[MCP Client] and link:https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/README.md#server-usage-examples[MCP Server] implementations
+* Standard MCP operations support (tool discovery, resource management, prompt handling, structured logging). Support for request and notification handling.
+* link:https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio[Stdio] and link:https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse[SSE] transport implementations.
+* link:./mcp/README.md[Find more].
+
+=== spring-ai-mcp
+
+The Spring integration module provides Spring-specific functionality:
+
+* Integration with Spring AI's function calling system
+* Spring-friendly abstractions for MCP clients
+* Auto-configurations (WIP)
+
+== Requirements
+
+* Java 17 or later
+* Maven 3.6 or later
+* Spring AI 1.0.0-M4 or later
+
+== Installation
+
+Add the following dependencies to your Maven project:
+
+[source,xml]
+----
+<!-- For core MCP functionality -->
+<dependency>
+    <groupId>org.springframework.experimental</groupId>
+    <artifactId>mcp</artifactId>
+    <version>0.4.0-SNAPSHOT</version>
+</dependency>
+
+<!-- For Spring AI integration -->
+<dependency>
+    <groupId>org.springframework.experimental</groupId>
+    <artifactId>spring-ai-mcp</artifactId>
+    <version>0.4.0-SNAPSHOT</version>
+</dependency>
+----
+
+== Example Demos
+
+Explore these MCP examples in the link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol[spring-ai-examples/model-context-protocol] repository:
+
+* link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/sqlite/simple[SQLite Simple] - Demonstrates LLM integration with a database
+* link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/sqlite/chatbot[SQLite Chatbot] - Interactive chatbot with SQLite database interaction
+* link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/filesystem[Filesystem] - Enables LLM interaction with local filesystem folders and files
+* link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/brave[Brave] - Enables natural language interactions with Brave Search, allowing you to perform internet searches.
+* link:./spring-ai-mcp-sample/[Spring-ai-mcp-sample] - Showcases how to create and use MCP servers and clients with different transport modes and capabilities.
+
+== Documentation
+
+* link:mcp/README.md[Java MCP SDK documentation]
+** link:docs/ref-index.md[Reference documentation]
+* link:spring-ai-mcp/README.md[Spring Integration documentation]
+
+== Development
+
+=== Building from Source
+
+[source,bash]
+----
+mvn clean install
+----
+
+=== Running Tests
+
+[source,bash]
+----
+mvn test
+----
+
+== Project Information
+
+* *Group ID*: org.springframework.experimental
+* *Version*: 0.4.0-SNAPSHOT
+* *Java Version*: 17
+* *Spring AI Version*: 1.0.0-M4
+
+== Contributing
+
+This is an experimental Spring project. Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a Pull Request
+
+== Team
+
+* Christian Tzolov
+* Dariusz Jędrzejczyk
+
+== Links
+
+* link:https://github.com/spring-projects-experimental/spring-ai-mcp[GitHub Repository]
+* link:https://github.com/spring-projects-experimental/spring-ai-mcp/issues[Issue Tracker]
+* link:https://github.com/spring-projects-experimental/spring-ai-mcp/actions[CI/CD]
+
+== License
+
+This project is licensed under the link:LICENSE[Apache License 2.0].

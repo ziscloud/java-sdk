@@ -19,6 +19,7 @@ package org.springframework.ai.mcp.client;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,8 @@ import reactor.test.StepVerifier;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
+import org.springframework.ai.mcp.spec.McpSchema.CreateMessageRequest;
+import org.springframework.ai.mcp.spec.McpSchema.CreateMessageResult;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptRequest;
 import org.springframework.ai.mcp.spec.McpSchema.Prompt;
 import org.springframework.ai.mcp.spec.McpSchema.Resource;
@@ -295,7 +298,9 @@ public abstract class AbstractMcpAsyncClientTests {
 
 		var capabilities = ClientCapabilities.builder().sampling().build();
 
-		var client = McpClient.using(transport).requestTimeout(TIMEOUT).capabilities(capabilities).async();
+		var client = McpClient.using(transport).requestTimeout(TIMEOUT).capabilities(capabilities).sampling(request -> {
+			return CreateMessageResult.builder().message("test").model("test-model").build();
+		}).async();
 
 		assertThatCode(() -> {
 			client.initialize().block(Duration.ofSeconds(10));
@@ -313,7 +318,14 @@ public abstract class AbstractMcpAsyncClientTests {
 			.sampling()
 			.build();
 
-		var client = McpClient.using(transport).requestTimeout(TIMEOUT).capabilities(capabilities).async();
+		Function<CreateMessageRequest, CreateMessageResult> samplingHandler = request -> {
+			return CreateMessageResult.builder().message("test").model("test-model").build();
+		};
+		var client = McpClient.using(transport)
+			.requestTimeout(TIMEOUT)
+			.capabilities(capabilities)
+			.sampling(samplingHandler)
+			.async();
 
 		assertThatCode(() -> {
 			var result = client.initialize().block(Duration.ofSeconds(10));

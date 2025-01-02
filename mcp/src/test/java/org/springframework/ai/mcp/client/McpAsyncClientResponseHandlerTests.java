@@ -27,11 +27,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.ai.mcp.MockMcpTransport;
+import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.Root;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 class McpAsyncClientResponseHandlerTests {
@@ -285,31 +287,10 @@ class McpAsyncClientResponseHandlerTests {
 		MockMcpTransport transport = new MockMcpTransport();
 
 		// Create client with sampling capability but null handler
-		McpAsyncClient asyncMcpClient = McpClient.using(transport)
-			.capabilities(ClientCapabilities.builder().sampling().build())
-			.async();
-
-		// Create a mock create message request
-		var messageRequest = new McpSchema.CreateMessageRequest(
-				List.of(new McpSchema.SamplingMessage(McpSchema.Role.USER, new McpSchema.TextContent("Test message"))),
-				null, null, null, null, 0, null, null);
-
-		// Simulate incoming request
-		McpSchema.JSONRPCRequest request = new McpSchema.JSONRPCRequest(McpSchema.JSONRPC_VERSION,
-				McpSchema.METHOD_SAMPLING_CREATE_MESSAGE, "test-id", messageRequest);
-		transport.simulateIncomingMessage(request);
-
-		// Verify error response
-		McpSchema.JSONRPCMessage sentMessage = transport.getLastSentMessage();
-		assertThat(sentMessage).isInstanceOf(McpSchema.JSONRPCResponse.class);
-
-		McpSchema.JSONRPCResponse response = (McpSchema.JSONRPCResponse) sentMessage;
-		assertThat(response.id()).isEqualTo("test-id");
-		assertThat(response.result()).isNull();
-		assertThat(response.error()).isNotNull();
-		assertThat(response.error().message()).contains("Method not found: sampling/createMessage");
-
-		asyncMcpClient.closeGracefully();
+		assertThatThrownBy(
+				() -> McpClient.using(transport).capabilities(ClientCapabilities.builder().sampling().build()).async())
+			.isInstanceOf(McpError.class)
+			.hasMessage("Sampling handler must not be null when client capabilities include sampling");
 	}
 
 }

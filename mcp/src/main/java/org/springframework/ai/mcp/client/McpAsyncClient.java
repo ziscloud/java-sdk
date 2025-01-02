@@ -160,7 +160,10 @@ public class McpAsyncClient {
 		}
 
 		// Sampling Handler
-		if (samplingHandler != null && this.clientCapabilities.sampling() != null) {
+		if (this.clientCapabilities.sampling() != null) {
+			if (samplingHandler == null) {
+				throw new McpError("Sampling handler must not be null when client capabilities include sampling");
+			}
 			this.samplingHandler = samplingHandler;
 			requestHanlers.put(McpSchema.METHOD_SAMPLING_CREATE_MESSAGE, samplingCreateMessageHandler());
 		}

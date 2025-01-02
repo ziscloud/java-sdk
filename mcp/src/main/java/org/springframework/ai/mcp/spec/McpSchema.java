@@ -761,6 +761,46 @@ public class McpSchema {
 			@JsonProperty("stop_sequence") STOP_SEQUENCE,
 			@JsonProperty("max_tokens") MAX_TOKENS
 		}
+
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		public static class Builder {
+			private Role role = Role.ASSISTANT;
+			private Content content;
+			private String model;
+			private StopReason stopReason = StopReason.END_TURN;
+
+			public Builder role(Role role) {
+				this.role = role;
+				return this;
+			}
+
+			public Builder content(Content content) {
+				this.content = content;
+				return this;
+			}
+
+			public Builder model(String model) {
+				this.model = model;
+				return this;
+			}
+
+			public Builder stopReason(StopReason stopReason) {
+				this.stopReason = stopReason;
+				return this;
+			}
+
+			public Builder message(String message) {
+				this.content = new TextContent(message);
+				return this;
+			}
+
+			public CreateMessageResult build() {
+				return new CreateMessageResult(role, content, model, stopReason);
+			}
+		}
 	}// @formatter:on
 
 	// ---------------------------

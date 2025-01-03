@@ -26,14 +26,13 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Schedulers;
 
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.McpSchema;
-import org.springframework.ai.mcp.spec.McpTransport;
-import org.springframework.ai.mcp.spec.McpSchema.JSONRPCMessage;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCNotification;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCRequest;
 
 @SuppressWarnings("unused")
-public class MockMcpTransport implements McpTransport {
+public class MockMcpTransport implements ClientMcpTransport {
 
 	private final AtomicInteger inboundMessageCount = new AtomicInteger(0);
 

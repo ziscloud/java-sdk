@@ -19,7 +19,7 @@ package org.springframework.ai.mcp.server;
 import org.junit.jupiter.api.Timeout;
 
 import org.springframework.ai.mcp.server.transport.StdioServerTransport;
-import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 
 /**
  * Tests for {@link McpAsyncServer} using {@link StdioServerTransport}.
@@ -30,7 +30,7 @@ import org.springframework.ai.mcp.spec.McpTransport;
 class StdioMcpAsyncServerTests extends AbstractMcpAsyncServerTests {
 
 	@Override
-	protected McpTransport createMcpTransport() {
+	protected ServerMcpTransport createMcpTransport() {
 		return new StdioServerTransport();
 	}
 

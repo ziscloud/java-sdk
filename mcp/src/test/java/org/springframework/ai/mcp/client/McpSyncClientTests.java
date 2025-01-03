@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Timeout;
 
 import org.springframework.ai.mcp.client.transport.ServerParameters;
 import org.springframework.ai.mcp.client.transport.StdioClientTransport;
-import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class McpSyncClientTests extends AbstractMcpSyncClientTests {
 
 	@Override
-	protected McpTransport createMcpTransport() {
+	protected ClientMcpTransport createMcpTransport() {
 		ServerParameters stdioParams = ServerParameters.builder("npx")
 			.args("-y", "@modelcontextprotocol/server-everything", "dir")
 			.build();

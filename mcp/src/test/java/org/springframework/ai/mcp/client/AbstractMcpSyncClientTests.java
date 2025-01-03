@@ -24,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
@@ -38,7 +39,6 @@ import org.springframework.ai.mcp.spec.McpSchema.SubscribeRequest;
 import org.springframework.ai.mcp.spec.McpSchema.TextContent;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
 import org.springframework.ai.mcp.spec.McpSchema.UnsubscribeRequest;
-import org.springframework.ai.mcp.spec.McpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -58,9 +58,9 @@ public abstract class AbstractMcpSyncClientTests {
 
 	private static final String TEST_MESSAGE = "Hello MCP Spring AI!";
 
-	protected McpTransport mcpTransport;
+	protected ClientMcpTransport mcpTransport;
 
-	abstract protected McpTransport createMcpTransport();
+	abstract protected ClientMcpTransport createMcpTransport();
 
 	abstract protected void onStart();
 

@@ -23,11 +23,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.server.McpServer.PromptRegistration;
 import org.springframework.ai.mcp.server.McpServer.ResourceRegistration;
 import org.springframework.ai.mcp.server.McpServer.ToolRegistration;
 import org.springframework.ai.mcp.spec.McpError;
+import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptResult;
 import org.springframework.ai.mcp.spec.McpSchema.Prompt;
@@ -37,6 +37,7 @@ import org.springframework.ai.mcp.spec.McpSchema.Resource;
 import org.springframework.ai.mcp.spec.McpSchema.ServerCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
 import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -56,7 +57,7 @@ public abstract class AbstractMcpSyncServerTests {
 
 	private static final String TEST_PROMPT_NAME = "test-prompt";
 
-	abstract protected McpTransport createMcpTransport();
+	abstract protected ServerMcpTransport createMcpTransport();
 
 	protected void onStart() {
 	}

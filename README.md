@@ -1,18 +1,13 @@
 # Java & Spring MCP
 
-Java SDK for the Model Context Protocol (MCP), providing seamless integration between Java and Spring applications and MCP-compliant AI resources and tools.
+Set of projects that provide Java SDK and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). 
+It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
 
-## Overview
+<img src="mcp-docs/src/main/antora/modules/ROOT/images/spring-ai-mcp-architecture.jpg" width="600">
 
-Provides Java and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
+## Projects
 
-<img src="docs/spring-ai-mcp-architecture.jpg" width="600">
-
-## Modules
-
-The project consists of two main modules:
-
-### [mcp](./mcp/README.md)
+### [MCP Java SDK](https://docs.spring.io/spring-ai-mcp/reference/mcp.html)
 
 Java implementation of the Model Context Protocol specification. It includes:
 - Synchronous and asynchronous [MCP Client](https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/README.md#client-usage-examples) and [MCP Server](https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/README.md#server-usage-examples) implementations
@@ -20,18 +15,13 @@ Java implementation of the Model Context Protocol specification. It includes:
 - [Stdio](https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio) and [SSE](https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse) transport implementations. 
 - [Find more](./mcp/README.md).
 
-### [spring-ai-mcp](./spring-ai-mcp/README.md)
+### [Spring AI MCP](https://docs.spring.io/spring-ai-mcp/reference/spring-mcp.html)
 
 The Spring integration module provides Spring-specific functionality:
 - Integration with Spring AI's function calling system
 - Spring-friendly abstractions for MCP clients
 - Auto-configurations (WIP)
 
-## Requirements
-
-- Java 17 or later
-- Maven 3.6 or later
-- Spring AI 1.0.0-M4 or later
 
 ## Installation
 
@@ -53,6 +43,23 @@ Add the following dependencies to your Maven project:
 </dependency>
 ```
 
+This is a milestone release, not available on Maven Central. 
+Add this repository to your POM:
+
+```xml
+<repositories>
+  <repository>
+    <id>spring-milestones</id>
+    <name>Spring Milestones</name>
+    <url>https://repo.spring.io/libs-milestone-local</url>
+    <snapshots>
+      <enabled>false</enabled>
+    </snapshots>
+  </repository>
+</repositories>
+```
+
+
 ## Example Demos
 
 Explore these MCP examples in the [spring-ai-examples/model-context-protocol](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol) repository:
@@ -71,24 +78,18 @@ Explore these MCP examples in the [spring-ai-examples/model-context-protocol](ht
 
 ## Development
 
-### Building from Source
+- Building from Source
 
 ```bash
 mvn clean install
 ```
 
-### Running Tests
+- Running Tests
 
 ```bash
 mvn test
 ```
 
-## Project Information
-
-- **Group ID**: org.springframework.experimental
-- **Version**: 0.4.0-SNAPSHOT
-- **Java Version**: 17
-- **Spring AI Version**: 1.0.0-M4
 
 ## Contributing
 

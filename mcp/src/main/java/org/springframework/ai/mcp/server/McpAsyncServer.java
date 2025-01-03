@@ -44,7 +44,7 @@ import org.springframework.ai.mcp.spec.McpSchema.ListRootsResult;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingLevel;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingMessageNotification;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
-import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 import org.springframework.ai.mcp.util.Utils;
 
 /**
@@ -63,7 +63,7 @@ public class McpAsyncServer {
 	 */
 	private final DefaultMcpSession mcpSession;
 
-	private final McpTransport transport;
+	private final ServerMcpTransport transport;
 
 	private final McpSchema.ServerCapabilities serverCapabilities;
 
@@ -98,7 +98,7 @@ public class McpAsyncServer {
 	 * @param rootsChangeConsumers The list of consumers that will be notified when the
 	 * roots list changes
 	 */
-	public McpAsyncServer(McpTransport mcpTransport, McpSchema.Implementation serverInfo,
+	public McpAsyncServer(ServerMcpTransport mcpTransport, McpSchema.Implementation serverInfo,
 			McpSchema.ServerCapabilities serverCapabilities, List<ToolRegistration> tools,
 			Map<String, ResourceRegistration> resources, List<McpSchema.ResourceTemplate> resourceTemplates,
 			Map<String, PromptRegistration> prompts, List<Consumer<List<McpSchema.Root>>> rootsChangeConsumers) {

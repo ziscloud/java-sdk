@@ -17,7 +17,7 @@ import reactor.core.publisher.Sinks;
 
 import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
-import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 import org.springframework.ai.mcp.util.Assert;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,7 +33,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  *
  * @author Christian Tzolov
  */
-public class SseServerTransport implements McpTransport {
+public class SseServerTransport implements ServerMcpTransport {
 
 	private final static Logger logger = LoggerFactory.getLogger(SseServerTransport.class);
 

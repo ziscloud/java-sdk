@@ -22,7 +22,7 @@ import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
 
 import org.springframework.ai.mcp.server.transport.SseServerTransport;
-import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
 import org.springframework.web.reactive.function.server.RouterFunctions;
@@ -44,7 +44,7 @@ class SseMcpSyncServerTests extends AbstractMcpSyncServerTests {
 	private SseServerTransport transport;
 
 	@Override
-	protected McpTransport createMcpTransport() {
+	protected ServerMcpTransport createMcpTransport() {
 		transport = new SseServerTransport(new ObjectMapper(), MESSAGE_ENDPOINT);
 		return transport;
 	}

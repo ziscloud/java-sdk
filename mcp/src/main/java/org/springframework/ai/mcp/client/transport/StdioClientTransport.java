@@ -38,10 +38,10 @@ import reactor.core.publisher.Sinks;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCMessage;
 import org.springframework.ai.mcp.util.Assert;
-import org.springframework.ai.mcp.spec.McpTransport;
 
 /**
  * Implementation of the MCP Stdio transport that communicates with a server process using
@@ -51,7 +51,7 @@ import org.springframework.ai.mcp.spec.McpTransport;
  * @author Christian Tzolov
  * @author Dariusz Jędrzejczyk
  */
-public class StdioClientTransport implements McpTransport {
+public class StdioClientTransport implements ClientMcpTransport {
 
 	private static final Logger logger = LoggerFactory.getLogger(StdioClientTransport.class);
 

@@ -18,6 +18,7 @@ package org.springframework.ai.mcp.sample.client;
 import java.util.Map;
 
 import org.springframework.ai.mcp.client.McpClient;
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
 import org.springframework.ai.mcp.spec.McpSchema.GetPromptRequest;
@@ -32,9 +33,9 @@ import org.springframework.ai.mcp.spec.McpTransport;
 
 public class SampleClient {
 
-	private final McpTransport transport;
+	private final ClientMcpTransport transport;
 
-	public SampleClient(McpTransport transport) {
+	public SampleClient(ClientMcpTransport transport) {
 		this.transport = transport;
 	}
 

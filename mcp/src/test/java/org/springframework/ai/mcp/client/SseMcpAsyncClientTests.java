@@ -21,7 +21,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import org.springframework.ai.mcp.client.transport.SseClientTransport;
-import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -42,7 +42,7 @@ class SseMcpAsyncClientTests extends AbstractMcpAsyncClientTests {
 		.waitingFor(Wait.forHttp("/").forStatusCode(404));
 
 	@Override
-	protected McpTransport createMcpTransport() {
+	protected ClientMcpTransport createMcpTransport() {
 		return new SseClientTransport(WebClient.builder().baseUrl(host));
 	}
 

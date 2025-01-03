@@ -32,10 +32,10 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.retry.Retry;
 import reactor.util.retry.Retry.RetrySignal;
 
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCMessage;
-import org.springframework.ai.mcp.spec.McpTransport;
 import org.springframework.ai.mcp.util.Assert;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -71,7 +71,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * "https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse">MCP
  * HTTP with SSE Transport Specification</a>
  */
-public class SseClientTransport implements McpTransport {
+public class SseClientTransport implements ClientMcpTransport {
 
 	private final static Logger logger = LoggerFactory.getLogger(SseClientTransport.class);
 

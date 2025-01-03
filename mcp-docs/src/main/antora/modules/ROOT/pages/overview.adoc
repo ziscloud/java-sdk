@@ -1,16 +1,13 @@
 = Java & Spring MCP
 
-Java SDK for the Model Context Protocol (MCP), providing seamless integration between Java and Spring applications and MCP-compliant AI resources and tools.
-
-== Overview
-
-Provides Java and Spring Framework integration for the link:https://modelcontextprotocol.org/docs/concepts/architecture[Model Context Protocol]. It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
+Set of tools to provide Java SDK and Spring Framework integration for the link:https://modelcontextprotocol.org/docs/concepts/architecture[Model Context Protocol]. 
+It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
 
 image::spring-ai-mcp-architecture.jpg[Spring AI MCP Architecture,600]
 
-== Modules
+== Projects
 
-The project consists of two main modules:
+There are two main projects in this repository:
 
 === xref:mcp.adoc[MCP Java SDK]
 
@@ -57,7 +54,8 @@ Maven::
 </dependency>
 ----
 +
-This is a milestone release. It is not available on Maven Central. Add this repository to your POM:
+This is a milestone release, not available on Maven Central. 
+Add this repository to your POM:
 +
 [source,xml]
 ----

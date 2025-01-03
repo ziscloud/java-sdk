@@ -21,7 +21,7 @@ import org.springframework.ai.mcp.spec.McpSchema.LoggingMessageNotification;
 import org.springframework.ai.mcp.spec.McpSchema.PromptMessage;
 import org.springframework.ai.mcp.spec.McpSchema.Role;
 import org.springframework.ai.mcp.spec.McpSchema.TextContent;
-import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +55,7 @@ public class McpServerConfig {
 	}
 
 	@Bean
-	public McpAsyncServer mcpServer(McpTransport transport) { // @formatter:off
+	public McpAsyncServer mcpServer(ServerMcpTransport transport) { // @formatter:off
 
 		// Configure server capabilities with resource support
 		var capabilities = McpSchema.ServerCapabilities.builder()

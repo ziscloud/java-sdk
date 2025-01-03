@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.CreateMessageRequest;
@@ -115,7 +116,7 @@ public interface McpClient {
 	 * @return A new builder instance for configuring the client
 	 * @throws IllegalArgumentException if transport is null
 	 */
-	public static Builder using(McpTransport transport) {
+	public static Builder using(ClientMcpTransport transport) {
 		return new Builder(transport);
 	}
 
@@ -138,7 +139,7 @@ public interface McpClient {
 	 */
 	public static class Builder {
 
-		private final McpTransport transport;
+		private final ClientMcpTransport transport;
 
 		private Duration requestTimeout = Duration.ofSeconds(20); // Default timeout
 
@@ -158,7 +159,7 @@ public interface McpClient {
 
 		private Function<CreateMessageRequest, CreateMessageResult> samplingHandler;
 
-		private Builder(McpTransport transport) {
+		private Builder(ClientMcpTransport transport) {
 			Assert.notNull(transport, "Transport must not be null");
 			this.transport = transport;
 		}

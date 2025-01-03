@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolRequest;
 import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
@@ -56,13 +57,13 @@ public abstract class AbstractMcpAsyncClientTests {
 
 	private McpAsyncClient mcpAsyncClient;
 
-	protected McpTransport mcpTransport;
+	protected ClientMcpTransport mcpTransport;
 
 	private static final Duration TIMEOUT = Duration.ofSeconds(20);
 
 	private static final String ECHO_TEST_MESSAGE = "Hello MCP Spring AI!";
 
-	abstract protected McpTransport createMcpTransport();
+	abstract protected ClientMcpTransport createMcpTransport();
 
 	protected void onStart() {
 	}

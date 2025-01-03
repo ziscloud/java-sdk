@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.DefaultMcpSession;
 import org.springframework.ai.mcp.spec.DefaultMcpSession.NotificationHandler;
 import org.springframework.ai.mcp.spec.DefaultMcpSession.RequestHandler;
@@ -129,7 +130,7 @@ public class McpAsyncClient {
 	 * @param loggingConsumers the logging consumers.
 	 * @param samplingHandler the sampling handler.
 	 */
-	public McpAsyncClient(McpTransport transport, Duration requestTimeout, Implementation clientInfo,
+	public McpAsyncClient(ClientMcpTransport transport, Duration requestTimeout, Implementation clientInfo,
 			ClientCapabilities clientCapabilities, Map<String, Root> roots,
 			List<Consumer<List<McpSchema.Tool>>> toolsChangeConsumers,
 			List<Consumer<List<McpSchema.Resource>>> resourcesChangeConsumers,

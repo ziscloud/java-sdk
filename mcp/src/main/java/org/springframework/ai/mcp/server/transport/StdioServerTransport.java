@@ -38,7 +38,7 @@ import reactor.core.scheduler.Schedulers;
 
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCMessage;
-import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 import org.springframework.ai.mcp.util.Assert;
 
 /**
@@ -48,7 +48,7 @@ import org.springframework.ai.mcp.util.Assert;
  *
  * @author Christian Tzolov
  */
-public class StdioServerTransport implements McpTransport {
+public class StdioServerTransport implements ServerMcpTransport {
 
 	private static final Logger logger = LoggerFactory.getLogger(StdioServerTransport.class);
 

@@ -39,6 +39,7 @@ import org.springframework.ai.mcp.spec.McpSchema.Resource;
 import org.springframework.ai.mcp.spec.McpSchema.ServerCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
 import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -58,7 +59,7 @@ public abstract class AbstractMcpAsyncServerTests {
 
 	private static final String TEST_PROMPT_NAME = "test-prompt";
 
-	abstract protected McpTransport createMcpTransport();
+	abstract protected ServerMcpTransport createMcpTransport();
 
 	protected void onStart() {
 	}

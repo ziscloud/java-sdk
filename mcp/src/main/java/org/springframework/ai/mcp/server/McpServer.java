@@ -28,6 +28,7 @@ import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
 import org.springframework.ai.mcp.spec.McpSchema.ResourceTemplate;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
 import org.springframework.ai.mcp.spec.McpTransport;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 import org.springframework.ai.mcp.util.Assert;
 
 /**
@@ -198,7 +199,7 @@ public interface McpServer {
 	 * @param transport The transport layer implementation for MCP communication
 	 * @return A new builder instance
 	 */
-	public static Builder using(McpTransport transport) {
+	public static Builder using(ServerMcpTransport transport) {
 		return new Builder(transport);
 	}
 
@@ -210,7 +211,7 @@ public interface McpServer {
 		private final static McpSchema.Implementation DEFAULT_SERVER_INFO = new McpSchema.Implementation("mcp-server",
 				"1.0.0");
 
-		private final McpTransport transport;
+		private final ServerMcpTransport transport;
 
 		private McpSchema.Implementation serverInfo = DEFAULT_SERVER_INFO;
 
@@ -247,7 +248,7 @@ public interface McpServer {
 
 		private List<Consumer<List<McpSchema.Root>>> rootsChangeConsumers = new ArrayList<>();
 
-		private Builder(McpTransport transport) {
+		private Builder(ServerMcpTransport transport) {
 			Assert.notNull(transport, "Transport must not be null");
 			this.transport = transport;
 		}

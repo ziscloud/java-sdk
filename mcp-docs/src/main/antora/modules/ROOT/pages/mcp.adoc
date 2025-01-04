@@ -31,7 +31,7 @@ Add the following dependency to your Maven project:
 
 == Architecture
 
-image::mcp-layers.svg[width=400,float=right]
+image::mcp-stack.svg[width=400,float=right]
 
 The SDK follows a layered architecture with clear separation of concerns:
 

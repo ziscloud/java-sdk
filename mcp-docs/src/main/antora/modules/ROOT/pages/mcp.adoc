@@ -31,13 +31,13 @@ Add the following dependency to your Maven project:
 
 == Architecture
 
+image::mcp-layers.svg[width=400,float=right]
+
 The SDK follows a layered architecture with clear separation of concerns:
 
-image::MCP-layers.svg[width=400,align=center]
-
-* *Transport Layer (McpTransport)*: Handles JSON-RPC message serialization/deserialization via StdioTransport (stdin/stdout) and SseTransport (HTTP streaming).
-* *Session Layer (McpSession)*: Manages communication patterns and state using DefaultMcpSession implementation.
 * *Client/Server Layer*: Both use McpSession for sync/async operations, with McpClient handling client-side protocol operations and McpServer managing server-side protocol operations.
+* *Session Layer (McpSession)*: Manages communication patterns and state using DefaultMcpSession implementation.
+* *Transport Layer (McpTransport)*: Handles JSON-RPC message serialization/deserialization via StdioTransport (stdin/stdout) and SseTransport (HTTP streaming).
 
 Following class diagram illustrates the layered architecture of the MCP SDK, showing the relationships between core interfaces (McpTransport, McpSession), their implementations, and the client/server components. It highlights how the transport layer connects to sessions, which in turn support both synchronous and asynchronous client/server implementations.
 

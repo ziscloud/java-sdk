@@ -30,9 +30,10 @@ import org.springframework.ai.mcp.spec.ClientMcpTransport;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCNotification;
 import org.springframework.ai.mcp.spec.McpSchema.JSONRPCRequest;
+import org.springframework.ai.mcp.spec.ServerMcpTransport;
 
 @SuppressWarnings("unused")
-public class MockMcpTransport implements ClientMcpTransport {
+public class MockMcpTransport implements ClientMcpTransport, ServerMcpTransport {
 
 	private final AtomicInteger inboundMessageCount = new AtomicInteger(0);
 

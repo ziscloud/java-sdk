@@ -40,7 +40,6 @@ import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.CallToolResult;
 import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
-import org.springframework.ai.mcp.spec.McpSchema.ListRootsResult;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingLevel;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingMessageNotification;
 import org.springframework.ai.mcp.spec.McpSchema.Tool;
@@ -251,28 +250,35 @@ public class McpAsyncServer {
 	private static TypeReference<McpSchema.ListRootsResult> LIST_ROOTS_RESULT_TYPE_REF = new TypeReference<>() {
 	};
 
+	/**
+	 * Retrieves the list of all roots provided by the client.
+	 * @return A Mono that emits the list of roots result.
+	 */
+	public Mono<McpSchema.ListRootsResult> listRoots() {
+		return this.listRoots(null);
+	}
+
+	/**
+	 * Retrieves a paginated list of roots provided by the server.
+	 * @param cursor Optional pagination cursor from a previous list request
+	 * @return A Mono that emits the list of roots result containing
+	 */
+	public Mono<McpSchema.ListRootsResult> listRoots(String cursor) {
+		return this.mcpSession.sendRequest(McpSchema.METHOD_ROOTS_LIST, new McpSchema.PaginatedRequest(cursor),
+				LIST_ROOTS_RESULT_TYPE_REF);
+	}
+
 	private NotificationHandler rootsListChnagedNotificationHandler(
 			List<Consumer<List<McpSchema.Root>>> rootsChangeConsumers) {
 
-		if (this.clientCapabilities != null && this.clientCapabilities.roots() != null) {
-
-			Mono<ListRootsResult> updatedRootsList = this.mcpSession.sendRequest(McpSchema.METHOD_ROOTS_LIST, null,
-					LIST_ROOTS_RESULT_TYPE_REF);
-
-			return params -> updatedRootsList // @formatter:off
-				.flatMap(listRootsResult -> 
-					Mono.fromRunnable(() -> 
-						rootsChangeConsumers.stream().forEach(consumer -> consumer.accept(listRootsResult.roots())))
-					.subscribeOn(Schedulers.boundedElastic())) // TODO: Check if this is needed
-				.onErrorResume(error -> {
-					logger.error("Error handling roots list change notification", error);
-					return Mono.empty();
-				})
-				.then(); // Convert to Mono<Void>
-				// @formatter:on
-		}
-
-		return params -> Mono.empty();
+		return params -> {
+			return listRoots().flatMap(listRootsResult -> Mono.fromRunnable(() -> {
+				rootsChangeConsumers.stream().forEach(consumer -> consumer.accept(listRootsResult.roots()));
+			}).subscribeOn(Schedulers.boundedElastic())).onErrorResume(error -> {
+				logger.error("Error handling roots list change notification", error);
+				return Mono.empty();
+			}).then();
+		};
 	};
 
 	// ---------------------------------------

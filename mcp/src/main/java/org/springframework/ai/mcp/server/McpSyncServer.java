@@ -19,6 +19,7 @@ package org.springframework.ai.mcp.server;
 import org.springframework.ai.mcp.server.McpServer.PromptRegistration;
 import org.springframework.ai.mcp.server.McpServer.ResourceRegistration;
 import org.springframework.ai.mcp.server.McpServer.ToolRegistration;
+import org.springframework.ai.mcp.spec.McpError;
 import org.springframework.ai.mcp.spec.McpSchema;
 import org.springframework.ai.mcp.spec.McpSchema.ClientCapabilities;
 import org.springframework.ai.mcp.spec.McpSchema.LoggingMessageNotification;
@@ -45,6 +46,23 @@ public class McpSyncServer {
 	public McpSyncServer(McpAsyncServer asyncServer) {
 		Assert.notNull(asyncServer, "Async server must not be null");
 		this.asyncServer = asyncServer;
+	}
+
+	/**
+	 * Retrieves the list of all roots provided by the client.
+	 * @return The list of roots
+	 */
+	public McpSchema.ListRootsResult listRoots() {
+		return this.listRoots(null);
+	}
+
+	/**
+	 * Retrieves a paginated list of roots provided by the server.
+	 * @param cursor Optional pagination cursor from a previous list request
+	 * @return The list of roots
+	 */
+	public McpSchema.ListRootsResult listRoots(String cursor) {
+		return this.asyncServer.listRoots(cursor).block();
 	}
 
 	/**

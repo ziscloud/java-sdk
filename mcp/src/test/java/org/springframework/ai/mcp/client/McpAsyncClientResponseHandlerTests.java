@@ -100,7 +100,8 @@ class McpAsyncClientResponseHandlerTests {
 
 		McpSchema.JSONRPCResponse response = (McpSchema.JSONRPCResponse) sentMessage;
 		assertThat(response.id()).isEqualTo("test-id");
-		assertThat(response.result()).isEqualTo(List.of(new Root("file:///test/path", "test-root")));
+		assertThat(response.result())
+			.isEqualTo(new McpSchema.ListRootsResult(List.of(new Root("file:///test/path", "test-root"))));
 		assertThat(response.error()).isNull();
 
 		asyncMcpClient.closeGracefully();

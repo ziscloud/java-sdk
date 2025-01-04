@@ -15,8 +15,10 @@
 */
 package org.springframework.ai.mcp.server;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,12 +39,14 @@ import org.springframework.ai.mcp.spec.McpSchema.CreateMessageRequest;
 import org.springframework.ai.mcp.spec.McpSchema.CreateMessageResult;
 import org.springframework.ai.mcp.spec.McpSchema.InitializeResult;
 import org.springframework.ai.mcp.spec.McpSchema.Role;
+import org.springframework.ai.mcp.spec.McpSchema.Root;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ReactorHttpHandlerAdapter;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 public class SseAsyncIntegrationTests {
 
@@ -154,6 +158,62 @@ public class SseAsyncIntegrationTests {
 			assertThat(result.model()).isEqualTo("MockModelName");
 			assertThat(result.stopReason()).isEqualTo(CreateMessageResult.StopReason.STOP_SEQUENCE);
 		}).verifyComplete();
+	}
+
+	// ---------------------------------------
+	// Roots Tests
+	// ---------------------------------------
+	@Test
+	void testRootsSuccess() {
+
+		List<Root> roots = List.of(new Root("uri1://", "root1"), new Root("uri2://", "root2"));
+
+		AtomicReference<List<Root>> rootsRef = new AtomicReference<>();
+		var mcpServer = McpServer.using(mcpServerTransport)
+			.rootsChangeConsumer(rootsUpdate -> rootsRef.set(rootsUpdate))
+			.sync();
+
+		// HttpHandler httpHandler =
+		// RouterFunctions.toHttpHandler(mcpServerTransport.getRouterFunction());
+		// ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);
+		// HttpServer httpServer = HttpServer.create().port(8080).handle(adapter);
+		// DisposableServer d = httpServer.bindNow();
+
+		var mcpClient = clientBuilder.capabilities(ClientCapabilities.builder().roots(true).build())
+			.roots(roots)
+			.sync();
+
+		InitializeResult initResult = mcpClient.initialize();
+		assertThat(initResult).isNotNull();
+
+		assertThat(rootsRef.get()).isNull();
+
+		assertThat(mcpServer.listRoots().roots()).containsAll(roots);
+
+		mcpClient.rootsListChangedNotification();
+
+		await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+			assertThat(rootsRef.get()).containsAll(roots);
+		});
+
+		// Remove a root
+		mcpClient.removeRoot(roots.get(0).uri());
+
+		await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+			assertThat(rootsRef.get()).containsAll(List.of(roots.get(1)));
+		});
+
+		// Add a new root
+		var root3 = new Root("uri3://", "root3");
+		mcpClient.addRoot(root3);
+
+		await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+			assertThat(rootsRef.get()).containsAll(List.of(roots.get(1), root3));
+		});
+
+		mcpClient.close();
+
+		mcpServer.close();
 	}
 
 }

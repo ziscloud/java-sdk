@@ -409,7 +409,7 @@ public class McpAsyncClient {
 
 			List<Root> roots = this.roots.values().stream().toList();
 
-			return Mono.just(roots);
+			return Mono.just(new McpSchema.ListRootsResult(roots));
 		};
 	}
 

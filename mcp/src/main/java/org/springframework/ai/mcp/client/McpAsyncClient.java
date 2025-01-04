@@ -150,13 +150,13 @@ public class McpAsyncClient {
 
 		this.transport = transport;
 
-		this.roots = !Utils.isEmpty(roots) ? new ConcurrentHashMap<>(roots) : new ConcurrentHashMap<>();
+		this.roots = roots != null ? new ConcurrentHashMap<>(roots) : new ConcurrentHashMap<>();
 
 		// Request Handlers
 		Map<String, RequestHandler> requestHanlers = new HashMap<>();
 
 		// Roots List Request Handler
-		if (!Utils.isEmpty(this.roots) && this.clientCapabilities.roots() != null) {
+		if (this.roots != null && this.clientCapabilities.roots() != null) {
 			requestHanlers.put(McpSchema.METHOD_ROOTS_LIST, rootsListRequestHandler());
 		}
 

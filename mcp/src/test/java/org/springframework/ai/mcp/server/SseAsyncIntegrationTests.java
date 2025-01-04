@@ -1,18 +1,18 @@
 /*
-* Copyright 2024 - 2024 the original author or authors.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* https://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2024 - 2024 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.ai.mcp.server;
 
 import java.time.Duration;
@@ -46,6 +46,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 public class SseAsyncIntegrationTests {
@@ -165,19 +166,12 @@ public class SseAsyncIntegrationTests {
 	// ---------------------------------------
 	@Test
 	void testRootsSuccess() {
-
 		List<Root> roots = List.of(new Root("uri1://", "root1"), new Root("uri2://", "root2"));
 
 		AtomicReference<List<Root>> rootsRef = new AtomicReference<>();
 		var mcpServer = McpServer.using(mcpServerTransport)
 			.rootsChangeConsumer(rootsUpdate -> rootsRef.set(rootsUpdate))
 			.sync();
-
-		// HttpHandler httpHandler =
-		// RouterFunctions.toHttpHandler(mcpServerTransport.getRouterFunction());
-		// ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);
-		// HttpServer httpServer = HttpServer.create().port(8080).handle(adapter);
-		// DisposableServer d = httpServer.bindNow();
 
 		var mcpClient = clientBuilder.capabilities(ClientCapabilities.builder().roots(true).build())
 			.roots(roots)
@@ -212,8 +206,112 @@ public class SseAsyncIntegrationTests {
 		});
 
 		mcpClient.close();
-
 		mcpServer.close();
+	}
+
+	@Test
+	void testRootsWithoutCapability() {
+		var mcpServer = McpServer.using(mcpServerTransport).rootsChangeConsumer(rootsUpdate -> {
+		}).sync();
+
+		// Create client without roots capability
+		var mcpClient = clientBuilder.capabilities(ClientCapabilities.builder().build()) // No
+																							// roots
+																							// capability
+			.sync();
+
+		InitializeResult initResult = mcpClient.initialize();
+		assertThat(initResult).isNotNull();
+
+		// Attempt to list roots should fail
+		assertThatThrownBy(() -> mcpServer.listRoots().roots()).isInstanceOf(McpError.class)
+			.hasMessage("Roots not supported");
+
+		mcpClient.close();
+		mcpServer.close();
+	}
+
+	@Test
+	void testRootsWithEmptyRootsList() {
+		AtomicReference<List<Root>> rootsRef = new AtomicReference<>();
+		var mcpServer = McpServer.using(mcpServerTransport)
+			.rootsChangeConsumer(rootsUpdate -> rootsRef.set(rootsUpdate))
+			.sync();
+
+		var mcpClient = clientBuilder.capabilities(ClientCapabilities.builder().roots(true).build())
+			.roots(List.of()) // Empty roots list
+			.sync();
+
+		InitializeResult initResult = mcpClient.initialize();
+		assertThat(initResult).isNotNull();
+
+		mcpClient.rootsListChangedNotification();
+
+		await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+			assertThat(rootsRef.get()).isEmpty();
+		});
+
+		mcpClient.close();
+		mcpServer.close();
+	}
+
+	@Test
+	void testRootsWithMultipleConsumers() {
+		List<Root> roots = List.of(new Root("uri1://", "root1"));
+
+		AtomicReference<List<Root>> rootsRef1 = new AtomicReference<>();
+		AtomicReference<List<Root>> rootsRef2 = new AtomicReference<>();
+
+		var mcpServer = McpServer.using(mcpServerTransport)
+			.rootsChangeConsumer(rootsUpdate -> rootsRef1.set(rootsUpdate))
+			.rootsChangeConsumer(rootsUpdate -> rootsRef2.set(rootsUpdate))
+			.sync();
+
+		var mcpClient = clientBuilder.capabilities(ClientCapabilities.builder().roots(true).build())
+			.roots(roots)
+			.sync();
+
+		InitializeResult initResult = mcpClient.initialize();
+		assertThat(initResult).isNotNull();
+
+		mcpClient.rootsListChangedNotification();
+
+		await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+			assertThat(rootsRef1.get()).containsAll(roots);
+			assertThat(rootsRef2.get()).containsAll(roots);
+		});
+
+		mcpClient.close();
+		mcpServer.close();
+	}
+
+	@Test
+	void testRootsServerCloseWithActiveSubscription() {
+		List<Root> roots = List.of(new Root("uri1://", "root1"));
+
+		AtomicReference<List<Root>> rootsRef = new AtomicReference<>();
+		var mcpServer = McpServer.using(mcpServerTransport)
+			.rootsChangeConsumer(rootsUpdate -> rootsRef.set(rootsUpdate))
+			.sync();
+
+		var mcpClient = clientBuilder.capabilities(ClientCapabilities.builder().roots(true).build())
+			.roots(roots)
+			.sync();
+
+		InitializeResult initResult = mcpClient.initialize();
+		assertThat(initResult).isNotNull();
+
+		mcpClient.rootsListChangedNotification();
+
+		await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+			assertThat(rootsRef.get()).containsAll(roots);
+		});
+
+		// Close server while subscription is active
+		mcpServer.close();
+
+		// Verify client can handle server closure gracefully
+		mcpClient.close();
 	}
 
 }

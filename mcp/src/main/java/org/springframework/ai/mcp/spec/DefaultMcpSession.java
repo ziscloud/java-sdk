@@ -128,9 +128,11 @@ public class DefaultMcpSession implements McpSession {
 		this.requestHandlers.putAll(requestHandlers);
 		this.notificationHandlers.putAll(notificationHandlers);
 
-		// TODO: consider mono.transformDeferredContextual where the Context contains the
+		// TODO: consider mono.transformDeferredContextual where the Context contains
+		// the
 		// Observation associated with the individual message - it can be used to
-		// create child Observation and emit it together with the message to the consumer
+		// create child Observation and emit it together with the message to the
+		// consumer
 		this.connection = this.transport.connect(mono -> mono.doOnNext(message -> {
 			if (message instanceof McpSchema.JSONRPCResponse response) {
 				logger.info("Received Response: {}", response);
@@ -169,9 +171,10 @@ public class DefaultMcpSession implements McpSession {
 		return Mono.defer(() -> {
 			var handler = this.requestHandlers.get(request.method());
 			if (handler == null) {
+				MethodNotFoundError error = getMethodNotFoundError(request.method());
 				return Mono.just(new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(), null,
 						new McpSchema.JSONRPCResponse.JSONRPCError(McpSchema.ErrorCodes.METHOD_NOT_FOUND,
-								"Method not found: " + request.method(), null)));
+								error.message(), error.data())));
 			}
 
 			return handler.handle(request.params())
@@ -181,6 +184,19 @@ public class DefaultMcpSession implements McpSession {
 								error.getMessage(), null)))); // TODO: add error message
 																// through the data field
 		});
+	}
+
+	record MethodNotFoundError(String method, String message, Object data) {
+	}
+
+	public static MethodNotFoundError getMethodNotFoundError(String method) {
+		switch (method) {
+			case McpSchema.METHOD_ROOTS_LIST:
+				return new MethodNotFoundError(method, "Roots not supported",
+						Map.of("reason", "Client does not have roots capability"));
+			default:
+				return new MethodNotFoundError(method, "Method not found: " + method, null);
+		}
 	}
 
 	/**

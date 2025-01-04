@@ -15,10 +15,23 @@
 */
 package org.springframework.ai.mcp.spec;
 
+import org.springframework.ai.mcp.spec.McpSchema.JSONRPCResponse.JSONRPCError;
+
 public class McpError extends RuntimeException {
+
+	private JSONRPCError jsonRpcError;
+
+	public McpError(JSONRPCError jsonRpcError) {
+		super(jsonRpcError.message());
+		this.jsonRpcError = jsonRpcError;
+	}
 
 	public McpError(Object error) {
 		super(error.toString());
+	}
+
+	public JSONRPCError getJsonRpcError() {
+		return jsonRpcError;
 	}
 
 }

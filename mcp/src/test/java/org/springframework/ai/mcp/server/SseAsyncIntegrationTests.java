@@ -322,12 +322,22 @@ public class SseAsyncIntegrationTests {
 	// ---------------------------------------
 	// Tools Tests
 	// ---------------------------------------
+
+	String emptyJsonSchema = """
+			{
+				"$schema": "http://json-schema.org/draft-07/schema#",
+				"type": "object",
+				"properties": {}
+			}
+			""";
+
 	@Test
+
 	void testToolCallSuccess() {
 
 		var callResponse = new McpSchema.CallToolResult(List.of(new McpSchema.TextContent("CALL RESPONSE")), null);
-		ToolRegistration tool1 = new ToolRegistration(
-				new McpSchema.Tool("tool1", "tool1 description", Map.of("city", "String")), request -> {
+		ToolRegistration tool1 = new ToolRegistration(new McpSchema.Tool("tool1", "tool1 description", emptyJsonSchema),
+				request -> {
 					// perform a blocking call to a remote service
 					String response = RestClient.create()
 						.get()
@@ -363,8 +373,8 @@ public class SseAsyncIntegrationTests {
 	void testToolListChangeHandlingSuccess() {
 
 		var callResponse = new McpSchema.CallToolResult(List.of(new McpSchema.TextContent("CALL RESPONSE")), null);
-		ToolRegistration tool1 = new ToolRegistration(
-				new McpSchema.Tool("tool1", "tool1 description", Map.of("city", "String")), request -> {
+		ToolRegistration tool1 = new ToolRegistration(new McpSchema.Tool("tool1", "tool1 description", emptyJsonSchema),
+				request -> {
 					// perform a blocking call to a remote service
 					String response = RestClient.create()
 						.get()
@@ -413,8 +423,8 @@ public class SseAsyncIntegrationTests {
 		});
 
 		// Add a new tool
-		ToolRegistration tool2 = new ToolRegistration(
-				new McpSchema.Tool("tool2", "tool2 description", Map.of("city", "String")), request -> callResponse);
+		ToolRegistration tool2 = new ToolRegistration(new McpSchema.Tool("tool2", "tool2 description", emptyJsonSchema),
+				request -> callResponse);
 
 		mcpServer.addTool(tool2);
 

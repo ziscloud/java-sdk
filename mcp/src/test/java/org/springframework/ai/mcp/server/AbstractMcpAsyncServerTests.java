@@ -18,7 +18,6 @@ package org.springframework.ai.mcp.server;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

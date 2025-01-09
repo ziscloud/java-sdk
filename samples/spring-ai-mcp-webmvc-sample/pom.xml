@@ -11,23 +11,22 @@
 	</parent>
 
     <groupId>org.springframework.experimental</groupId>
-    <artifactId>spring-ai-mcp-sample</artifactId>
+    <artifactId>spring-ai-mcp-webmvc-sample</artifactId>
     <version>0.5.0-SNAPSHOT</version>
 
-    <name>Spring AI MCP StdIO and WebFluxSSE Sample</name>
+    <name>Spring AI MCP Sample</name>
     <description>Sample Spring Boot application demonstrating MCP server usage</description>
 
     <properties>
-        <spring-ai-mcp.version>0.5.0-SNAPSHOT</spring-ai-mcp.version>
+        <spring-ai-mcp.version>0.5.0-SNAPSHOT</spring-ai-mcp.version>   
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.experimental</groupId>
-            <artifactId>mcp-webflux-sse-transport</artifactId>
+            <artifactId>mcp-webmvc-sse-transport</artifactId>
             <version>${spring-ai-mcp.version}</version>
         </dependency>
-        
         <dependency>
             <groupId>org.springframework.experimental</groupId>
             <artifactId>spring-ai-mcp</artifactId>
@@ -36,7 +35,7 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <dependency>
@@ -50,7 +49,7 @@
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>            
+                <artifactId>spring-boot-maven-plugin</artifactId>
                 <executions>
                     <execution>
                         <goals>

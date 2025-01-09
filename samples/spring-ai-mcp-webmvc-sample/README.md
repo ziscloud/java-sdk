@@ -56,7 +56,7 @@ var transport = new StdioClientTransport(stdioParams);
 var client = McpClient.using(transport).sync();
 ```
 
-### SSE Client (ClientWebFluxSse.java)
+### SSE Client (ClientSse.java)
 ```java
 var transport = new SseClientTransport(WebClient.builder().baseUrl("http://localhost:8080"));
 var client = McpClient.using(transport).sync();

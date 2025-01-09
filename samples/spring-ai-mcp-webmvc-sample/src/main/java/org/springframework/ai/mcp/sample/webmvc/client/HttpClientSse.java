@@ -13,15 +13,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.springframework.ai.mcp.sample.client;
+package org.springframework.ai.mcp.sample.webmvc.client;
 
 import org.springframework.ai.mcp.client.transport.HttpClientSseClientTransport;
 
 /**
  * @author Christian Tzolov
  */
-
-public class ClientSse2 {
+public class HttpClientSse {
 
 	public static void main(String[] args) {
 		var transport = new HttpClientSseClientTransport("http://localhost:8080");

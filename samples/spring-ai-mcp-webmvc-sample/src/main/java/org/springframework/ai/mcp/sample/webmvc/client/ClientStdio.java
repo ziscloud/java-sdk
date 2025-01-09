@@ -13,19 +13,25 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.springframework.ai.mcp.sample.client;
+package org.springframework.ai.mcp.sample.webmvc.client;
 
-import org.springframework.ai.mcp.client.transport.WebFluxSseClientTransport;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.ai.mcp.client.transport.ServerParameters;
+import org.springframework.ai.mcp.client.transport.StdioClientTransport;
 
 /**
- * @author Christian Tzolov
+ * With stdio transport, the MCP server is automatically started by the client. But you
+ * have to build the server jar first: <pre>./mvnw clean install -DskipTests</pre>
  */
-
-public class ClientSse {
+public class ClientStdio {
 
 	public static void main(String[] args) {
-		var transport = new WebFluxSseClientTransport(WebClient.builder().baseUrl("http://localhost:8080"));
+
+		var stdioParams = ServerParameters.builder("java")
+			.args("-Dtransport.mode=stdio", "-jar",
+					"spring-ai-mcp-webmvc-sample/target/spring-ai-mcp-webmvc-sample-0.5.0-SNAPSHOT.jar")
+			.build();
+
+		var transport = new StdioClientTransport(stdioParams);
 
 		new SampleClient(transport).run();
 	}

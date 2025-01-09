@@ -13,9 +13,10 @@
 
     <!-- Client packages -->
     <logger name="org.springframework.ai.mcp.client" level="INFO"/>
-
+    
     <!-- Spec package -->
     <logger name="org.springframework.ai.mcp.spec" level="INFO"/>
+
 
     <!-- Root logger -->
     <root level="INFO">

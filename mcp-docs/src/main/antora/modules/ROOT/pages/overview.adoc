@@ -161,8 +161,8 @@ Explore these MCP examples in the link:https://github.com/spring-projects/spring
 * link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/sqlite/chatbot[SQLite Chatbot] - Interactive chatbot with SQLite database interaction
 * link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/filesystem[Filesystem] - Enables LLM interaction with local filesystem folders and files
 * link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/brave[Brave] - Enables natural language interactions with Brave Search
-* link:https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/samples/spring-ai-mcp-sample[Spring-ai-mcp-sample] - Showcases MCP servers and clients with different transport modes and capabilities
 * link:https://github.com/habuma/spring-ai-examples/tree/main/spring-ai-mcp[Theme Park API Example] - Shows how to create an MCP server and client with Spring AI, exposing Theme Park API tools
+* link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webflux-server[WebFlux SSE Client + Server sample] - Showcases how to create and use MCP WebFlux servers and clients with different capabilities
 * link:https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webmvc-server[Http SSE Client + WebMvc SSE Server sample] - Showcases how to create and use MCP WebMvc servers and HttpClient clients with different capabilities
 
 

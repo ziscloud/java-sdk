@@ -18,10 +18,7 @@ package org.springframework.ai.mcp.server.transport;
 
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -39,6 +36,7 @@ import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.RouterFunctions;
 import org.springframework.web.servlet.function.ServerRequest;
 import org.springframework.web.servlet.function.ServerResponse;
+import org.springframework.web.servlet.function.ServerResponse.SseBuilder;
 
 /**
  * Server-side implementation of the MCP HTTP with SSE transport specification using
@@ -122,11 +120,11 @@ public class WebMvcSseServerTransport implements ServerMcpTransport {
 
 				sessions.values().forEach(session -> {
 					try {
-						var event = new SSEEvent(session.id, MESSAGE_EVENT_TYPE, jsonText);
-						session.queue.put(event);
+						session.sseBuilder.id(session.id).event(MESSAGE_EVENT_TYPE).data(jsonText);
 					}
 					catch (Exception e) {
 						logger.error("Failed to send message to session {}: {}", session.id, e.getMessage());
+						session.sseBuilder.error(e);
 					}
 				});
 			}
@@ -147,27 +145,20 @@ public class WebMvcSseServerTransport implements ServerMcpTransport {
 		String sessionId = UUID.randomUUID().toString();
 		logger.debug("Creating new SSE connection for session: {}", sessionId);
 
-		ClientSession session = new ClientSession(sessionId);
-		this.sessions.put(sessionId, session);
-
 		// Send initial endpoint event
 		try {
-			session.queue.put(new SSEEvent(session.id, ENDPOINT_EVENT_TYPE, messageEndpoint));
 			return ServerResponse.sse(sseBuilder -> {
-				// new Thread(() -> {
-				while (!this.isClosing) {
-					try {
-						SSEEvent sseEvent = session.queue.poll(100, TimeUnit.MILLISECONDS);
-						if (sseEvent != null) {
-							sseBuilder.id(sseEvent.id).event(sseEvent.type()).data(sseEvent.data());
-						}
-					}
-					catch (Exception e) {
-						logger.error("Failed to poll event from session queue: {}", e.getMessage());
-						sseBuilder.error(e);
-					}
+
+				ClientSession session = new ClientSession(sessionId, sseBuilder);
+				this.sessions.put(sessionId, session);
+
+				try {
+					session.sseBuilder.id(session.id).event(ENDPOINT_EVENT_TYPE).data(messageEndpoint);
 				}
-				// }).start();
+				catch (Exception e) {
+					logger.error("Failed to poll event from session queue: {}", e.getMessage());
+					sseBuilder.error(e);
+				}
 			});
 		}
 		catch (Exception e) {
@@ -205,9 +196,6 @@ public class WebMvcSseServerTransport implements ServerMcpTransport {
 		}
 	}
 
-	record SSEEvent(String id, String type, String data) {
-	}
-
 	/**
 	 * Represents an active client session.
 	 */
@@ -215,22 +203,23 @@ public class WebMvcSseServerTransport implements ServerMcpTransport {
 
 		private final String id;
 
-		private final BlockingQueue<SSEEvent> queue;
+		private final SseBuilder sseBuilder;
 
-		ClientSession(String id) {
+		ClientSession(String id, SseBuilder sseBuilder) {
 			this.id = id;
-			this.queue = new LinkedBlockingQueue<>();
+			this.sseBuilder = sseBuilder;
 			logger.debug("Session {} initialized with SSE emitter", id);
 		}
 
 		void close() {
 			logger.debug("Closing session: {}", id);
 			try {
-				queue.remove();
+				sseBuilder.complete();
 				logger.debug("Successfully completed SSE emitter for session {}", id);
 			}
 			catch (Exception e) {
 				logger.warn("Failed to complete SSE emitter for session {}: {}", id, e.getMessage());
+				// sseBuilder.error(e);
 			}
 		}
 

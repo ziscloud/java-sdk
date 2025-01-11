@@ -69,6 +69,7 @@ Explore these MCP examples in the [spring-ai-examples/model-context-protocol](ht
 - [Filesystem](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/filesystem) - Enables LLM interaction with local filesystem folders and files
 - [Brave](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/brave) - Enables natural language interactions with Brave Search, allowing you to perform internet searches.
 - [Spring-ai-mcp-sample](./samples/spring-ai-mcp-sample/) - Showcases how to create and use MCP servers and clients with different transport modes and capabilities.
+- [Http SSE Client + WebMvc SSE Server sample](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webmvc-server) - Showcases how to create and use MCP WebMvc servers and HttpClient clients with different capabilities.
 ## Documentation
 
 - [Java MCP SDK documentation](mcp/README.md)

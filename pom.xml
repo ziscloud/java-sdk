@@ -106,7 +106,6 @@
 		<module>spring-ai-mcp</module>
 		<module>mcp-docs</module>
 		<module>mcp-test</module>
-		<!-- <module>samples/spring-ai-mcp-webmvc-sample</module> -->
 	</modules>
 
 	<build>

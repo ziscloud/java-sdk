@@ -19,7 +19,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,23 +26,101 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
+ * A Server-Sent Events (SSE) client implementation using Java's Flow API for reactive
+ * stream processing. This client establishes a connection to an SSE endpoint and
+ * processes the incoming event stream, parsing SSE-formatted messages into structured
+ * events.
+ *
+ * <p>
+ * The client supports standard SSE event fields including:
+ * <ul>
+ * <li>event - The event type (defaults to "message" if not specified)</li>
+ * <li>id - The event ID</li>
+ * <li>data - The event payload data</li>
+ * </ul>
+ *
+ * <p>
+ * Events are delivered to a provided {@link SseEventHandler} which can process events and
+ * handle any errors that occur during the connection.
+ *
  * @author Christian Tzolov
+ * @see SseEventHandler
+ * @see SseEvent
  */
 public class FlowSseClient {
 
 	private final HttpClient httpClient;
 
+	/**
+	 * Pattern to extract the data content from SSE data field lines. Matches lines
+	 * starting with "data:" and captures the remaining content.
+	 */
 	private static final Pattern EVENT_DATA_PATTERN = Pattern.compile("^data:(.+)$", Pattern.MULTILINE);
 
+	/**
+	 * Pattern to extract the event ID from SSE id field lines. Matches lines starting
+	 * with "id:" and captures the ID value.
+	 */
 	private static final Pattern EVENT_ID_PATTERN = Pattern.compile("^id:(.+)$", Pattern.MULTILINE);
 
+	/**
+	 * Pattern to extract the event type from SSE event field lines. Matches lines
+	 * starting with "event:" and captures the event type.
+	 */
 	private static final Pattern EVENT_TYPE_PATTERN = Pattern.compile("^event:(.+)$", Pattern.MULTILINE);
 
+	/**
+	 * Record class representing a Server-Sent Event with its standard fields.
+	 *
+	 * @param id the event ID (may be null)
+	 * @param type the event type (defaults to "message" if not specified in the stream)
+	 * @param data the event payload data
+	 */
+	public static record SseEvent(String id, String type, String data) {
+	}
+
+	/**
+	 * Interface for handling SSE events and errors. Implementations can process received
+	 * events and handle any errors that occur during the SSE connection.
+	 */
+	public interface SseEventHandler {
+
+		/**
+		 * Called when an SSE event is received.
+		 * @param event the received SSE event containing id, type, and data
+		 */
+		void onEvent(SseEvent event);
+
+		/**
+		 * Called when an error occurs during the SSE connection.
+		 * @param error the error that occurred
+		 */
+		void onError(Throwable error);
+
+	}
+
+	/**
+	 * Creates a new FlowSseClient with the specified HTTP client.
+	 * @param httpClient the {@link HttpClient} instance to use for SSE connections
+	 */
 	public FlowSseClient(HttpClient httpClient) {
 		this.httpClient = httpClient;
 	}
 
-	public void subscribe(String url, SSEEventHandler eventHandler) {
+	/**
+	 * Subscribes to an SSE endpoint and processes the event stream.
+	 *
+	 * <p>
+	 * This method establishes a connection to the specified URL and begins processing the
+	 * SSE stream. Events are parsed and delivered to the provided event handler. The
+	 * connection remains active until either an error occurs or the server closes the
+	 * connection.
+	 * @param url the SSE endpoint URL to connect to
+	 * @param eventHandler the handler that will receive SSE events and error
+	 * notifications
+	 * @throws RuntimeException if the connection fails with a non-200 status code
+	 */
+	public void subscribe(String url, SseEventHandler eventHandler) {
 		HttpRequest request = HttpRequest.newBuilder()
 			.uri(URI.create(url))
 			.header("Accept", "text/event-stream")
@@ -70,7 +147,7 @@ public class FlowSseClient {
 					// Empty line means end of event
 					if (eventBuilder.length() > 0) {
 						String eventData = eventBuilder.toString();
-						SSEEvent event = new SSEEvent(currentEventId.get(), currentEventType.get(), eventData.trim());
+						SseEvent event = new SseEvent(currentEventId.get(), currentEventType.get(), eventData.trim());
 						eventHandler.onEvent(event);
 						eventBuilder.setLength(0);
 					}
@@ -108,7 +185,7 @@ public class FlowSseClient {
 				// Handle any remaining event data
 				if (eventBuilder.length() > 0) {
 					String eventData = eventBuilder.toString();
-					SSEEvent event = new SSEEvent(currentEventId.get(), currentEventType.get(), eventData.trim());
+					SseEvent event = new SseEvent(currentEventId.get(), currentEventType.get(), eventData.trim());
 					eventHandler.onEvent(event);
 				}
 			}
@@ -130,73 +207,30 @@ public class FlowSseClient {
 		});
 	}
 
-	// Event handler interface
-	public interface SSEEventHandler {
+	// public static void main(String[] args) {
 
-		void onEvent(SSEEvent event);
+	// FlowSseClient sseClient = new FlowSseClient(
+	// HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
 
-		void onError(Throwable error);
+	// var eventHandler = new SSEEventHandler() {
+	// @Override
+	// public void onEvent(SSEEvent event) {
+	// System.out.println("Received event: " + event);
+	// }
 
-	}
+	// @Override
+	// public void onError(Throwable error) {
+	// System.out.println("Error: " + error);
+	// }
+	// };
+	// sseClient.subscribe("http://localhost:8080/sse", eventHandler);
 
-	// SSE Event class
-	public static class SSEEvent {
-
-		private final String id;
-
-		private final String type;
-
-		private final String data;
-
-		public SSEEvent(String id, String type, String data) {
-			this.id = id;
-			this.type = type;
-			this.data = data;
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public String getType() {
-			return type;
-		}
-
-		public String getData() {
-			return data;
-		}
-
-		@Override
-		public String toString() {
-			return "SSEEvent{" + "id='" + id + '\'' + ", type='" + type + '\'' + ", data='" + data + '\'' + '}';
-		}
-
-	}
-
-	public static void main(String[] args) {
-
-		FlowSseClient sseClient = new FlowSseClient(
-				HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
-
-		var eventHandler = new SSEEventHandler() {
-			@Override
-			public void onEvent(SSEEvent event) {
-				System.out.println("Received event: " + event);
-			}
-
-			@Override
-			public void onError(Throwable error) {
-				System.out.println("Error: " + error);
-			}
-		};
-		sseClient.subscribe("http://localhost:8080/sse", eventHandler);
-
-		try {
-			Thread.sleep(100000);
-		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
+	// try {
+	// Thread.sleep(100000);
+	// }
+	// catch (InterruptedException e) {
+	// e.printStackTrace();
+	// }
+	// }
 
 }

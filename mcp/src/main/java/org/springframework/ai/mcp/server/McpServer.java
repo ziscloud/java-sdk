@@ -190,7 +190,7 @@ public interface McpServer {
 	 * @param promptHandler The function that processes prompt requests and returns
 	 * formatted templates
 	 */
-	public static record PromptRegistration(McpSchema.Prompt propmpt,
+	public static record PromptRegistration(McpSchema.Prompt prompt,
 			Function<McpSchema.GetPromptRequest, McpSchema.GetPromptResult> promptHandler) {
 	}
 
@@ -498,7 +498,7 @@ public interface McpServer {
 		 */
 		public Builder prompts(List<PromptRegistration> prompts) {
 			for (PromptRegistration prompt : prompts) {
-				this.prompts.put(prompt.propmpt().name(), prompt);
+				this.prompts.put(prompt.prompt().name(), prompt);
 			}
 			return this;
 		}
@@ -521,7 +521,7 @@ public interface McpServer {
 		 */
 		public Builder prompts(PromptRegistration... prompts) {
 			for (PromptRegistration prompt : prompts) {
-				this.prompts.put(prompt.propmpt().name(), prompt);
+				this.prompts.put(prompt.prompt().name(), prompt);
 			}
 			return this;
 		}

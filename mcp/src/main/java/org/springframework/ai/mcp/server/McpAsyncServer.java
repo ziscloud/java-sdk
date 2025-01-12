@@ -487,14 +487,14 @@ public class McpAsyncServer {
 			return Mono.error(new McpError("Server must be configured with prompt capabilities"));
 		}
 
-		if (this.prompts.containsKey(promptRegistration.propmpt().name())) {
+		if (this.prompts.containsKey(promptRegistration.prompt().name())) {
 			return Mono
-				.error(new McpError("Prompt with name '" + promptRegistration.propmpt().name() + "' already exists"));
+				.error(new McpError("Prompt with name '" + promptRegistration.prompt().name() + "' already exists"));
 		}
 
-		this.prompts.put(promptRegistration.propmpt().name(), promptRegistration);
+		this.prompts.put(promptRegistration.prompt().name(), promptRegistration);
 
-		logger.info("Added prompt handler: {}", promptRegistration.propmpt().name());
+		logger.info("Added prompt handler: {}", promptRegistration.prompt().name());
 
 		// Servers that declared the listChanged capability SHOULD send a notification,
 		// when the list of available prompts changes
@@ -546,7 +546,7 @@ public class McpAsyncServer {
 			// new TypeReference<McpSchema.PaginatedRequest>() {
 			// });
 
-			var promptList = this.prompts.values().stream().map(PromptRegistration::propmpt).toList();
+			var promptList = this.prompts.values().stream().map(PromptRegistration::prompt).toList();
 
 			return Mono.just(new McpSchema.ListPromptsResult(promptList, null));
 		};

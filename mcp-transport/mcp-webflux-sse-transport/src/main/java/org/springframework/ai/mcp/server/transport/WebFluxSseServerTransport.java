@@ -28,10 +28,37 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 /**
- * Server-side implementation of the MCP HTTP with SSE transport specification. Provides
- * endpoints for SSE connections and message handling.
+ * Server-side implementation of the MCP (Model Context Protocol) HTTP transport using
+ * Server-Sent Events (SSE). This implementation provides a bidirectional communication
+ * channel between MCP clients and servers using HTTP POST for client-to-server messages
+ * and SSE for server-to-client messages.
+ *
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Implements the {@link ServerMcpTransport} interface for MCP server transport
+ * functionality</li>
+ * <li>Uses WebFlux for non-blocking request handling and SSE support</li>
+ * <li>Maintains client sessions for reliable message delivery</li>
+ * <li>Supports graceful shutdown with session cleanup</li>
+ * <li>Thread-safe message broadcasting to multiple clients</li>
+ * </ul>
+ *
+ * <p>
+ * The transport sets up two main endpoints:
+ * <ul>
+ * <li>SSE endpoint (/sse) - For establishing SSE connections with clients</li>
+ * <li>Message endpoint (configurable) - For receiving JSON-RPC messages from clients</li>
+ * </ul>
+ *
+ * <p>
+ * This implementation is thread-safe and can handle multiple concurrent client
+ * connections. It uses {@link ConcurrentHashMap} for session management and Reactor's
+ * {@link Sinks} for thread-safe message broadcasting.
  *
  * @author Christian Tzolov
+ * @see ServerMcpTransport
+ * @see ServerSentEvent
  */
 public class WebFluxSseServerTransport implements ServerMcpTransport {
 
@@ -71,9 +98,13 @@ public class WebFluxSseServerTransport implements ServerMcpTransport {
 	private Function<Mono<McpSchema.JSONRPCMessage>, Mono<McpSchema.JSONRPCMessage>> connectHandler;
 
 	/**
-	 * Constructs a new SseServerTransport.
+	 * Constructs a new WebFlux SSE server transport instance.
 	 * @param objectMapper The ObjectMapper to use for JSON serialization/deserialization
-	 * @param messageEndpoint The endpoint URI where clients should send messages
+	 * of MCP messages. Must not be null.
+	 * @param messageEndpoint The endpoint URI where clients should send their JSON-RPC
+	 * messages. This endpoint will be communicated to clients during SSE connection
+	 * setup. Must not be null.
+	 * @throws IllegalArgumentException if either parameter is null
 	 */
 	public WebFluxSseServerTransport(ObjectMapper objectMapper, String messageEndpoint) {
 		Assert.notNull(objectMapper, "ObjectMapper must not be null");
@@ -87,6 +118,16 @@ public class WebFluxSseServerTransport implements ServerMcpTransport {
 			.build();
 	}
 
+	/**
+	 * Configures the message handler for this transport. In the WebFlux SSE
+	 * implementation, this method stores the handler for processing incoming messages but
+	 * doesn't establish any connections since the server accepts connections rather than
+	 * initiating them.
+	 * @param handler A function that processes incoming JSON-RPC messages and returns
+	 * responses. This handler will be called for each message received through the
+	 * message endpoint.
+	 * @return An empty Mono since the server doesn't initiate connections
+	 */
 	@Override
 	public Mono<Void> connect(Function<Mono<McpSchema.JSONRPCMessage>, Mono<McpSchema.JSONRPCMessage>> handler) {
 		this.connectHandler = handler;
@@ -94,6 +135,23 @@ public class WebFluxSseServerTransport implements ServerMcpTransport {
 		return Mono.empty().then();
 	}
 
+	/**
+	 * Broadcasts a JSON-RPC message to all connected clients through their SSE
+	 * connections. The message is serialized to JSON and sent as a server-sent event to
+	 * each active session.
+	 *
+	 * <p>
+	 * The method:
+	 * <ul>
+	 * <li>Serializes the message to JSON</li>
+	 * <li>Creates a server-sent event with the message data</li>
+	 * <li>Attempts to send the event to all active sessions</li>
+	 * <li>Tracks and reports any delivery failures</li>
+	 * </ul>
+	 * @param message The JSON-RPC message to broadcast
+	 * @return A Mono that completes when the message has been sent to all sessions, or
+	 * errors if any session fails to receive the message
+	 */
 	@Override
 	public Mono<Void> sendMessage(McpSchema.JSONRPCMessage message) {
 		if (sessions.isEmpty()) {
@@ -133,11 +191,35 @@ public class WebFluxSseServerTransport implements ServerMcpTransport {
 		});
 	}
 
+	/**
+	 * Converts data from one type to another using the configured ObjectMapper. This
+	 * method is primarily used for converting between different representations of
+	 * JSON-RPC message data.
+	 * @param <T> The target type to convert to
+	 * @param data The source data to convert
+	 * @param typeRef Type reference describing the target type
+	 * @return The converted data
+	 * @throws IllegalArgumentException if the conversion fails
+	 */
 	@Override
 	public <T> T unmarshalFrom(Object data, TypeReference<T> typeRef) {
 		return this.objectMapper.convertValue(data, typeRef);
 	}
 
+	/**
+	 * Initiates a graceful shutdown of the transport. This method ensures all active
+	 * sessions are properly closed and cleaned up.
+	 *
+	 * <p>
+	 * The shutdown process:
+	 * <ul>
+	 * <li>Marks the transport as closing to prevent new connections</li>
+	 * <li>Closes each active session</li>
+	 * <li>Removes closed sessions from the sessions map</li>
+	 * <li>Times out after 5 seconds if shutdown takes too long</li>
+	 * </ul>
+	 * @return A Mono that completes when all sessions have been closed
+	 */
 	@Override
 	public Mono<Void> closeGracefully() {
 		return Mono.fromRunnable(() -> {
@@ -155,14 +237,36 @@ public class WebFluxSseServerTransport implements ServerMcpTransport {
 	}
 
 	/**
-	 * Get the router function for configuring the web server.
+	 * Returns the WebFlux router function that defines the transport's HTTP endpoints.
+	 * This router function should be integrated into the application's web configuration.
+	 *
+	 * <p>
+	 * The router function defines two endpoints:
+	 * <ul>
+	 * <li>GET {SSE_ENDPOINT} - For establishing SSE connections</li>
+	 * <li>POST {messageEndpoint} - For receiving client messages</li>
+	 * </ul>
+	 * @return The configured {@link RouterFunction} for handling HTTP requests
 	 */
 	public RouterFunction<?> getRouterFunction() {
 		return this.routerFunction;
 	}
 
 	/**
-	 * Handles new SSE connection requests from clients.
+	 * Handles new SSE connection requests from clients. Creates a new session for each
+	 * connection and sets up the SSE event stream.
+	 *
+	 * <p>
+	 * The handler performs the following steps:
+	 * <ul>
+	 * <li>Generates a unique session ID</li>
+	 * <li>Creates a new ClientSession instance</li>
+	 * <li>Sends the message endpoint URI as an initial event</li>
+	 * <li>Sets up message forwarding for the session</li>
+	 * <li>Handles connection cleanup on completion or errors</li>
+	 * </ul>
+	 * @param request The incoming server request
+	 * @return A response with the SSE event stream
 	 */
 	private Mono<ServerResponse> handleSseConnection(ServerRequest request) {
 		if (isClosing) {
@@ -208,7 +312,19 @@ public class WebFluxSseServerTransport implements ServerMcpTransport {
 	}
 
 	/**
-	 * Handles incoming messages from clients.
+	 * Handles incoming JSON-RPC messages from clients. Deserializes the message and
+	 * processes it through the configured message handler.
+	 *
+	 * <p>
+	 * The handler:
+	 * <ul>
+	 * <li>Deserializes the incoming JSON-RPC message</li>
+	 * <li>Passes it through the message handler chain</li>
+	 * <li>Returns appropriate HTTP responses based on processing results</li>
+	 * <li>Handles various error conditions with appropriate error responses</li>
+	 * </ul>
+	 * @param request The incoming server request containing the JSON-RPC message
+	 * @return A response indicating the message processing result
 	 */
 	private Mono<ServerResponse> handleMessage(ServerRequest request) {
 		if (isClosing) {
@@ -239,7 +355,16 @@ public class WebFluxSseServerTransport implements ServerMcpTransport {
 	}
 
 	/**
-	 * Represents an active client session.
+	 * Represents an active client SSE connection session. Manages the message sink for
+	 * sending events to the client and handles session lifecycle.
+	 *
+	 * <p>
+	 * Each session:
+	 * <ul>
+	 * <li>Has a unique identifier</li>
+	 * <li>Maintains its own message sink for event broadcasting</li>
+	 * <li>Supports clean shutdown through the close method</li>
+	 * </ul>
 	 */
 	private static class ClientSession {
 

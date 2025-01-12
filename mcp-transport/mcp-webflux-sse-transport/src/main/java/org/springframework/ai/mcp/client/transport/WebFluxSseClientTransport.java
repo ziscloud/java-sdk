@@ -61,10 +61,9 @@ import org.springframework.web.reactive.function.client.WebClient;
  * <li>The client establishes an SSE connection to the server's /sse endpoint</li>
  * <li>The server sends an 'endpoint' event containing the URI for sending messages</li>
  * </ol>
- * 
- * This implementation handles automatic reconnection for transient failures and provides
- * graceful shutdown capabilities. It uses {@link WebClient} for HTTP communications and
- * supports JSON serialization/deserialization of messages.
+ *
+ * This implementation uses {@link WebClient} for HTTP communications and supports JSON
+ * serialization/deserialization of messages.
  *
  * @author Christian Tzolov
  * @see <a href=
@@ -157,6 +156,28 @@ public class WebFluxSseClientTransport implements ClientMcpTransport {
 		this.webClient = webClientBuilder.build();
 	}
 
+	/**
+	 * Establishes a connection to the MCP server using Server-Sent Events (SSE). This
+	 * method initiates the SSE connection and sets up the message processing pipeline.
+	 *
+	 * <p>
+	 * The connection process follows these steps:
+	 * <ol>
+	 * <li>Establishes an SSE connection to the server's /sse endpoint</li>
+	 * <li>Waits for the server to send an 'endpoint' event with the message posting
+	 * URI</li>
+	 * <li>Sets up message handling for incoming JSON-RPC messages</li>
+	 * </ol>
+	 *
+	 * <p>
+	 * The connection is considered established only after receiving the endpoint event
+	 * from the server.
+	 * @param handler a function that processes incoming JSON-RPC messages and returns
+	 * responses
+	 * @return a Mono that completes when the connection is fully established
+	 * @throws McpError if there's an error processing SSE events or if an unrecognized
+	 * event type is received
+	 */
 	@Override
 	public Mono<Void> connect(Function<Mono<JSONRPCMessage>, Mono<JSONRPCMessage>> handler) {
 		Flux<ServerSentEvent<String>> events = eventStream();
@@ -190,6 +211,18 @@ public class WebFluxSseClientTransport implements ClientMcpTransport {
 		return messageEndpointSink.asMono().then();
 	}
 
+	/**
+	 * Sends a JSON-RPC message to the server using the endpoint provided during
+	 * connection.
+	 *
+	 * <p>
+	 * Messages are sent via HTTP POST requests to the server-provided endpoint URI. The
+	 * message is serialized to JSON before transmission. If the transport is in the
+	 * process of closing, the message send operation is skipped gracefully.
+	 * @param message the JSON-RPC message to send
+	 * @return a Mono that completes when the message has been sent successfully
+	 * @throws RuntimeException if message serialization fails
+	 */
 	@Override
 	public Mono<Void> sendMessage(JSONRPCMessage message) {
 		// The messageEndpoint is the endpoint URI to send the messages
@@ -281,6 +314,20 @@ public class WebFluxSseClientTransport implements ClientMcpTransport {
 		.subscribeOn(Schedulers.boundedElastic());
 	} // @formatter:on
 
+	/**
+	 * Unmarshals data from a generic Object into the specified type using the configured
+	 * ObjectMapper.
+	 *
+	 * <p>
+	 * This method is particularly useful when working with JSON-RPC parameters or result
+	 * objects that need to be converted to specific Java types. It leverages Jackson's
+	 * type conversion capabilities to handle complex object structures.
+	 * @param <T> the target type to convert the data into
+	 * @param data the source object to convert
+	 * @param typeRef the TypeReference describing the target type
+	 * @return the unmarshaled object of type T
+	 * @throws IllegalArgumentException if the conversion cannot be performed
+	 */
 	@Override
 	public <T> T unmarshalFrom(Object data, TypeReference<T> typeRef) {
 		return this.objectMapper.convertValue(data, typeRef);

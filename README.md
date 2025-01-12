@@ -1,5 +1,7 @@
 # Java & Spring MCP
 
+[![Build Status](https://github.com/spring-projects-experimental/spring-ai-mcp/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/spring-projects-experimental/spring-ai-mcp/actions/workflows/continuous-integration.yml)
+
 Set of projects that provide Java SDK and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). 
 It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
 

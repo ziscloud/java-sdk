@@ -13,7 +13,17 @@ Java implementation of the Model Context Protocol specification. It includes:
 - Synchronous and asynchronous [MCP Client](https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/README.md#client-usage-examples) and [MCP Server](https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/README.md#server-usage-examples) implementations
 - Standard MCP operations support (tool discovery, resource management, prompt handling, structured logging). Support for request and notification handling.
 - [Stdio](https://spec.modelcontextprotocol.io/specification/basic/transports/#stdio) and [SSE](https://spec.modelcontextprotocol.io/specification/basic/transports/#http-with-sse) transport implementations. 
-- [Find more](./mcp/README.md).
+
+### MCP Transports
+
+#### Core Transports
+- Stdio-based (`StdioClientTransport`, `StdioServerTransport`) for process-based communication
+- Java HttpClient-based SSE client (`HttpClientSseClientTransport`) for HTTP streaming
+
+#### Optional SSE Transports
+- [WebFlux SSE Transport](https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/mcp-transport/mcp-webflux-sse-transport) - Reactive HTTP streaming with Spring WebFlux (Client & Server)
+- [WebMvc SSE Transport](https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/mcp-transport/mcp-webmvc-sse-transport) - Servlet-based HTTP streaming (Server only). 
+Use the core `HttpClientSseClientTransport` for SSE clients.
 
 ### [Spring AI MCP](https://docs.spring.io/spring-ai-mcp/reference/spring-mcp.html)
 
@@ -28,14 +38,28 @@ The Spring integration module provides Spring-specific functionality:
 Add the following dependencies to your Maven project:
 
 ```xml
-<!-- For core MCP functionality -->
+<!-- Core MCP -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>mcp</artifactId>
     <version>0.5.0-SNAPSHOT</version>
 </dependency>
 
-<!-- For Spring AI integration -->
+<!-- Optional: WebFlux SSE transport -->
+<dependency>
+    <groupId>org.springframework.experimental</groupId>
+    <artifactId>mcp-webflux-sse-transport</artifactId>
+    <version>0.5.0-SNAPSHOT</version>
+</dependency>
+
+<!-- Optional: WebMVC SSE transport -->
+<dependency>
+    <groupId>org.springframework.experimental</groupId>
+    <artifactId>mcp-webmvc-sse-transport</artifactId>
+    <version>0.5.0-SNAPSHOT</version>
+</dependency>
+
+<!-- Optional: Spring AI integration -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>spring-ai-mcp</artifactId>
@@ -48,14 +72,14 @@ Add this repository to your POM:
 
 ```xml
 <repositories>
-  <repository>
-    <id>spring-milestones</id>
-    <name>Spring Milestones</name>
-    <url>https://repo.spring.io/libs-milestone-local</url>
-    <snapshots>
-      <enabled>false</enabled>
-    </snapshots>
-  </repository>
+    <repository>
+        <id>spring-milestones</id>
+        <name>Spring Milestones</name>
+        <url>https://repo.spring.io/milestone</url>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+    </repository>
 </repositories>
 ```
 

@@ -3,7 +3,7 @@
 Set of projects that provide Java SDK and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). 
 It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
 
-<img src="mcp-docs/src/main/antora/modules/ROOT/images/spring-ai-mcp-architecture.jpg" width="600">
+<img src="mcp-docs/src/main/antora/modules/ROOT/images/spring-ai-mcp-architecture.png" width="600">
 
 ## Projects
 

@@ -2,7 +2,8 @@
 
 Java SDK and Spring Framework integration for the link:https://modelcontextprotocol.org/docs/concepts/architecture[Model Context Protocol], enabling standardized interaction with AI models and tools through both synchronous and asynchronous communication.
 
-image::spring-ai-mcp-architecture.png[Spring AI MCP Architecture,600]
+image::spring-ai-mcp-clinet-architecture.jpg[Spring AI MCP Client Architecture,600,float="right",align="left"]
+image::spring-ai-mcp-server-architecture.jpg[Spring AI MCP Server Architecture,600,align="right"]
 
 == Core Components
 

@@ -5,7 +5,9 @@
 Set of projects that provide Java SDK and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). 
 It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
 
-<img src="mcp-docs/src/main/antora/modules/ROOT/images/spring-ai-mcp-architecture.png" width="600">
+<img src="mcp-docs/src/main/antora/modules/ROOT/images/spring-ai-mcp-clinet-architecture.jpg" width="600">
+
+<img src="mcp-docs/src/main/antora/modules/ROOT/images/spring-ai-mcp-server-architecture.jpg" width="600">
 
 ## Projects
 
@@ -44,28 +46,24 @@ Add the following dependencies to your Maven project:
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>mcp</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
 </dependency>
 
 <!-- Optional: WebFlux SSE transport -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>mcp-webflux-sse-transport</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
 </dependency>
 
 <!-- Optional: WebMVC SSE transport -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>mcp-webmvc-sse-transport</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
 </dependency>
 
 <!-- Optional: Spring AI integration -->
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>spring-ai-mcp</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -85,6 +83,7 @@ Add this repository to your POM:
 </repositories>
 ```
 
+Reffer to the [Dependency Management](https://docs.spring.io/spring-ai-mcp/reference/dependency-management.html) page for more information.
 
 ## Example Demos
 

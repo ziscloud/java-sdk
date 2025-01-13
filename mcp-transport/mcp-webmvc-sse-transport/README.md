@@ -4,7 +4,6 @@
 <dependency>
     <groupId>org.springframework.experimental</groupId>
     <artifactId>mcp-webmvc-sse-transport</artifactId>
-    <version>0.5.0-SNAPSHOT</version>
 </dependency>
 ```
 

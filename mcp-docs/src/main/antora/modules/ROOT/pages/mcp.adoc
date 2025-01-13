@@ -541,6 +541,8 @@ public class McpServerConfig implements WebMvcConfigurer {
 }
 ----
 +
+(You can implment non Spring web container as well link:https://github.com/spring-projects-experimental/spring-ai-mcp/blob/main/mcp/src/test/java/org/springframework/ai/mcp/server/transport/HttpServletSseServerTransportIntegrationTests.java[HttpServletSseServerTransportIntegrationTests])
++
 Implements the MCP HTTP with SSE transport specification using the traditional Servlet API, providing:
 +
 * Asynchronous message handling using Servlet 6.0 async support

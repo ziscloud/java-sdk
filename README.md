@@ -23,11 +23,12 @@ Java implementation of the Model Context Protocol specification. It includes:
 #### Core Transports
 - Stdio-based (`StdioClientTransport`, `StdioServerTransport`) for process-based communication
 - Java HttpClient-based SSE client (`HttpClientSseClientTransport`) for HTTP streaming
+- Servlet-based SSE server (`HttpServletSseServerTransport`) for HTTP SSE Server streaming using traditional Servlet API
 
 #### Optional SSE Transports
 - [WebFlux SSE Transport](https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/mcp-transport/mcp-webflux-sse-transport) - Reactive HTTP streaming with Spring WebFlux (Client & Server)
-- [WebMvc SSE Transport](https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/mcp-transport/mcp-webmvc-sse-transport) - Servlet-based HTTP streaming (Server only). 
-Use the core `HttpClientSseClientTransport` for SSE clients.
+- [WebMvc SSE Transport](https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/mcp-transport/mcp-webmvc-sse-transport) - Spring MVC based HTTP SSE transport (Server only). 
+You can use the core `HttpClientSseClientTransport` transport as a SSE client.
 
 ### [Spring AI MCP](https://docs.spring.io/spring-ai-mcp/reference/spring-mcp.html)
 

@@ -26,8 +26,8 @@ Core implementation of the Model Context Protocol specification, providing:
 
 * *Optional SSE Transports*
 ** link:https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/mcp-transport/mcp-webflux-sse-transport[WebFlux SSE Transport] - Reactive HTTP streaming with Spring WebFlux (Client & Server)
-** link:https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/mcp-transport/mcp-webmvc-sse-transport[WebMvc SSE Transport] - Servlet-based HTTP streaming (Server only). 
-Use the core `HttpClientSseClientTransport` for SSE clients.
+** link:https://github.com/spring-projects-experimental/spring-ai-mcp/tree/main/mcp-transport/mcp-webmvc-sse-transport[WebMvc SSE Transport] - Spring MVC based SSE transport (Server only). 
+You can use the core `HttpClientSseClientTransport` transport as a SSE client.
 
 === xref:spring-mcp.adoc[Spring AI MCP]
 Spring integration features:

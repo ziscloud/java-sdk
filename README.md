@@ -95,9 +95,9 @@ Explore these MCP examples in the [spring-ai-examples/model-context-protocol](ht
 - [Filesystem](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/filesystem) - Enables LLM interaction with local filesystem folders and files
 - [Brave](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/brave) - Enables natural language interactions with Brave Search, allowing you to perform internet searches.
 - [Theme Park API Example](https://github.com/habuma/spring-ai-examples/tree/main/spring-ai-mcp) - Shows how to create an MCP server and client with Spring AI, exposing Theme Park API tools
-- [Http SSE Client + WebMvc SSE Server sample](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webmvc-server) - Showcases how to create and use MCP WebMvc servers and HttpClient clients with different capabilities.
-* [WebFlux SSE Client + WebFlux SSE Server sample](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webflux-server) - Showcases how to create and use MCP WebFlux servers and clients with different capabilities
-
+- [Http SSE Client + WebMvc SSE Server](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webmvc-server) - Showcases how to create and use MCP WebMvc servers and HttpClient clients with different capabilities.
+- [WebFlux SSE Client + WebFlux SSE Server](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webflux-server) - Showcases how to create and use MCP WebFlux servers and clients with different capabilities
+- [HttpClient SSE Client + Servlet SSE Server](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-servlet-server) - Showcases how to create and use MCP Servlet SSE Server and HttpClient SSE Client with different capabilities
 
 ## Documentation
 

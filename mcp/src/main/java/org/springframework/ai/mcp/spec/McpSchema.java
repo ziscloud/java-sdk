@@ -222,6 +222,7 @@ public final class McpSchema {
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record InitializeResult( // @formatter:off
 		@JsonProperty("protocolVersion") String protocolVersion,
 		@JsonProperty("capabilities") ServerCapabilities capabilities,
@@ -472,12 +473,14 @@ public final class McpSchema {
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record ListResourcesResult( // @formatter:off
 		@JsonProperty("resources") List<Resource> resources,
 		@JsonProperty("nextCursor") String nextCursor) {
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record ListResourceTemplatesResult( // @formatter:off
 		@JsonProperty("resourceTemplates") List<ResourceTemplate> resourceTemplates,
 		@JsonProperty("nextCursor") String nextCursor) {
@@ -489,6 +492,7 @@ public final class McpSchema {
 	} // @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record ReadResourceResult( // @formatter:off
 		@JsonProperty("contents") List<ResourceContents> contents){
 	} // @formatter:on
@@ -619,6 +623,7 @@ public final class McpSchema {
 	 * are more prompts available.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record ListPromptsResult( // @formatter:off
 		@JsonProperty("prompts") List<Prompt> prompts,
 		@JsonProperty("nextCursor") String nextCursor) {
@@ -643,6 +648,7 @@ public final class McpSchema {
 	 * @param messages A list of messages to display as part of the prompt.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record GetPromptResult( // @formatter:off
 		@JsonProperty("description") String description,
 		@JsonProperty("messages") List<PromptMessage> messages) {
@@ -659,6 +665,7 @@ public final class McpSchema {
 	 * are more tools available.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record ListToolsResult( // @formatter:off
 		@JsonProperty("tools") List<Tool> tools,
 		@JsonProperty("nextCursor") String nextCursor) {
@@ -716,6 +723,7 @@ public final class McpSchema {
 	 * input schema.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record CallToolRequest(// @formatter:off
 		@JsonProperty("name") String name,
 		@JsonProperty("arguments") Map<String, Object> arguments) implements Request {
@@ -730,6 +738,7 @@ public final class McpSchema {
 	 *                If false or absent, indicates successful execution.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record CallToolResult( // @formatter:off
 		@JsonProperty("content") List<Content> content,
 		@JsonProperty("isError") Boolean isError) {
@@ -776,6 +785,7 @@ public final class McpSchema {
 	}// @formatter:on
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record CreateMessageResult(// @formatter:off
 		@JsonProperty("role") Role role,
 		@JsonProperty("content") Content content,
@@ -837,6 +847,7 @@ public final class McpSchema {
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record PaginatedResult(@JsonProperty("nextCursor") String nextCursor) {
 	}
 
@@ -1044,6 +1055,7 @@ public final class McpSchema {
 	 * that the server can operate on.
 	 */
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record ListRootsResult( // @formatter:off
 		@JsonProperty("roots") List<Root> roots) {
 	} // @formatter:on

@@ -107,6 +107,7 @@ Key Interactions:
 * *Prompt System*: Discovery, parameter-based retrieval, change notifications, and content management.
 * *Tool Execution*: Discovery, parameter validation, timeout-aware execution, and result processing.
 
+[[mcp-client]]
 == MCP Client
 
 The MCP Client is a key component in the Model Context Protocol (MCP) architecture, responsible for establishing and managing connections with MCP servers. It implements the client-side of the protocol, handling:
@@ -338,6 +339,7 @@ This capability allows:
 * Support for both text and image-based interactions
 * Optional inclusion of MCP server context in prompts
 
+[[mcp-server]]
 == MCP Server
 
 The MCP Server is a foundational component in the Model Context Protocol (MCP) architecture that provides tools, resources, and capabilities to clients. It implements the server-side of the protocol, responsible for:

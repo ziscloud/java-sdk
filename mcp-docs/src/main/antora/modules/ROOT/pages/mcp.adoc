@@ -129,14 +129,14 @@ Sync API::
 [source,java]
 ----
 // Create a sync client with custom configuration
-McpSyncClient client = McpClient.using(transport)
+McpSyncClient client = McpClient.sync(transport)
     .requestTimeout(Duration.ofSeconds(10))
     .capabilities(ClientCapabilities.builder()
         .roots(true)      // Enable roots capability
         .sampling()       // Enable sampling capability
         .build())
-    .sampling( request -> new CreateMessageResult(response))
-    .sync();
+    .sampling(request -> new CreateMessageResult(response))
+    .build();
 
 // Initialize connection
 client.initialize();
@@ -175,23 +175,23 @@ Async API::
 [source,java]
 ----
 // Create an async client with custom configuration
-McpAsyncClient client = McpClient.using(transport)
+McpAsyncClient client = McpClient.async(transport)
     .requestTimeout(Duration.ofSeconds(10))
     .capabilities(ClientCapabilities.builder()
         .roots(true)      // Enable roots capability
         .sampling()       // Enable sampling capability
         .build())
-    .sampling( request -> new CreateMessageResult(response))
-    .toolsChangeConsumer(tools -> {
+    .sampling(request -> Mono.just(new CreateMessageResult(response)))
+    .toolsChangeConsumer(tools -> Mono.fromRunnable(() -> {
         logger.info("Tools updated: {}", tools);
-    })
-    .resourcesChangeConsumer(resources -> {
+    }))
+    .resourcesChangeConsumer(resources -> Mono.fromRunnable(() -> {
         logger.info("Resources updated: {}", resources);
-    })
-    .promptsChangeConsumer(prompts -> {
+    }))
+    .promptsChangeConsumer(prompts -> Mono.fromRunnable(() -> {
         logger.info("Prompts updated: {}", prompts);
-    })
-    .async();
+    }))
+    .build();
 
 // Initialize connection
 client.initialize()
@@ -361,13 +361,13 @@ Sync API::
 [source,java]
 ----
 // Create a server with custom configuration
-McpSyncServer syncServer = McpServer.using(transport)
-    .info("my-server", "1.0.0")
+McpSyncServer syncServer = McpServer.sync(transport)
+    .serverInfo("my-server", "1.0.0")
     .capabilities(ServerCapabilities.builder()...build())
-    .tools(new CalculatorTool())
-    .resources(resourceRegistration)
-    .prompts(promptRegistration)
-    .sync();
+    .tools(new McpServerFeatures.SyncToolRegistration(calculatorTool, calculatorHandler))
+    .resources(new McpServerFeatures.SyncResourceRegistration(resource, resourceHandler))
+    .prompts(new McpServerFeatures.SyncPromptRegistration(prompt, promptHandler))
+    .build();
 
 // Add a tool handler at runtime
 syncServer.addTool(new CalculatorTool());
@@ -396,13 +396,13 @@ Async API::
 [source,java]
 ----
 // Create an async server with custom configuration
-McpAsyncServer asyncServer = McpServer.using(transport)
-    .info("my-server", "1.0.0")
+McpAsyncServer asyncServer = McpServer.async(transport)
+    .serverInfo("my-server", "1.0.0")
     .capabilities(ServerCapabilities.builder()...build())
-    .tools(new CalculatorTool())
-    .resources(resourceRegistration)
-    .prompts(promptRegistration)
-    .async();
+    .tools(new McpServerFeatures.AsyncToolRegistration(calculatorTool, args -> Mono.just(calculatorHandler.apply(args))))
+    .resources(new McpServerFeatures.AsyncResourceRegistration(resource, req -> Mono.just(resourceHandler.apply(req))))
+    .prompts(new McpServerFeatures.AsyncPromptRegistration(prompt, req -> Mono.just(promptHandler.apply(req))))
+    .build();
 
 // Add a tool handler at runtime
 asyncServer.addTool(new CalculatorTool())
@@ -593,7 +593,8 @@ Supported logging levels (in order of increasing severity): DEBUG (0), INFO (1),
 
 [source,java]
 ----
-var toolRegistration = new ToolRegistration(
+// Sync tool registration
+var syncToolRegistration = new McpServerFeatures.SyncToolRegistration(
     new Tool("calculator", "Basic calculator", Map.of(
         "operation", "string",
         "a", "number",
@@ -604,17 +605,40 @@ var toolRegistration = new ToolRegistration(
         return new CallToolResult(result, false);
     }
 );
+
+// Async tool registration
+var asyncToolRegistration = new McpServerFeatures.AsyncToolRegistration(
+    new Tool("calculator", "Basic calculator", Map.of(
+        "operation", "string",
+        "a", "number",
+        "b", "number"
+    )),
+    arguments -> {
+        // Tool implementation
+        return Mono.just(new CallToolResult(result, false));
+    }
+);
 ----
 
 ==== Resource Registration
 
 [source,java]
 ----
-var resourceRegistration = new ResourceRegistration(
+// Sync resource registration
+var syncResourceRegistration = new McpServerFeatures.SyncResourceRegistration(
     new Resource("custom://resource", "name", "description", "mime-type", null),
     request -> {
         // Resource read implementation
         return new ReadResourceResult(contents);
+    }
+);
+
+// Async resource registration
+var asyncResourceRegistration = new McpServerFeatures.AsyncResourceRegistration(
+    new Resource("custom://resource", "name", "description", "mime-type", null),
+    request -> {
+        // Resource read implementation
+        return Mono.just(new ReadResourceResult(contents));
     }
 );
 ----
@@ -623,13 +647,25 @@ var resourceRegistration = new ResourceRegistration(
 
 [source,java]
 ----
-var promptRegistration = new PromptRegistration(
+// Sync prompt registration
+var syncPromptRegistration = new McpServerFeatures.SyncPromptRegistration(
     new Prompt("greeting", "description", List.of(
         new PromptArgument("name", "description", true)
     )),
     request -> {
         // Prompt implementation
         return new GetPromptResult(description, messages);
+    }
+);
+
+// Async prompt registration
+var asyncPromptRegistration = new McpServerFeatures.AsyncPromptRegistration(
+    new Prompt("greeting", "description", List.of(
+        new PromptArgument("name", "description", true)
+    )),
+    request -> {
+        // Prompt implementation
+        return Mono.just(new GetPromptResult(description, messages));
     }
 );
 ----

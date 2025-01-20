@@ -29,10 +29,39 @@ import org.springframework.ai.mcp.spec.McpSchema.ListPromptsResult;
 import org.springframework.ai.mcp.util.Assert;
 
 /**
- * A synchronous client for the Model Context Protocol (MCP).
+ * A synchronous client implementation for the Model Context Protocol (MCP) that wraps an
+ * {@link McpAsyncClient} to provide blocking operations.
+ *
+ * <p>
+ * This client implements the MCP specification by delegating to an asynchronous client
+ * and blocking on the results. Key features include:
+ * <ul>
+ * <li>Synchronous, blocking API for simpler integration in non-reactive applications
+ * <li>Tool discovery and invocation for server-provided functionality
+ * <li>Resource access and management with URI-based addressing
+ * <li>Prompt template handling for standardized AI interactions
+ * <li>Real-time notifications for tools, resources, and prompts changes
+ * <li>Structured logging with configurable severity levels
+ * </ul>
+ *
+ * <p>
+ * The client follows the same lifecycle as its async counterpart:
+ * <ol>
+ * <li>Initialization - Establishes connection and negotiates capabilities
+ * <li>Normal Operation - Handles requests and notifications
+ * <li>Graceful Shutdown - Ensures clean connection termination
+ * </ol>
+ *
+ * <p>
+ * This implementation implements {@link AutoCloseable} for resource cleanup and provides
+ * both immediate and graceful shutdown options. All operations block until completion or
+ * timeout, making it suitable for traditional synchronous programming models.
  *
  * @author Dariusz Jędrzejczyk
  * @author Christian Tzolov
+ * @see McpClient
+ * @see McpAsyncClient
+ * @see McpSchema
  */
 public class McpSyncClient implements AutoCloseable {
 

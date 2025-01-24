@@ -198,39 +198,14 @@ public class FlowSseClient {
 				info -> subscriberFactory.apply(lineSubscriber));
 
 		future.thenAccept(response -> {
-			if (response.statusCode() != 200) {
-				throw new RuntimeException("Failed to connect to SSE stream: " + response.statusCode());
+			int status = response.statusCode();
+			if (status != 200 && status != 201 && status != 202 && status != 206) {
+				throw new RuntimeException("Failed to connect to SSE stream. Unexpected status code: " + status);
 			}
 		}).exceptionally(throwable -> {
 			eventHandler.onError(throwable);
 			return null;
 		});
 	}
-
-	// public static void main(String[] args) {
-
-	// FlowSseClient sseClient = new FlowSseClient(
-	// HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
-
-	// var eventHandler = new SSEEventHandler() {
-	// @Override
-	// public void onEvent(SSEEvent event) {
-	// System.out.println("Received event: " + event);
-	// }
-
-	// @Override
-	// public void onError(Throwable error) {
-	// System.out.println("Error: " + error);
-	// }
-	// };
-	// sseClient.subscribe("http://localhost:8080/sse", eventHandler);
-
-	// try {
-	// Thread.sleep(100000);
-	// }
-	// catch (InterruptedException e) {
-	// e.printStackTrace();
-	// }
-	// }
 
 }

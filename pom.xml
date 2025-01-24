@@ -107,7 +107,6 @@
 		<module>mcp</module>
 		<module>mcp-transport/mcp-webflux-sse-transport</module>
 		<module>mcp-transport/mcp-webmvc-sse-transport</module>
-		<module>spring-ai-mcp</module>
 		<module>mcp-docs</module>
 		<module>mcp-test</module>
 	</modules>

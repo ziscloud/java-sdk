@@ -54,12 +54,6 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- Spring AI MCP -->
-            <dependency>
-                <groupId>org.springframework.experimental</groupId>
-                <artifactId>spring-ai-mcp</artifactId>
-                <version>${project.version}</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 

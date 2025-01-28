@@ -159,7 +159,7 @@ public interface McpClient {
 
 		private ClientCapabilities capabilities;
 
-		private Implementation clientInfo = new Implementation("Spring AI MCP Client", "1.0.0");
+		private Implementation clientInfo = new Implementation("Java SDK MCP Client", "1.0.0");
 
 		private final Map<String, Root> roots = new HashMap<>();
 

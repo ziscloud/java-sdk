@@ -71,7 +71,7 @@
                     <descriptors>
                         <descriptor>src/assembly/javadocs.xml</descriptor>
                     </descriptors>
-                    <finalName>spring-ai-mcp-${project.version}</finalName>
+                    <finalName>mcp-${project.version}</finalName>
                     <appendAssemblyId>true</appendAssemblyId>
                 </configuration>
             </plugin>

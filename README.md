@@ -12,19 +12,17 @@ For comprehensive guides and API documentation, visit the [MCP Java SDK Referenc
 
 <img src="docs/images/java-mcp-server-architecture.jpg" width="600">
 
-## Projects
+## Mudules
 
 ### MCP 
 
 Java implementation of the Model Context Protocol specification. It includes:
 - Synchronous and asynchronous [MCP Client](docs/docs/mcp-client.mdx) and [MCP Server](docs/docs/mcp-server.mdx) implementations
 - Standard MCP operations support (tool discovery, resource management, prompt handling, structured logging). Support for request and notification handling.
-- [Stdio](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/#stdio) and [SSE](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/#http-with-sse) transport implementations. 
-
-##### Core Transports
-- Stdio-based (`StdioClientTransport`, `StdioServerTransport`) for process-based communication
-- Java HttpClient-based SSE client (`HttpClientSseClientTransport`) for HTTP streaming
-- Servlet-based SSE server (`HttpServletSseServerTransport`) for HTTP SSE Server streaming using traditional Servlet API
+- [Stdio](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/#stdio) and [SSE](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/#http-with-sse) transport implementations:
+  - Stdio-based (`StdioClientTransport`, `StdioServerTransport`) for process-based communication
+  - Java HttpClient-based SSE client (`HttpClientSseClientTransport`) for HTTP streaming
+  - Servlet-based SSE server (`HttpServletSseServerTransport`) for HTTP SSE Server streaming using traditional Servlet API
 
 
 ### MCP Spring
@@ -60,7 +58,7 @@ Add the following dependencies to your Maven project:
 </dependency>
 ```
 
-## Example Demos
+## Examples
 
 Explore these MCP examples in the [spring-ai-examples/model-context-protocol](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol) repository:
 

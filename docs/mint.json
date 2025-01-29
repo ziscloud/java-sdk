@@ -33,7 +33,7 @@
         "docs/mcp-overview",
         "docs/mcp-client",
         "docs/mcp-server",
-        "docs/mcp-spring",
+        "docs/mcp-transport",
         "docs/mcp-capabilities"
       ]
     }

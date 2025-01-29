@@ -13,8 +13,8 @@
     <artifactId>mcp-bom</artifactId>
     <packaging>pom</packaging>
 
-    <name>Spring AI MCP BOM</name>
-    <description>Spring AI MCP Bill of Materials</description>
+    <name>Java SDK MCP BOM</name>
+    <description>Java SDK MCP Bill of Materials</description>
 
 	<url>https://github.com/modelcontextprotocol/java-sdk</url>
 

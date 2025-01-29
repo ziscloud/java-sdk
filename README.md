@@ -1,26 +1,27 @@
-# Java & Spring MCP
+# MCP Java SDK
 [![Build Status](https://github.com/modelcontextprotocol/java-sdk/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/modelcontextprotocol/java-sdk/actions/workflows/continuous-integration.yml)
 
-Set of projects that provide Java SDK and Spring Framework integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). 
+Set of projects that provide Java SDK integration for the [Model Context Protocol](https://modelcontextprotocol.org/docs/concepts/architecture). 
 It enables Java applications to interact with AI models and tools through a standardized interface, supporting both synchronous and asynchronous communication patterns.
 
 ## 📚 Reference Documentation
-For comprehensive guides and API documentation, visit the [Spring AI MCP Reference Documentation](https://docs.spring.io/spring-ai-mcp/reference/overview.html).
 
-<img src="mcp-docs/src/main/antora/modules/ROOT/images/spring-ai-mcp-clinet-architecture.jpg" width="600">
+For comprehensive guides and API documentation, visit the [MCP Java SDK Reference Documentation](docs/docs/overview.mdx).
 
-<img src="mcp-docs/src/main/antora/modules/ROOT/images/spring-ai-mcp-server-architecture.jpg" width="600">
+<img src="docs/images/java-mcp-client-architecture" width="600">
+
+<img src="docs/images/java-mcp-server-architecture.jpg" width="600">
 
 ## Projects
 
-### [MCP Java SDK](https://docs.spring.io/spring-ai-mcp/reference/mcp.html)
+### MCP 
 
 Java implementation of the Model Context Protocol specification. It includes:
 - Synchronous and asynchronous [MCP Client](https://docs.spring.io/spring-ai-mcp/reference/mcp.html#_mcp_client) and [MCP Server](https://docs.spring.io/spring-ai-mcp/reference/mcp.html#_mcp_server) implementations
 - Standard MCP operations support (tool discovery, resource management, prompt handling, structured logging). Support for request and notification handling.
 - [Stdio](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/#stdio) and [SSE](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/#http-with-sse) transport implementations. 
 
-### MCP Transports
+### MCP Spring
 
 #### Core Transports
 - Stdio-based (`StdioClientTransport`, `StdioServerTransport`) for process-based communication
@@ -31,13 +32,6 @@ Java implementation of the Model Context Protocol specification. It includes:
 - [WebFlux SSE Transport](https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-spring/mcp-spring-webflux) - Reactive HTTP streaming with Spring WebFlux (Client & Server)
 - [WebMvc SSE Transport](https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-spring/mcp-spring-webmvc) - Spring MVC based HTTP SSE transport (Server only). 
 You can use the core `HttpClientSseClientTransport` transport as a SSE client.
-
-### [Spring AI MCP](https://docs.spring.io/spring-ai-mcp/reference/spring-mcp.html)
-
-The Spring integration module provides Spring-specific functionality:
-- Integration with Spring AI's function calling system
-- Spring-friendly abstractions for MCP clients
-- Auto-configurations (WIP)
 
 
 ## Installation
@@ -63,24 +57,6 @@ Add the following dependencies to your Maven project:
     <artifactId>mcp-spring-webmvc</artifactId>
 </dependency>
 ```
-
-This is a milestone release, not available on Maven Central. 
-Add this repository to your POM:
-
-```xml
-<repositories>
-    <repository>
-        <id>spring-milestones</id>
-        <name>Spring Milestones</name>
-        <url>https://repo.spring.io/milestone</url>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-    </repository>
-</repositories>
-```
-
-Reffer to the [Dependency Management](https://docs.spring.io/spring-ai-mcp/reference/dependency-management.html) page for more information.
 
 ## Example Demos
 

@@ -98,7 +98,6 @@
 		<module>mcp</module>
 		<module>mcp-spring/mcp-spring-webflux</module>
 		<module>mcp-spring/mcp-spring-webmvc</module>
-		<!-- <module>mcp-docs</module> -->
 		<module>mcp-test</module>
 	</modules>
 
@@ -351,14 +350,6 @@
 			<releases>
 				<enabled>true</enabled>
 			</releases>
-		</repository>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
 		</repository>
 	</repositories>
 

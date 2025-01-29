@@ -8,7 +8,7 @@ It enables Java applications to interact with AI models and tools through a stan
 
 For comprehensive guides and API documentation, visit the [MCP Java SDK Reference Documentation](docs/docs/overview.mdx).
 
-<img src="docs/images/java-mcp-client-architecture" width="600">
+<img src="docs/images/java-mcp-client-architecture.jpg" width="600">
 
 <img src="docs/images/java-mcp-server-architecture.jpg" width="600">
 
@@ -17,18 +17,20 @@ For comprehensive guides and API documentation, visit the [MCP Java SDK Referenc
 ### MCP 
 
 Java implementation of the Model Context Protocol specification. It includes:
-- Synchronous and asynchronous [MCP Client](https://docs.spring.io/spring-ai-mcp/reference/mcp.html#_mcp_client) and [MCP Server](https://docs.spring.io/spring-ai-mcp/reference/mcp.html#_mcp_server) implementations
+- Synchronous and asynchronous [MCP Client](docs/docs/mcp-client.mdx) and [MCP Server](docs/docs/mcp-server.mdx) implementations
 - Standard MCP operations support (tool discovery, resource management, prompt handling, structured logging). Support for request and notification handling.
 - [Stdio](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/#stdio) and [SSE](https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/#http-with-sse) transport implementations. 
 
-### MCP Spring
-
-#### Core Transports
+##### Core Transports
 - Stdio-based (`StdioClientTransport`, `StdioServerTransport`) for process-based communication
 - Java HttpClient-based SSE client (`HttpClientSseClientTransport`) for HTTP streaming
 - Servlet-based SSE server (`HttpServletSseServerTransport`) for HTTP SSE Server streaming using traditional Servlet API
 
-#### Optional SSE Transports
+
+### MCP Spring
+
+Optional SSE Transports implementations usin gthe Spring Webflux or WebMvc libraries.
+
 - [WebFlux SSE Transport](https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-spring/mcp-spring-webflux) - Reactive HTTP streaming with Spring WebFlux (Client & Server)
 - [WebMvc SSE Transport](https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-spring/mcp-spring-webmvc) - Spring MVC based HTTP SSE transport (Server only). 
 You can use the core `HttpClientSseClientTransport` transport as a SSE client.
@@ -70,11 +72,6 @@ Explore these MCP examples in the [spring-ai-examples/model-context-protocol](ht
 - [Http SSE Client + WebMvc SSE Server](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webmvc-server) - Showcases how to create and use MCP WebMvc servers and HttpClient clients with different capabilities.
 - [WebFlux SSE Client + WebFlux SSE Server](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-webflux-server) - Showcases how to create and use MCP WebFlux servers and clients with different capabilities
 - [HttpClient SSE Client + Servlet SSE Server](https://github.com/spring-projects/spring-ai-examples/tree/main/model-context-protocol/mcp-servlet-server) - Showcases how to create and use MCP Servlet SSE Server and HttpClient SSE Client with different capabilities
-
-## Documentation
-
-- [Java MCP SDK documentation](mcp/README.md)
-  - [Reference documentation](docs/ref-index.md)
 
 
 ## Development

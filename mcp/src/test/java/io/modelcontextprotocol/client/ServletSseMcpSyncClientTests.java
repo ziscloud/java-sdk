@@ -4,7 +4,6 @@
 
 package io.modelcontextprotocol.client;
 
-import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.HttpClientSseClientTransport;
 import io.modelcontextprotocol.spec.ClientMcpTransport;
 import org.junit.jupiter.api.Timeout;

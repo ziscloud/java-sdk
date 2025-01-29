@@ -25,8 +25,8 @@ Core implementation of the Model Context Protocol specification, providing:
 ** Servlet-based SSE server (`HttpServletSseServerTransport`) for HTTP SSE Server streaming using traditional Servlet API
 
 * *Optional SSE Transports*
-** link:https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-transport/mcp-webflux-sse-transport[WebFlux SSE Transport] - Reactive HTTP streaming with Spring WebFlux (Client & Server)
-** link:https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-transport/mcp-webmvc-sse-transport[WebMvc SSE Transport] - Spring MVC based SSE transport (Server only). 
+** link:https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-spring/mcp-spring-webflux[WebFlux SSE Transport] - Reactive HTTP streaming with Spring WebFlux (Client & Server)
+** link:https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-spring/mcp-spring-webmvc[WebMvc SSE Transport] - Spring MVC based SSE transport (Server only). 
 You can use the core `HttpClientSseClientTransport` transport as a SSE client.
 
 == Getting Started
@@ -46,13 +46,13 @@ Maven::
 <!-- Optional: WebFlux SSE transport -->
 <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-webflux-sse-transport</artifactId>
+    <artifactId>mcp-spring-webflux</artifactId>
 </dependency>
 
 <!-- Optional: WebMVC SSE transport -->
 <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-webmvc-sse-transport</artifactId>
+    <artifactId>mcp-spring-webmvc</artifactId>
 </dependency>
 
 ----
@@ -79,8 +79,8 @@ Gradle::
 ----
 dependencies {
     implementation 'io.modelcontextprotocol.sdk:mcp'                     // Core
-    implementation 'io.modelcontextprotocol.sdk:mcp-webflux-sse-transport'  // Optional
-    implementation 'io.modelcontextprotocol.sdk:mcp-webmvc-sse-transport'   // Optional
+    implementation 'io.modelcontextprotocol.sdk:mcp-spring-webflux'  // Optional
+    implementation 'io.modelcontextprotocol.sdk:mcp-spring-webmvc'   // Optional
 }
 
 repositories {

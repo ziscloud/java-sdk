@@ -5,7 +5,6 @@
 package io.modelcontextprotocol.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.modelcontextprotocol.server.McpAsyncServer;
 import io.modelcontextprotocol.server.transport.HttpServletSseServerTransport;
 import io.modelcontextprotocol.spec.ServerMcpTransport;
 import org.junit.jupiter.api.Timeout;

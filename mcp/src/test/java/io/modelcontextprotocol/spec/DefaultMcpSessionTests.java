@@ -9,9 +9,6 @@ import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.modelcontextprotocol.MockMcpTransport;
-import io.modelcontextprotocol.spec.DefaultMcpSession;
-import io.modelcontextprotocol.spec.McpError;
-import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

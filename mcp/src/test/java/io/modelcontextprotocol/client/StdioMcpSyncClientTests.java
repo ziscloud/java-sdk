@@ -6,7 +6,6 @@ package io.modelcontextprotocol.client;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import io.modelcontextprotocol.spec.ClientMcpTransport;

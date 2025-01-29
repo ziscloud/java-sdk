@@ -8,8 +8,6 @@ import java.time.Duration;
 import java.util.List;
 
 import io.modelcontextprotocol.MockMcpTransport;
-import io.modelcontextprotocol.client.McpAsyncClient;
-import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.InitializeResult;

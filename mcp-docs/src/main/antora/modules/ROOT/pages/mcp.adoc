@@ -47,13 +47,13 @@ For HTTP SSE transport implementations, add one of the following dependencies
 <!-- Spring WebFlux-based SSE client and server transport -->
 <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-webflux-sse-transport</artifactId>
+    <artifactId>mcp-spring-webflux</artifactId>
 </dependency>
 
 <!-- Spring WebMVC-based SSE server transport -->
 <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-webmvc-sse-transport</artifactId>
+    <artifactId>mcp-spring-webmvc</artifactId>
 </dependency>
 ----
 
@@ -74,10 +74,10 @@ For HTTP SSE transport implementations, add one of the following dependencies
 [source,groovy]
 ----
 // Spring WebFlux-based SSE client and server transport
-implementation 'io.modelcontextprotocol.sdk:mcp-webflux-sse-transport'
+implementation 'io.modelcontextprotocol.sdk:mcp-spring-webflux'
 
 // Spring WebMVC-based SSE server transport
-implementation 'io.modelcontextprotocol.sdk:mcp-webmvc-sse-transport'
+implementation 'io.modelcontextprotocol.sdk:mcp-spring-webmvc'
 ----
 ======
 
@@ -267,7 +267,7 @@ McpTransport transport = new HttpClientSseClientTransport("http://your-mcp-serve
 SSE (WebFlux)::
 +
 Creates WebFlux-based SSE client transport.
-Requires the `mcp-webflux-sse-transport` dependency.
+Requires the `mcp-spring-webflux` dependency.
 +
 [source,java]
 ----
@@ -464,7 +464,7 @@ Provides bidirectional JSON-RPC message handling over standard input/output stre
 SSE (WebFlux)::
 +
 Creates WebFlux-based SSE server transport.
-Requires the `mcp-webflux-sse-transport` dependency.
+Requires the `mcp-spring-webflux` dependency.
 +
 [source,java]
 ----
@@ -492,7 +492,7 @@ Implements the MCP HTTP with SSE transport specification, providing:
 SSE (WebMvc)::
 +
 Creates WebMvc-based SSE server transport.
-Requires the `mcp-webmvc-sse-transport` dependency.
+Requires the `mcp-spring-webmvc` dependency.
 +
 [source,java]
 ----

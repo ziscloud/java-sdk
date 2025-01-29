@@ -4,7 +4,6 @@
 
 package io.modelcontextprotocol.client;
 
-import io.modelcontextprotocol.client.McpAsyncClient;
 import io.modelcontextprotocol.client.transport.ServerParameters;
 import io.modelcontextprotocol.client.transport.StdioClientTransport;
 import io.modelcontextprotocol.spec.ClientMcpTransport;

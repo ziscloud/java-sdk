@@ -28,8 +28,8 @@ Java implementation of the Model Context Protocol specification. It includes:
 - Servlet-based SSE server (`HttpServletSseServerTransport`) for HTTP SSE Server streaming using traditional Servlet API
 
 #### Optional SSE Transports
-- [WebFlux SSE Transport](https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-transport/mcp-webflux-sse-transport) - Reactive HTTP streaming with Spring WebFlux (Client & Server)
-- [WebMvc SSE Transport](https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-transport/mcp-webmvc-sse-transport) - Spring MVC based HTTP SSE transport (Server only). 
+- [WebFlux SSE Transport](https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-spring/mcp-spring-webflux) - Reactive HTTP streaming with Spring WebFlux (Client & Server)
+- [WebMvc SSE Transport](https://github.com/modelcontextprotocol/java-sdk/tree/main/mcp-spring/mcp-spring-webmvc) - Spring MVC based HTTP SSE transport (Server only). 
 You can use the core `HttpClientSseClientTransport` transport as a SSE client.
 
 ### [Spring AI MCP](https://docs.spring.io/spring-ai-mcp/reference/spring-mcp.html)
@@ -54,13 +54,13 @@ Add the following dependencies to your Maven project:
 <!-- Optional: WebFlux SSE transport -->
 <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-webflux-sse-transport</artifactId>
+    <artifactId>mcp-spring-webflux</artifactId>
 </dependency>
 
 <!-- Optional: WebMVC SSE transport -->
 <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
-    <artifactId>mcp-webmvc-sse-transport</artifactId>
+    <artifactId>mcp-spring-webmvc</artifactId>
 </dependency>
 ```
 

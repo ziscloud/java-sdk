@@ -57,8 +57,8 @@ The following dependencies are available and managed by the BOM:
 
 === Transport Dependencies
 
-* `io.modelcontextprotocol.sdk:mcp-webflux-sse-transport` - WebFlux-based Server-Sent Events (SSE) transport implementation for reactive applications.
-* `io.modelcontextprotocol.sdk:mcp-webmvc-sse-transport` - WebMVC-based Server-Sent Events (SSE) transport implementation for servlet-based applications.
+* `io.modelcontextprotocol.sdk:mcp-spring-webflux` - WebFlux-based Server-Sent Events (SSE) transport implementation for reactive applications.
+* `io.modelcontextprotocol.sdk:mcp-spring-webmvc` - WebMVC-based Server-Sent Events (SSE) transport implementation for servlet-based applications.
 
 === Testing Dependencies
 

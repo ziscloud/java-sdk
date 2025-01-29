@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.UUID;
 
 import io.modelcontextprotocol.MockMcpTransport;
-import io.modelcontextprotocol.server.McpAsyncServer;
-import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.junit.jupiter.api.Test;
 

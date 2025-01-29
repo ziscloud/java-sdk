@@ -9,17 +9,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.modelcontextprotocol.spec.ClientMcpTransport;
 import io.modelcontextprotocol.spec.DefaultMcpSession;
-import io.modelcontextprotocol.spec.McpError;
-import io.modelcontextprotocol.spec.McpSchema;
-import io.modelcontextprotocol.spec.McpTransport;
 import io.modelcontextprotocol.spec.DefaultMcpSession.NotificationHandler;
 import io.modelcontextprotocol.spec.DefaultMcpSession.RequestHandler;
+import io.modelcontextprotocol.spec.McpError;
+import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpSchema.ClientCapabilities;
 import io.modelcontextprotocol.spec.McpSchema.CreateMessageRequest;
 import io.modelcontextprotocol.spec.McpSchema.CreateMessageResult;
@@ -30,13 +28,13 @@ import io.modelcontextprotocol.spec.McpSchema.LoggingLevel;
 import io.modelcontextprotocol.spec.McpSchema.LoggingMessageNotification;
 import io.modelcontextprotocol.spec.McpSchema.PaginatedRequest;
 import io.modelcontextprotocol.spec.McpSchema.Root;
+import io.modelcontextprotocol.spec.McpTransport;
 import io.modelcontextprotocol.util.Assert;
 import io.modelcontextprotocol.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 /**
  * The Model Context Protocol (MCP) client implementation that provides asynchronous
@@ -686,32 +684,6 @@ public class McpAsyncClient {
 	// --------------------------
 	// Logging
 	// --------------------------
-	/**
-	 * Create a notification handler for logging notifications from the server. This
-	 * handler automatically distributes logging messages to all registered consumers.
-	 * @param loggingConsumers List of consumers that will be notified when a logging
-	 * message is received. Each consumer receives the logging message notification.
-	 * @return A NotificationHandler that processes log notifications by distributing the
-	 * message to all registered consumers
-	 */
-	private NotificationHandler loggingNotificationHandler(
-			List<Consumer<LoggingMessageNotification>> loggingConsumers) {
-
-		return params -> {
-
-			McpSchema.LoggingMessageNotification loggingMessageNotification = transport.unmarshalFrom(params,
-					new TypeReference<McpSchema.LoggingMessageNotification>() {
-					});
-
-			return Mono.fromRunnable(() -> {
-				for (Consumer<LoggingMessageNotification> loggingConsumer : loggingConsumers) {
-					loggingConsumer.accept(loggingMessageNotification);
-				}
-			}).subscribeOn(Schedulers.boundedElastic()).then();
-
-		};
-	}
-
 	/**
 	 * Create a notification handler for logging notifications from the server. This
 	 * handler automatically distributes logging messages to all registered consumers.

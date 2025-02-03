@@ -23,8 +23,7 @@
     {
       "group": "Getting Started",
       "pages": [
-        "docs/overview",
-        "docs/dependency-management"
+        "docs/overview"        
       ]
     },
     {
@@ -32,9 +31,7 @@
       "pages": [
         "docs/mcp-overview",
         "docs/mcp-client",
-        "docs/mcp-server",
-        "docs/mcp-transport",
-        "docs/mcp-capabilities"
+        "docs/mcp-server"
       ]
     }
   ]

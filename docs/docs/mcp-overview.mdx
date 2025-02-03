@@ -1,16 +1,9 @@
 ---
-title: MCP Overview
-description: Overview of the Model Context Protocol (MCP) architecture and key concepts
+title: MCP Java SDK
+description: Java SDK implementation of the [Model Context Protocol](https://modelcontextprotocol.io/introduction), enabling seamless integration with language models and AI tools.
 ---
 
-# Java MCP SDK
-
-Java SDK implementation of the [Model Context Protocol](https://modelcontextprotocol.io/introduction), enabling seamless integration with language models and AI tools.
-
-![Spring AI MCP Client Architecture](/images/java-mcp-client-architecture.jpg)
-![Spring AI MCP Server Architecture](/images/java-mcp-server-architecture.jpg)
-
-## Features
+# Features
 
 - Synchronous and Asynchronous MCP Client and MCP Server implementations
 - Standard MCP operations support:
@@ -29,7 +22,7 @@ Java SDK implementation of the [Model Context Protocol](https://modelcontextprot
     - WebFlux SSE transport for reactive HTTP streaming
     - WebMVC SSE transport for servlet-based HTTP streaming
 
-## Architecture
+# Architecture
 
 ![MCP Stack Architecture](/images/mcp-stack.svg)
 
@@ -51,7 +44,7 @@ Key Interactions:
 - **Message Flow**: JSON-RPC message handling with validation, type-safe response processing, and error handling.
 - **Resource Management**: Resource discovery, URI template-based access, subscription system, and content retrieval.
 
-## Dependencies
+# Dependencies
 
 Add the following dependency to your Maven project:
 

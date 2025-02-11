@@ -251,7 +251,7 @@ public class WebFluxSseServerTransport implements ServerMcpTransport {
 				.then(Mono.fromRunnable(() -> sessions.remove(sessionId)));
 		}).toList()))
 			.timeout(Duration.ofSeconds(5))
-			.doOnSuccess(v -> logger.info("Graceful shutdown completed"))
+			.doOnSuccess(v -> logger.debug("Graceful shutdown completed"))
 			.doOnError(e -> logger.error("Error during graceful shutdown: {}", e.getMessage()));
 	}
 

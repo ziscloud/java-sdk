@@ -68,7 +68,7 @@ public class StdioClientTransport implements ClientMcpTransport {
 	private volatile boolean isClosing = false;
 
 	// visible for tests
-	private Consumer<String> errorHandler = error -> logger.error("Error received: {}", error);
+	private Consumer<String> stdErrorHandler = error -> logger.info("STDERR Message received: {}", error);
 
 	/**
 	 * Creates a new StdioClientTransport with the specified parameters and default
@@ -164,8 +164,8 @@ public class StdioClientTransport implements ClientMcpTransport {
 	 * </p>
 	 * @param errorHandler a consumer that processes error messages
 	 */
-	public void setErrorHandler(Consumer<String> errorHandler) {
-		this.errorHandler = errorHandler;
+	public void setStdErrorHandler(Consumer<String> errorHandler) {
+		this.stdErrorHandler = errorHandler;
 	}
 
 	/**
@@ -192,7 +192,6 @@ public class StdioClientTransport implements ClientMcpTransport {
 				String line;
 				while (!isClosing && (line = processErrorReader.readLine()) != null) {
 					try {
-						logger.error("Received error line: {}", line);
 						if (!this.errorSink.tryEmitNext(line).isSuccess()) {
 							if (!isClosing) {
 								logger.error("Failed to emit error message");
@@ -230,7 +229,7 @@ public class StdioClientTransport implements ClientMcpTransport {
 
 	private void handleIncomingErrors() {
 		this.errorSink.asFlux().subscribe(e -> {
-			this.errorHandler.accept(e);
+			this.stdErrorHandler.accept(e);
 		});
 	}
 
@@ -355,7 +354,7 @@ public class StdioClientTransport implements ClientMcpTransport {
 			// Give a short time for any pending messages to be processed
 			return Mono.delay(Duration.ofMillis(100));
 		})).then(Mono.fromFuture(() -> {
-			logger.info("Sending TERM to process");
+			logger.debug("Sending TERM to process");
 			if (this.process != null) {
 				this.process.destroy();
 				return process.onExit();
@@ -375,7 +374,7 @@ public class StdioClientTransport implements ClientMcpTransport {
 				errorScheduler.dispose();
 				outboundScheduler.dispose();
 
-				logger.info("Graceful shutdown completed");
+				logger.debug("Graceful shutdown completed");
 			}
 			catch (Exception e) {
 				logger.error("Error during graceful shutdown", e);

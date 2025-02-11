@@ -173,7 +173,7 @@ public class McpAsyncClient {
 		// Tools Change Notification
 		List<Function<List<McpSchema.Tool>, Mono<Void>>> toolsChangeConsumersFinal = new ArrayList<>();
 		toolsChangeConsumersFinal
-			.add((notification) -> Mono.fromRunnable(() -> logger.info("Tools changed: {}", notification)));
+			.add((notification) -> Mono.fromRunnable(() -> logger.debug("Tools changed: {}", notification)));
 
 		if (!Utils.isEmpty(features.toolsChangeConsumers())) {
 			toolsChangeConsumersFinal.addAll(features.toolsChangeConsumers());
@@ -184,7 +184,7 @@ public class McpAsyncClient {
 		// Resources Change Notification
 		List<Function<List<McpSchema.Resource>, Mono<Void>>> resourcesChangeConsumersFinal = new ArrayList<>();
 		resourcesChangeConsumersFinal
-			.add((notification) -> Mono.fromRunnable(() -> logger.info("Resources changed: {}", notification)));
+			.add((notification) -> Mono.fromRunnable(() -> logger.debug("Resources changed: {}", notification)));
 
 		if (!Utils.isEmpty(features.resourcesChangeConsumers())) {
 			resourcesChangeConsumersFinal.addAll(features.resourcesChangeConsumers());
@@ -196,7 +196,7 @@ public class McpAsyncClient {
 		// Prompts Change Notification
 		List<Function<List<McpSchema.Prompt>, Mono<Void>>> promptsChangeConsumersFinal = new ArrayList<>();
 		promptsChangeConsumersFinal
-			.add((notification) -> Mono.fromRunnable(() -> logger.info("Prompts changed: {}", notification)));
+			.add((notification) -> Mono.fromRunnable(() -> logger.debug("Prompts changed: {}", notification)));
 		if (!Utils.isEmpty(features.promptsChangeConsumers())) {
 			promptsChangeConsumersFinal.addAll(features.promptsChangeConsumers());
 		}
@@ -205,7 +205,7 @@ public class McpAsyncClient {
 
 		// Utility Logging Notification
 		List<Function<LoggingMessageNotification, Mono<Void>>> loggingConsumersFinal = new ArrayList<>();
-		loggingConsumersFinal.add((notification) -> Mono.fromRunnable(() -> logger.info("Logging: {}", notification)));
+		loggingConsumersFinal.add((notification) -> Mono.fromRunnable(() -> logger.debug("Logging: {}", notification)));
 		if (!Utils.isEmpty(features.loggingConsumers())) {
 			loggingConsumersFinal.addAll(features.loggingConsumers());
 		}
@@ -364,7 +364,7 @@ public class McpAsyncClient {
 
 		this.roots.put(root.uri(), root);
 
-		logger.info("Added root: {}", root);
+		logger.debug("Added root: {}", root);
 
 		if (this.clientCapabilities.roots().listChanged()) {
 			return this.rootsListChangedNotification();
@@ -390,7 +390,7 @@ public class McpAsyncClient {
 		Root removed = this.roots.remove(rootUri);
 
 		if (removed != null) {
-			logger.info("Removed Root: {}", rootUri);
+			logger.debug("Removed Root: {}", rootUri);
 			if (this.clientCapabilities.roots().listChanged()) {
 				return this.rootsListChangedNotification();
 			}

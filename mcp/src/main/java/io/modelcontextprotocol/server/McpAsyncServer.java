@@ -318,7 +318,7 @@ public class McpAsyncServer {
 			}
 
 			this.tools.add(toolRegistration);
-			logger.info("Added tool handler: {}", toolRegistration.tool().name());
+			logger.debug("Added tool handler: {}", toolRegistration.tool().name());
 
 			if (this.serverCapabilities.tools().listChanged()) {
 				return notifyToolsListChanged();
@@ -343,7 +343,7 @@ public class McpAsyncServer {
 		return Mono.defer(() -> {
 			boolean removed = this.tools.removeIf(toolRegistration -> toolRegistration.tool().name().equals(toolName));
 			if (removed) {
-				logger.info("Removed tool handler: {}", toolName);
+				logger.debug("Removed tool handler: {}", toolName);
 				if (this.serverCapabilities.tools().listChanged()) {
 					return notifyToolsListChanged();
 				}
@@ -411,7 +411,7 @@ public class McpAsyncServer {
 				return Mono
 					.error(new McpError("Resource with URI '" + resourceHandler.resource().uri() + "' already exists"));
 			}
-			logger.info("Added resource handler: {}", resourceHandler.resource().uri());
+			logger.debug("Added resource handler: {}", resourceHandler.resource().uri());
 			if (this.serverCapabilities.resources().listChanged()) {
 				return notifyResourcesListChanged();
 			}
@@ -435,7 +435,7 @@ public class McpAsyncServer {
 		return Mono.defer(() -> {
 			McpServerFeatures.AsyncResourceRegistration removed = this.resources.remove(resourceUri);
 			if (removed != null) {
-				logger.info("Removed resource handler: {}", resourceUri);
+				logger.debug("Removed resource handler: {}", resourceUri);
 				if (this.serverCapabilities.resources().listChanged()) {
 					return notifyResourcesListChanged();
 				}
@@ -507,7 +507,7 @@ public class McpAsyncServer {
 						new McpError("Prompt with name '" + promptRegistration.prompt().name() + "' already exists"));
 			}
 
-			logger.info("Added prompt handler: {}", promptRegistration.prompt().name());
+			logger.debug("Added prompt handler: {}", promptRegistration.prompt().name());
 
 			// Servers that declared the listChanged capability SHOULD send a
 			// notification,
@@ -536,7 +536,7 @@ public class McpAsyncServer {
 			McpServerFeatures.AsyncPromptRegistration removed = this.prompts.remove(promptName);
 
 			if (removed != null) {
-				logger.info("Removed prompt handler: {}", promptName);
+				logger.debug("Removed prompt handler: {}", promptName);
 				// Servers that declared the listChanged capability SHOULD send a
 				// notification, when the list of available prompts changes
 				if (this.serverCapabilities.prompts().listChanged()) {

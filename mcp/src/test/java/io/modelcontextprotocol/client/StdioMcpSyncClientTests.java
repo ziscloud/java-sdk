@@ -36,7 +36,7 @@ class StdioMcpSyncClientTests extends AbstractMcpSyncClientTests {
 	void customErrorHandlerShouldReceiveErrors() {
 		AtomicReference<String> receivedError = new AtomicReference<>();
 
-		((StdioClientTransport) mcpTransport).setErrorHandler(error -> receivedError.set(error));
+		((StdioClientTransport) mcpTransport).setStdErrorHandler(error -> receivedError.set(error));
 
 		String errorMessage = "Test error";
 		((StdioClientTransport) mcpTransport).getErrorSink().tryEmitNext(errorMessage);

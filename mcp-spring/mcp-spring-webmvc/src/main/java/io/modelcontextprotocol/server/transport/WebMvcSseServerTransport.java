@@ -353,7 +353,7 @@ public class WebMvcSseServerTransport implements ServerMcpTransport {
 				sessions.remove(sessionId);
 			});
 
-			logger.info("Graceful shutdown completed");
+			logger.debug("Graceful shutdown completed");
 		});
 	}
 

@@ -141,6 +141,8 @@ public class StdioServerTransport implements ServerMcpTransport {
 							break;
 						}
 
+						logger.debug("Received JSON message: {}", line);
+
 						try {
 							JSONRPCMessage message = McpSchema.deserializeJsonRpcMessage(this.objectMapper, line);
 							if (!this.inboundSink.tryEmitNext(message).isSuccess()) {
@@ -229,7 +231,7 @@ public class StdioServerTransport implements ServerMcpTransport {
 			// Completing the inbound causes the outbound to be completed as well, so
 			// we only close the inbound.
 			inboundSink.tryEmitComplete();
-			logger.info("Graceful shutdown complete");
+			logger.debug("Graceful shutdown complete");
 			return Mono.empty();
 		}).subscribeOn(Schedulers.boundedElastic());
 	}

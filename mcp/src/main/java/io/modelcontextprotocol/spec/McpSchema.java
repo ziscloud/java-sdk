@@ -17,6 +17,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Based on the <a href="http://www.jsonrpc.org/specification">JSON-RPC 2.0
@@ -27,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Christian Tzolov
  */
 public final class McpSchema {
+
+	private static final Logger logger = LoggerFactory.getLogger(McpSchema.class);
 
 	private McpSchema() {
 	}
@@ -143,6 +147,8 @@ public final class McpSchema {
 	 */
 	public static JSONRPCMessage deserializeJsonRpcMessage(ObjectMapper objectMapper, String jsonText)
 			throws IOException {
+
+		logger.debug("Received JSON message: {}", jsonText);
 
 		var map = objectMapper.readValue(jsonText, MAP_TYPE_REF);
 
@@ -662,8 +668,8 @@ public final class McpSchema {
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	record JsonSchema( // @formatter:off
-		@JsonProperty("type") String type, 
-		@JsonProperty("properties") Map<String, Object> properties, 
+		@JsonProperty("type") String type,
+		@JsonProperty("properties") Map<String, Object> properties,
 		@JsonProperty("required") List<String> required,
 		@JsonProperty("additionalProperties") Boolean additionalProperties) {
 	} // @formatter:on

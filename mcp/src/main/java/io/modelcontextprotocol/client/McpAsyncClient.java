@@ -187,6 +187,9 @@ public class McpAsyncClient {
 		// Request Handlers
 		Map<String, RequestHandler<?>> requestHandlers = new HashMap<>();
 
+		// Ping MUST respond with an empty data, but not NULL response.
+		requestHandlers.put(McpSchema.METHOD_PING, params -> Mono.just(Map.of()));
+
 		// Roots List Request Handler
 		if (this.clientCapabilities.roots() != null) {
 			requestHandlers.put(McpSchema.METHOD_ROOTS_LIST, rootsListRequestHandler());

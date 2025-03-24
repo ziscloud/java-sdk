@@ -18,6 +18,7 @@ import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpServerSession;
 import io.modelcontextprotocol.spec.McpServerTransport;
 import io.modelcontextprotocol.spec.McpServerTransportProvider;
+import io.modelcontextprotocol.util.Assert;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -170,8 +171,8 @@ public class HttpServletSseServerTransportProvider extends HttpServlet implement
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		String pathInfo = request.getPathInfo();
-		if (!sseEndpoint.equals(pathInfo)) {
+		String requestURI = request.getRequestURI();
+		if (!requestURI.endsWith(sseEndpoint)) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
@@ -225,8 +226,8 @@ public class HttpServletSseServerTransportProvider extends HttpServlet implement
 			return;
 		}
 
-		String pathInfo = request.getPathInfo();
-		if (!messageEndpoint.equals(pathInfo)) {
+		String requestURI = request.getRequestURI();
+		if (!requestURI.endsWith(messageEndpoint)) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
@@ -425,6 +426,83 @@ public class HttpServletSseServerTransportProvider extends HttpServlet implement
 			catch (Exception e) {
 				logger.warn("Failed to complete async context for session {}: {}", sessionId, e.getMessage());
 			}
+		}
+
+	}
+
+	/**
+	 * Creates a new Builder instance for configuring and creating instances of
+	 * HttpServletSseServerTransportProvider.
+	 * @return A new Builder instance
+	 */
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	/**
+	 * Builder for creating instances of HttpServletSseServerTransportProvider.
+	 * <p>
+	 * This builder provides a fluent API for configuring and creating instances of
+	 * HttpServletSseServerTransportProvider with custom settings.
+	 */
+	public static class Builder {
+
+		private ObjectMapper objectMapper = new ObjectMapper();
+
+		private String messageEndpoint;
+
+		private String sseEndpoint = DEFAULT_SSE_ENDPOINT;
+
+		/**
+		 * Sets the JSON object mapper to use for message serialization/deserialization.
+		 * @param objectMapper The object mapper to use
+		 * @return This builder instance for method chaining
+		 */
+		public Builder objectMapper(ObjectMapper objectMapper) {
+			Assert.notNull(objectMapper, "ObjectMapper must not be null");
+			this.objectMapper = objectMapper;
+			return this;
+		}
+
+		/**
+		 * Sets the endpoint path where clients will send their messages.
+		 * @param messageEndpoint The message endpoint path
+		 * @return This builder instance for method chaining
+		 */
+		public Builder messageEndpoint(String messageEndpoint) {
+			Assert.hasText(messageEndpoint, "Message endpoint must not be empty");
+			this.messageEndpoint = messageEndpoint;
+			return this;
+		}
+
+		/**
+		 * Sets the endpoint path where clients will establish SSE connections.
+		 * <p>
+		 * If not specified, the default value of {@link #DEFAULT_SSE_ENDPOINT} will be
+		 * used.
+		 * @param sseEndpoint The SSE endpoint path
+		 * @return This builder instance for method chaining
+		 */
+		public Builder sseEndpoint(String sseEndpoint) {
+			Assert.hasText(sseEndpoint, "SSE endpoint must not be empty");
+			this.sseEndpoint = sseEndpoint;
+			return this;
+		}
+
+		/**
+		 * Builds a new instance of HttpServletSseServerTransportProvider with the
+		 * configured settings.
+		 * @return A new HttpServletSseServerTransportProvider instance
+		 * @throws IllegalStateException if objectMapper or messageEndpoint is not set
+		 */
+		public HttpServletSseServerTransportProvider build() {
+			if (objectMapper == null) {
+				throw new IllegalStateException("ObjectMapper must be set");
+			}
+			if (messageEndpoint == null) {
+				throw new IllegalStateException("MessageEndpoint must be set");
+			}
+			return new HttpServletSseServerTransportProvider(objectMapper, messageEndpoint, sseEndpoint);
 		}
 
 	}

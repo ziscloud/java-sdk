@@ -47,7 +47,9 @@ public class HttpServletSseServerTransportProviderIntegrationTests {
 
 	private static final int PORT = 8185;
 
-	private static final String MESSAGE_ENDPOINT = "/mcp/message";
+	private static final String CUSTOM_SSE_ENDPOINT = "/somePath/sse";
+
+	private static final String CUSTOM_MESSAGE_ENDPOINT = "/otherPath/mcp/message";
 
 	private HttpServletSseServerTransportProvider mcpServerTransportProvider;
 
@@ -66,7 +68,11 @@ public class HttpServletSseServerTransportProviderIntegrationTests {
 		Context context = tomcat.addContext("", baseDir);
 
 		// Create and configure the transport provider
-		mcpServerTransportProvider = new HttpServletSseServerTransportProvider(new ObjectMapper(), MESSAGE_ENDPOINT);
+		mcpServerTransportProvider = HttpServletSseServerTransportProvider.builder()
+			.objectMapper(new ObjectMapper())
+			.messageEndpoint(CUSTOM_MESSAGE_ENDPOINT)
+			.sseEndpoint(CUSTOM_SSE_ENDPOINT)
+			.build();
 
 		// Add transport servlet to Tomcat
 		org.apache.catalina.Wrapper wrapper = context.createWrapper();
@@ -87,7 +93,9 @@ public class HttpServletSseServerTransportProviderIntegrationTests {
 			throw new RuntimeException("Failed to start Tomcat", e);
 		}
 
-		this.clientBuilder = McpClient.sync(new HttpClientSseClientTransport("http://localhost:" + PORT));
+		this.clientBuilder = McpClient.sync(HttpClientSseClientTransport.builder("http://localhost:" + PORT)
+			.sseEndpoint(CUSTOM_SSE_ENDPOINT)
+			.build());
 	}
 
 	@AfterEach

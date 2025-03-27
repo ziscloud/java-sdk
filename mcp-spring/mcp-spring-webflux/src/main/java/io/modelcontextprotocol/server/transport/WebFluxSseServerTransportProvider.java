@@ -346,4 +346,74 @@ public class WebFluxSseServerTransportProvider implements McpServerTransportProv
 
 	}
 
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	/**
+	 * Builder for creating instances of {@link WebFluxSseServerTransportProvider}.
+	 * <p>
+	 * This builder provides a fluent API for configuring and creating instances of
+	 * WebFluxSseServerTransportProvider with custom settings.
+	 */
+	public static class Builder {
+
+		private ObjectMapper objectMapper;
+
+		private String messageEndpoint;
+
+		private String sseEndpoint = DEFAULT_SSE_ENDPOINT;
+
+		/**
+		 * Sets the ObjectMapper to use for JSON serialization/deserialization of MCP
+		 * messages.
+		 * @param objectMapper The ObjectMapper instance. Must not be null.
+		 * @return this builder instance
+		 * @throws IllegalArgumentException if objectMapper is null
+		 */
+		public Builder objectMapper(ObjectMapper objectMapper) {
+			Assert.notNull(objectMapper, "ObjectMapper must not be null");
+			this.objectMapper = objectMapper;
+			return this;
+		}
+
+		/**
+		 * Sets the endpoint URI where clients should send their JSON-RPC messages.
+		 * @param messageEndpoint The message endpoint URI. Must not be null.
+		 * @return this builder instance
+		 * @throws IllegalArgumentException if messageEndpoint is null
+		 */
+		public Builder messageEndpoint(String messageEndpoint) {
+			Assert.notNull(messageEndpoint, "Message endpoint must not be null");
+			this.messageEndpoint = messageEndpoint;
+			return this;
+		}
+
+		/**
+		 * Sets the SSE endpoint path.
+		 * @param sseEndpoint The SSE endpoint path. Must not be null.
+		 * @return this builder instance
+		 * @throws IllegalArgumentException if sseEndpoint is null
+		 */
+		public Builder sseEndpoint(String sseEndpoint) {
+			Assert.notNull(sseEndpoint, "SSE endpoint must not be null");
+			this.sseEndpoint = sseEndpoint;
+			return this;
+		}
+
+		/**
+		 * Builds a new instance of {@link WebFluxSseServerTransportProvider} with the
+		 * configured settings.
+		 * @return A new WebFluxSseServerTransportProvider instance
+		 * @throws IllegalStateException if required parameters are not set
+		 */
+		public WebFluxSseServerTransportProvider build() {
+			Assert.notNull(objectMapper, "ObjectMapper must be set");
+			Assert.notNull(messageEndpoint, "Message endpoint must be set");
+
+			return new WebFluxSseServerTransportProvider(objectMapper, messageEndpoint, sseEndpoint);
+		}
+
+	}
+
 }

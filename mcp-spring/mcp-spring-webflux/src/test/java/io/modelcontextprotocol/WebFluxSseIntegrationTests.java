@@ -46,14 +46,17 @@ import org.springframework.web.reactive.function.server.RouterFunctions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 public class WebFluxSseIntegrationTests {
 
 	private static final int PORT = 8182;
 
-	private static final String MESSAGE_ENDPOINT = "/mcp/message";
+	// private static final String MESSAGE_ENDPOINT = "/mcp/message";
+
+	private static final String CUSTOM_SSE_ENDPOINT = "/somePath/sse";
+
+	private static final String CUSTOM_MESSAGE_ENDPOINT = "/otherPath/mcp/message";
 
 	private DisposableServer httpServer;
 
@@ -64,15 +67,25 @@ public class WebFluxSseIntegrationTests {
 	@BeforeEach
 	public void before() {
 
-		this.mcpServerTransportProvider = new WebFluxSseServerTransportProvider(new ObjectMapper(), MESSAGE_ENDPOINT);
+		this.mcpServerTransportProvider = new WebFluxSseServerTransportProvider.Builder()
+			.objectMapper(new ObjectMapper())
+			.messageEndpoint(CUSTOM_MESSAGE_ENDPOINT)
+			.sseEndpoint(CUSTOM_SSE_ENDPOINT)
+			.build();
 
 		HttpHandler httpHandler = RouterFunctions.toHttpHandler(mcpServerTransportProvider.getRouterFunction());
 		ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(httpHandler);
 		this.httpServer = HttpServer.create().port(PORT).handle(adapter).bindNow();
 
-		clientBulders.put("httpclient", McpClient.sync(new HttpClientSseClientTransport("http://localhost:" + PORT)));
+		clientBulders.put("httpclient",
+				McpClient.sync(HttpClientSseClientTransport.builder("http://localhost:" + PORT)
+					.sseEndpoint(CUSTOM_SSE_ENDPOINT)
+					.build()));
 		clientBulders.put("webflux",
-				McpClient.sync(new WebFluxSseClientTransport(WebClient.builder().baseUrl("http://localhost:" + PORT))));
+				McpClient
+					.sync(WebFluxSseClientTransport.builder(WebClient.builder().baseUrl("http://localhost:" + PORT))
+						.sseEndpoint(CUSTOM_SSE_ENDPOINT)
+						.build()));
 
 	}
 

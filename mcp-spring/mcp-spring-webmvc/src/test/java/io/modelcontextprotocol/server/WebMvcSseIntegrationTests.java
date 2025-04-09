@@ -388,7 +388,7 @@ public class WebMvcSseIntegrationTests {
 				new McpSchema.Tool("tool1", "tool1 description", emptyJsonSchema), (exchange, request) -> {
 					// perform a blocking call to a remote service
 					String response = RestClient.create()
-						.get()
+						.get()https://raw.githubusercontent.com/modelcontextprotocol/java-sdk/refs/heads/main/README.md
 						.uri("https://github.com/modelcontextprotocol/specification/blob/main/README.md")
 						.retrieve()
 						.body(String.class);
@@ -424,7 +424,7 @@ public class WebMvcSseIntegrationTests {
 		McpServerFeatures.SyncToolSpecification tool1 = new McpServerFeatures.SyncToolSpecification(
 				new McpSchema.Tool("tool1", "tool1 description", emptyJsonSchema), (exchange, request) -> {
 					// perform a blocking call to a remote service
-					String response = RestClient.create()
+					String https://raw.githubusercontent.com/modelcontextprotocol/java-sdk/refs/heads/main/README.md
 						.get()
 						.uri("https://github.com/modelcontextprotocol/specification/blob/main/README.md")
 						.retrieve()
@@ -441,7 +441,7 @@ public class WebMvcSseIntegrationTests {
 		AtomicReference<List<Tool>> rootsRef = new AtomicReference<>();
 		var mcpClient = clientBuilder.toolsChangeConsumer(toolsUpdate -> {
 			// perform a blocking call to a remote service
-			String response = RestClient.create()
+			String https://raw.githubusercontent.com/modelcontextprotocol/java-sdk/refs/heads/main/README.md
 				.get()
 				.uri("https://github.com/modelcontextprotocol/specification/blob/main/README.md")
 				.retrieve()

@@ -396,7 +396,7 @@ public class WebFluxSseIntegrationTests {
 					// perform a blocking call to a remote service
 					String response = RestClient.create()
 						.get()
-						.uri("https://github.com/modelcontextprotocol/specification/blob/main/README.md")
+						.uri("https://raw.githubusercontent.com/modelcontextprotocol/java-sdk/refs/heads/main/README.md")
 						.retrieve()
 						.body(String.class);
 					assertThat(response).isNotBlank();
@@ -436,7 +436,7 @@ public class WebFluxSseIntegrationTests {
 					// perform a blocking call to a remote service
 					String response = RestClient.create()
 						.get()
-						.uri("https://github.com/modelcontextprotocol/specification/blob/main/README.md")
+						.uri("https://raw.githubusercontent.com/modelcontextprotocol/java-sdk/refs/heads/main/README.md")
 						.retrieve()
 						.body(String.class);
 					assertThat(response).isNotBlank();
@@ -453,7 +453,7 @@ public class WebFluxSseIntegrationTests {
 			// perform a blocking call to a remote service
 			String response = RestClient.create()
 				.get()
-				.uri("https://github.com/modelcontextprotocol/specification/blob/main/README.md")
+				.uri("https://raw.githubusercontent.com/modelcontextprotocol/java-sdk/refs/heads/main/README.md")
 				.retrieve()
 				.body(String.class);
 			assertThat(response).isNotBlank();

@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.transport.HttpClientSseClientTransport;
 import io.modelcontextprotocol.server.McpServer;
@@ -44,9 +45,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
 
-public class HttpServletSseServerTransportProviderIntegrationTests {
+class HttpServletSseServerTransportProviderIntegrationTests {
 
-	private static final int PORT = 8189;
+	private static final int PORT = TomcatTestUtil.findAvailablePort();
 
 	private static final String CUSTOM_SSE_ENDPOINT = "/somePath/sse";
 
@@ -70,7 +71,7 @@ public class HttpServletSseServerTransportProviderIntegrationTests {
 		tomcat = TomcatTestUtil.createTomcatServer("", PORT, mcpServerTransportProvider);
 		try {
 			tomcat.start();
-			assertThat(tomcat.getServer().getState() == LifecycleState.STARTED);
+			assertThat(tomcat.getServer().getState()).isEqualTo(LifecycleState.STARTED);
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Failed to start Tomcat", e);
@@ -133,7 +134,7 @@ public class HttpServletSseServerTransportProviderIntegrationTests {
 	}
 
 	@Test
-	void testCreateMessageSuccess() throws InterruptedException {
+	void testCreateMessageSuccess() {
 
 		Function<CreateMessageRequest, CreateMessageResult> samplingHandler = request -> {
 			assertThat(request.messages()).hasSize(1);

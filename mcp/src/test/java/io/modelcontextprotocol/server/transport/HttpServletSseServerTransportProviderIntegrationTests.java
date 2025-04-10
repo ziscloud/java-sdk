@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.client.McpClient;
@@ -575,20 +576,24 @@ public class HttpServletSseServerTransportProviderIntegrationTests {
 				// Should have received 3 notifications (1 NOTICE and 2 ERROR)
 				assertThat(receivedNotifications).hasSize(3);
 
+				Map<String, McpSchema.LoggingMessageNotification> notificationMap = receivedNotifications.stream()
+					.collect(Collectors.toMap(n -> n.data(), n -> n));
+
 				// First notification should be NOTICE level
-				assertThat(receivedNotifications.get(0).level()).isEqualTo(McpSchema.LoggingLevel.NOTICE);
-				assertThat(receivedNotifications.get(0).logger()).isEqualTo("test-logger");
-				assertThat(receivedNotifications.get(0).data()).isEqualTo("Notice message");
+				assertThat(notificationMap.get("Notice message").level()).isEqualTo(McpSchema.LoggingLevel.NOTICE);
+				assertThat(notificationMap.get("Notice message").logger()).isEqualTo("test-logger");
+				assertThat(notificationMap.get("Notice message").data()).isEqualTo("Notice message");
 
 				// Second notification should be ERROR level
-				assertThat(receivedNotifications.get(1).level()).isEqualTo(McpSchema.LoggingLevel.ERROR);
-				assertThat(receivedNotifications.get(1).logger()).isEqualTo("test-logger");
-				assertThat(receivedNotifications.get(1).data()).isEqualTo("Error message");
+				assertThat(notificationMap.get("Error message").level()).isEqualTo(McpSchema.LoggingLevel.ERROR);
+				assertThat(notificationMap.get("Error message").logger()).isEqualTo("test-logger");
+				assertThat(notificationMap.get("Error message").data()).isEqualTo("Error message");
 
 				// Third notification should be ERROR level
-				assertThat(receivedNotifications.get(2).level()).isEqualTo(McpSchema.LoggingLevel.ERROR);
-				assertThat(receivedNotifications.get(2).logger()).isEqualTo("test-logger");
-				assertThat(receivedNotifications.get(2).data()).isEqualTo("Another error message");
+				assertThat(notificationMap.get("Another error message").level())
+					.isEqualTo(McpSchema.LoggingLevel.ERROR);
+				assertThat(notificationMap.get("Another error message").logger()).isEqualTo("test-logger");
+				assertThat(notificationMap.get("Another error message").data()).isEqualTo("Another error message");
 			});
 		}
 		mcpServer.close();

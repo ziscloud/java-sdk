@@ -152,7 +152,7 @@ class WebFluxSseIntegrationTests {
 		McpServerFeatures.AsyncToolSpecification tool = new McpServerFeatures.AsyncToolSpecification(
 				new McpSchema.Tool("tool1", "tool1 description", emptyJsonSchema), (exchange, request) -> {
 
-					var craeteMessageRequest = McpSchema.CreateMessageRequest.builder()
+					var createMessageRequest = McpSchema.CreateMessageRequest.builder()
 						.messages(List.of(new McpSchema.SamplingMessage(McpSchema.Role.USER,
 								new McpSchema.TextContent("Test message"))))
 						.modelPreferences(ModelPreferences.builder()
@@ -163,7 +163,7 @@ class WebFluxSseIntegrationTests {
 							.build())
 						.build();
 
-					return exchange.createMessage(craeteMessageRequest)
+					return exchange.createMessage(createMessageRequest)
 						.doOnNext(samplingResult::set)
 						.thenReturn(callResponse);
 				});
@@ -421,7 +421,7 @@ class WebFluxSseIntegrationTests {
 
 	@ParameterizedTest(name = "{0} : {displayName} ")
 	@ValueSource(strings = { "httpclient", "webflux" })
-	void testRootsNotifciationWithEmptyRootsList(String clientType) {
+	void testRootsNotificationWithEmptyRootsList(String clientType) {
 		var clientBuilder = clientBuilders.get(clientType);
 
 		AtomicReference<List<Root>> rootsRef = new AtomicReference<>();

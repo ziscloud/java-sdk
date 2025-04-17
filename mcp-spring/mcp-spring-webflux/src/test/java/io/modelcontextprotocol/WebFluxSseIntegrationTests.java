@@ -774,7 +774,7 @@ class WebFluxSseIntegrationTests {
 		};
 
 		var mcpServer = McpServer.sync(mcpServerTransportProvider)
-			.capabilities(ServerCapabilities.builder().completions(new CompletionCapabilities()).build())
+			.capabilities(ServerCapabilities.builder().completions().build())
 			.prompts(new McpServerFeatures.SyncPromptSpecification(
 					new Prompt("code_review", "this is code review prompt", List.of()),
 					(mcpSyncServerExchange, getPromptRequest) -> null))

@@ -360,8 +360,8 @@ public final class McpSchema {
 			private ResourceCapabilities resources;
 			private ToolCapabilities tools;
 
-			public Builder completions(CompletionCapabilities completions) {
-				this.completions = completions;
+			public Builder completions() {
+				this.completions = new CompletionCapabilities();
 				return this;
 			}
 

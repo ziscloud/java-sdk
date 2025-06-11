@@ -151,14 +151,30 @@ public abstract class AbstractMcpSyncClientTests {
 
 	@Test
 	void testListToolsWithoutInitialization() {
-		verifyCallSucceedsWithImplicitInitialization(client -> client.listTools(null), "listing tools");
+		verifyCallSucceedsWithImplicitInitialization(client -> client.listTools(McpSchema.FIRST_PAGE), "listing tools");
 	}
 
 	@Test
 	void testListTools() {
 		withClient(createMcpTransport(), mcpSyncClient -> {
 			mcpSyncClient.initialize();
-			ListToolsResult tools = mcpSyncClient.listTools(null);
+			ListToolsResult tools = mcpSyncClient.listTools(McpSchema.FIRST_PAGE);
+
+			assertThat(tools).isNotNull().satisfies(result -> {
+				assertThat(result.tools()).isNotNull().isNotEmpty();
+
+				Tool firstTool = result.tools().get(0);
+				assertThat(firstTool.name()).isNotNull();
+				assertThat(firstTool.description()).isNotNull();
+			});
+		});
+	}
+
+	@Test
+	void testListAllTools() {
+		withClient(createMcpTransport(), mcpSyncClient -> {
+			mcpSyncClient.initialize();
+			ListToolsResult tools = mcpSyncClient.listTools();
 
 			assertThat(tools).isNotNull().satisfies(result -> {
 				assertThat(result.tools()).isNotNull().isNotEmpty();
@@ -308,14 +324,33 @@ public abstract class AbstractMcpSyncClientTests {
 
 	@Test
 	void testListResourcesWithoutInitialization() {
-		verifyCallSucceedsWithImplicitInitialization(client -> client.listResources(null), "listing resources");
+		verifyCallSucceedsWithImplicitInitialization(client -> client.listResources(McpSchema.FIRST_PAGE),
+				"listing resources");
 	}
 
 	@Test
 	void testListResources() {
 		withClient(createMcpTransport(), mcpSyncClient -> {
 			mcpSyncClient.initialize();
-			ListResourcesResult resources = mcpSyncClient.listResources(null);
+			ListResourcesResult resources = mcpSyncClient.listResources(McpSchema.FIRST_PAGE);
+
+			assertThat(resources).isNotNull().satisfies(result -> {
+				assertThat(result.resources()).isNotNull();
+
+				if (!result.resources().isEmpty()) {
+					Resource firstResource = result.resources().get(0);
+					assertThat(firstResource.uri()).isNotNull();
+					assertThat(firstResource.name()).isNotNull();
+				}
+			});
+		});
+	}
+
+	@Test
+	void testListAllResources() {
+		withClient(createMcpTransport(), mcpSyncClient -> {
+			mcpSyncClient.initialize();
+			ListResourcesResult resources = mcpSyncClient.listResources();
 
 			assertThat(resources).isNotNull().satisfies(result -> {
 				assertThat(result.resources()).isNotNull();
@@ -466,7 +501,7 @@ public abstract class AbstractMcpSyncClientTests {
 
 	@Test
 	void testListResourceTemplatesWithoutInitialization() {
-		verifyCallSucceedsWithImplicitInitialization(client -> client.listResourceTemplates(null),
+		verifyCallSucceedsWithImplicitInitialization(client -> client.listResourceTemplates(McpSchema.FIRST_PAGE),
 				"listing resource templates");
 	}
 
@@ -474,7 +509,18 @@ public abstract class AbstractMcpSyncClientTests {
 	void testListResourceTemplates() {
 		withClient(createMcpTransport(), mcpSyncClient -> {
 			mcpSyncClient.initialize();
-			ListResourceTemplatesResult result = mcpSyncClient.listResourceTemplates(null);
+			ListResourceTemplatesResult result = mcpSyncClient.listResourceTemplates(McpSchema.FIRST_PAGE);
+
+			assertThat(result).isNotNull();
+			assertThat(result.resourceTemplates()).isNotNull();
+		});
+	}
+
+	@Test
+	void testListAllResourceTemplates() {
+		withClient(createMcpTransport(), mcpSyncClient -> {
+			mcpSyncClient.initialize();
+			ListResourceTemplatesResult result = mcpSyncClient.listResourceTemplates();
 
 			assertThat(result).isNotNull();
 			assertThat(result.resourceTemplates()).isNotNull();

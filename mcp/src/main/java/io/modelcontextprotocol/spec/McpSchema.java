@@ -1755,18 +1755,31 @@ public final class McpSchema {
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record CompleteRequest(// @formatter:off
-				@JsonProperty("ref") McpSchema.CompleteReference ref,
-				@JsonProperty("argument") CompleteArgument argument,
-				@JsonProperty("_meta") Map<String, Object> meta) implements Request {
+		@JsonProperty("ref") McpSchema.CompleteReference ref,
+		@JsonProperty("argument") CompleteArgument argument,
+		@JsonProperty("_meta") Map<String, Object> meta,
+		@JsonProperty("context") CompleteContext context) implements Request {
 
-				public CompleteRequest(McpSchema.CompleteReference ref, CompleteArgument argument) {
-						this(ref, argument, null);
-				}
+		public CompleteRequest(McpSchema.CompleteReference ref, CompleteArgument argument, Map<String, Object> meta) {
+			this(ref, argument, meta, null);
+		}
 
-				public record CompleteArgument(
-						@JsonProperty("name") String name,
-						@JsonProperty("value") String value) {
-				}// @formatter:on
+		public CompleteRequest(McpSchema.CompleteReference ref, CompleteArgument argument, CompleteContext context) {
+			this(ref, argument, null, context);
+		}
+
+		public CompleteRequest(McpSchema.CompleteReference ref, CompleteArgument argument) {
+			this(ref, argument, null, null);
+		}
+		
+		public record CompleteArgument(
+			@JsonProperty("name") String name,
+			@JsonProperty("value") String value) {
+		}
+
+		public record CompleteContext(
+			@JsonProperty("arguments") Map<String, String> arguments) {
+		}// @formatter:on
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_ABSENT)

@@ -216,7 +216,7 @@ public class WebFluxSseClientTransport implements McpClientTransport {
 				}
 			}
 			else {
-				s.error(new McpError("Received unrecognized SSE event type: " + event.event()));
+				logger.warn("Received unrecognized SSE event type: {}", event.event());
 			}
 		}).transform(handler)).subscribe();
 
@@ -315,9 +315,9 @@ public class WebFluxSseClientTransport implements McpClientTransport {
 	public Mono<Void> closeGracefully() { // @formatter:off
 		return Mono.fromRunnable(() -> {
 			isClosing = true;
-			
+
 			// Dispose of subscriptions
-			
+
 			if (inboundSubscription != null) {
 				inboundSubscription.dispose();
 			}
